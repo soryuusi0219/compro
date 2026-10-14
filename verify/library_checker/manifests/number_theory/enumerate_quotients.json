@@ -1,0 +1,5 @@
+{
+  "name": "enumerate_quotients",
+  "problem": "number_theory/enumerate_quotients",
+  "source": "verify/library_checker/number_theory/enumerate_quotients.cpp"
+}

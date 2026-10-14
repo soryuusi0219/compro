@@ -1,0 +1,5 @@
+{
+  "name": "many_aplusb_128bit",
+  "problem": "sample/many_aplusb_128bit",
+  "source": "verify/library_checker/sample/many_aplusb_128bit.cpp"
+}

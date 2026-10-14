@@ -1,0 +1,73 @@
+name: Verify library
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      count: ${{ steps.affected.outputs.count }}
+      matrix: ${{ steps.affected.outputs.matrix }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - uses: actions/cache@v4
+        with:
+          path: build/library-checker-problems
+          key: library-checker-problems-e64660561a995c357cdc61ddee1bde68b80528db
+
+      - name: Select affected verify targets
+        id: affected
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: python3 tools/library_manager.py affected --base "$BASE_SHA" --format github >> "$GITHUB_OUTPUT"
+
+      - name: Check library dependencies and expansion
+        run: python3 tools/library_manager.py all
+
+      - name: Prepare Library Checker Problems
+        if: steps.affected.outputs.count != '0'
+        run: python3 tools/verify.py --prepare-only
+
+      - name: No affected verify targets
+        if: steps.affected.outputs.count == '0'
+        run: echo "No Library Checker targets are affected by this change."
+
+  verify:
+    needs: prepare
+    if: needs.prepare.outputs.count != '0'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - uses: actions/cache@v4
+        with:
+          path: build/library-checker-problems
+          key: library-checker-problems-e64660561a995c357cdc61ddee1bde68b80528db
+          fail-on-cache-miss: true
+
+      - name: Expand ${{ matrix.target }}
+        run: python3 tools/library_manager.py expand-verify "${{ matrix.target }}"
+
+      - name: Verify ${{ matrix.target }}
+        run: python3 tools/verify.py --offline --expanded "${{ matrix.target }}"

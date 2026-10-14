@@ -1,0 +1,5 @@
+{
+  "name": "lcm_convolution",
+  "problem": "convolution/lcm_convolution",
+  "source": "verify/library_checker/convolution/lcm_convolution.cpp"
+}

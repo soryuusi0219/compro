@@ -1,0 +1,5 @@
+{
+  "name": "static_range_frequency_wavelet",
+  "problem": "data_structure/static_range_frequency",
+  "source": "verify/library_checker/data_structure/static_range_frequency_wavelet.cpp"
+}

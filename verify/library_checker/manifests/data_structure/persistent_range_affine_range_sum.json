@@ -1,0 +1,5 @@
+{
+  "name": "persistent_range_affine_range_sum",
+  "problem": "data_structure/persistent_range_affine_range_sum",
+  "source": "verify/library_checker/data_structure/persistent_range_affine_range_sum.cpp"
+}

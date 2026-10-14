@@ -1,0 +1,5 @@
+{
+  "name": "chromatic_polynomial",
+  "problem": "graph/chromatic_polynomial",
+  "source": "verify/library_checker/graph/chromatic_polynomial.cpp"
+}

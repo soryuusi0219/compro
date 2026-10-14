@@ -1,0 +1,27 @@
+# Build products and caches
+/build/
+
+# Generated standalone headers and dependency reports
+/build/expanded/
+/build/library_status.json
+/build/library_status.md
+/.cache/
+/work/
+
+# Compiler output
+*.o
+*.obj
+*.exe
+a.out
+
+# Editor-generated temporary files
+tempCodeRunnerFile*
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Editor and OS metadata
+.DS_Store
+*.swp
+*~

@@ -1,0 +1,5 @@
+{
+  "name": "shift_of_sampling_points_of_polynomial",
+  "problem": "polynomial/shift_of_sampling_points_of_polynomial",
+  "source": "verify/library_checker/polynomial/shift_of_sampling_points_of_polynomial.cpp"
+}

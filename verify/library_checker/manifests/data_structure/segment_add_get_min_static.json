@@ -1,0 +1,5 @@
+{
+  "name": "segment_add_get_min_static",
+  "problem": "data_structure/segment_add_get_min",
+  "source": "verify/library_checker/data_structure/segment_add_get_min_static.cpp"
+}

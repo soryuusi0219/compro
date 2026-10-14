@@ -1,0 +1,5 @@
+{
+  "name": "range_set_range_composite_lazy_segtree",
+  "problem": "data_structure/range_set_range_composite",
+  "source": "verify/library_checker/data_structure/range_set_range_composite_lazy_segtree.cpp"
+}

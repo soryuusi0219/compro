@@ -1,0 +1,5 @@
+{
+  "name": "range_kth_smallest",
+  "problem": "data_structure/range_kth_smallest",
+  "source": "verify/library_checker/data_structure/range_kth_smallest.cpp"
+}

@@ -1,0 +1,5 @@
+{
+  "name": "line_add_get_min_static",
+  "problem": "data_structure/line_add_get_min",
+  "source": "verify/library_checker/data_structure/line_add_get_min_static.cpp"
+}

@@ -1,0 +1,5 @@
+{
+  "name": "gcd_convolution",
+  "problem": "convolution/gcd_convolution",
+  "source": "verify/library_checker/convolution/gcd_convolution.cpp"
+}

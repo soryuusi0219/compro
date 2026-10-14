@@ -1,0 +1,5 @@
+{
+  "name": "bitwise_and_convolution",
+  "problem": "convolution/bitwise_and_convolution",
+  "source": "verify/library_checker/convolution/bitwise_and_convolution.cpp"
+}

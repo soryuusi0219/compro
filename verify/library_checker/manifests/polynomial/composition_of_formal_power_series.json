@@ -1,0 +1,5 @@
+{
+  "name": "composition_of_formal_power_series",
+  "problem": "polynomial/composition_of_formal_power_series",
+  "source": "verify/library_checker/polynomial/composition_of_formal_power_series.cpp"
+}

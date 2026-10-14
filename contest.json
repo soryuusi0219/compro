@@ -1,0 +1,7 @@
+{
+  "template": "templates/main.cpp",
+  "template_no_acl": "templates/main_noACL.cpp",
+  "tester_template": "templates/tester.cpp",
+  "problem_count": 12,
+  "acl_available": true
+}

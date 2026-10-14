@@ -1,0 +1,5 @@
+{
+  "name": "lyndon_factorization",
+  "problem": "string/lyndon_factorization",
+  "source": "verify/library_checker/string/lyndon_factorization.cpp"
+}

@@ -1,0 +1,5 @@
+{
+  "name": "static_range_inversions_mo",
+  "problem": "data_structure/static_range_inversions_query",
+  "source": "verify/library_checker/data_structure/static_range_inversions_mo.cpp"
+}

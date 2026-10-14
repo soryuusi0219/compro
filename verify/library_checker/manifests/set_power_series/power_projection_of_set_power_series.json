@@ -1,0 +1,5 @@
+{
+  "name": "power_projection_of_set_power_series",
+  "problem": "set_power_series/power_projection_of_set_power_series",
+  "source": "verify/library_checker/set_power_series/power_projection_of_set_power_series.cpp"
+}

@@ -1,0 +1,5 @@
+{
+  "name": "point_add_rectangle_sum_wavelet_segtree",
+  "problem": "data_structure/point_add_rectangle_sum",
+  "source": "verify/library_checker/data_structure/point_add_rectangle_sum_wavelet_segtree.cpp"
+}

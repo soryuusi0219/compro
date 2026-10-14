@@ -1,0 +1,5 @@
+{
+  "name": "number_of_subsequences",
+  "problem": "enumerative_combinatorics/number_of_subsequences",
+  "source": "verify/library_checker/enumerative_combinatorics/number_of_subsequences.cpp"
+}

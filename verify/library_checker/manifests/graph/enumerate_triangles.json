@@ -1,0 +1,5 @@
+{
+  "name": "enumerate_triangles",
+  "problem": "graph/enumerate_triangles",
+  "source": "verify/library_checker/graph/enumerate_triangles.cpp"
+}

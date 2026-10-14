@@ -1,0 +1,5 @@
+{
+  "name": "bell_number",
+  "problem": "enumerative_combinatorics/bell_number",
+  "source": "verify/library_checker/enumerative_combinatorics/bell_number.cpp"
+}

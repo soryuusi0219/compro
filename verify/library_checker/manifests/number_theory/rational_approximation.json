@@ -1,0 +1,5 @@
+{
+  "name": "rational_approximation",
+  "problem": "number_theory/rational_approximation",
+  "source": "verify/library_checker/number_theory/rational_approximation.cpp"
+}

@@ -1,0 +1,5 @@
+{
+  "name": "connected_components_of_complement_graph",
+  "problem": "graph/connected_components_of_complement_graph",
+  "source": "verify/library_checker/graph/connected_components_of_complement_graph.cpp"
+}

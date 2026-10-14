@@ -1,0 +1,5 @@
+{
+  "name": "sqrt_mod",
+  "problem": "number_theory/sqrt_mod",
+  "source": "verify/library_checker/number_theory/sqrt_mod.cpp"
+}

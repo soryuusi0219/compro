@@ -1,0 +1,5 @@
+{
+  "name": "double_ended_priority_queue",
+  "problem": "data_structure/double_ended_priority_queue",
+  "source": "verify/library_checker/data_structure/double_ended_priority_queue.cpp"
+}

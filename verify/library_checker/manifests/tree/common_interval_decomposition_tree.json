@@ -1,0 +1,5 @@
+{
+  "name": "common_interval_decomposition_tree",
+  "problem": "tree/common_interval_decomposition_tree",
+  "source": "verify/library_checker/tree/common_interval_decomposition_tree.cpp"
+}

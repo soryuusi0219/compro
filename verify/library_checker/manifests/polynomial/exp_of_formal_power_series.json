@@ -1,0 +1,5 @@
+{
+  "name": "exp_of_formal_power_series",
+  "problem": "polynomial/exp_of_formal_power_series",
+  "source": "verify/library_checker/polynomial/exp_of_formal_power_series.cpp"
+}

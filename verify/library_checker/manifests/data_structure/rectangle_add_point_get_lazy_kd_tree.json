@@ -1,0 +1,5 @@
+{
+  "name": "rectangle_add_point_get_lazy_kd_tree",
+  "problem": "data_structure/rectangle_add_point_get",
+  "source": "verify/library_checker/data_structure/rectangle_add_point_get_lazy_kd_tree.cpp"
+}

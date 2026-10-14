@@ -1,0 +1,5 @@
+{
+  "name": "stern_brocot_tree",
+  "problem": "number_theory/stern_brocot_tree",
+  "source": "verify/library_checker/number_theory/stern_brocot_tree.cpp"
+}

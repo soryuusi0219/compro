@@ -1,0 +1,5 @@
+{
+  "name": "primitive_root",
+  "problem": "number_theory/primitive_root",
+  "source": "verify/library_checker/number_theory/primitive_root.cpp"
+}

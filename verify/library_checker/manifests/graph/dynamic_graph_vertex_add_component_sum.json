@@ -1,0 +1,5 @@
+{
+  "name": "dynamic_graph_vertex_add_component_sum",
+  "problem": "graph/dynamic_graph_vertex_add_component_sum",
+  "source": "verify/library_checker/graph/dynamic_graph_vertex_add_component_sum.cpp"
+}

@@ -1,0 +1,5 @@
+{
+  "name": "inv_of_polynomials",
+  "problem": "polynomial/inv_of_polynomials",
+  "source": "verify/library_checker/polynomial/inv_of_polynomials.cpp"
+}

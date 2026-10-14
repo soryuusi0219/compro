@@ -1,0 +1,5 @@
+{
+  "name": "enumerate_primes_linear_sieve",
+  "problem": "number_theory/enumerate_primes",
+  "source": "verify/library_checker/number_theory/enumerate_primes_linear_sieve.cpp"
+}

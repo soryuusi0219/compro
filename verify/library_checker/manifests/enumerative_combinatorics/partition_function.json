@@ -1,0 +1,5 @@
+{
+  "name": "partition_function",
+  "problem": "enumerative_combinatorics/partition_function",
+  "source": "verify/library_checker/enumerative_combinatorics/partition_function.cpp"
+}

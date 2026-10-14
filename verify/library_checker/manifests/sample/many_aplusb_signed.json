@@ -1,0 +1,5 @@
+{
+  "name": "many_aplusb_signed",
+  "problem": "sample/many_aplusb",
+  "source": "verify/library_checker/sample/many_aplusb_signed.cpp"
+}

@@ -1,0 +1,5 @@
+{
+  "name": "min_plus_convolution_concave_arbitrary",
+  "problem": "convolution/min_plus_convolution_concave_arbitrary",
+  "source": "verify/library_checker/convolution/min_plus_convolution_concave_arbitrary.cpp"
+}

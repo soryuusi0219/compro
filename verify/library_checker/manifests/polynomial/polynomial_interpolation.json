@@ -1,0 +1,5 @@
+{
+  "name": "polynomial_interpolation",
+  "problem": "polynomial/polynomial_interpolation",
+  "source": "verify/library_checker/polynomial/polynomial_interpolation.cpp"
+}

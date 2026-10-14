@@ -1,0 +1,5 @@
+{
+  "name": "rectangle_sum_static",
+  "problem": "data_structure/rectangle_sum",
+  "source": "verify/library_checker/data_structure/rectangle_sum_static.cpp"
+}

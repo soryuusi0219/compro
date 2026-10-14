@@ -1,0 +1,5 @@
+{
+  "name": "scc",
+  "problem": "graph/scc",
+  "source": "verify/library_checker/graph/scc.cpp"
+}

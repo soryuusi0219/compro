@@ -1,0 +1,5 @@
+{
+  "name": "compositional_inverse_of_formal_power_series",
+  "problem": "polynomial/compositional_inverse_of_formal_power_series",
+  "source": "verify/library_checker/polynomial/compositional_inverse_of_formal_power_series.cpp"
+}

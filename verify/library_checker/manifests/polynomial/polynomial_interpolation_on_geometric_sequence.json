@@ -1,0 +1,5 @@
+{
+  "name": "polynomial_interpolation_on_geometric_sequence",
+  "problem": "polynomial/polynomial_interpolation_on_geometric_sequence",
+  "source": "verify/library_checker/polynomial/polynomial_interpolation_on_geometric_sequence.cpp"
+}

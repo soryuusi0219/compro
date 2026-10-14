@@ -1,0 +1,5 @@
+{
+  "name": "bernoulli_number",
+  "problem": "number_theory/bernoulli_number",
+  "source": "verify/library_checker/number_theory/bernoulli_number.cpp"
+}

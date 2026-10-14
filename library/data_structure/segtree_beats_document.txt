@@ -1,0 +1,6 @@
+segtree_beats<S, op, e, F, mapping, composition, id> seg(n);
+
+基本はlazy_segtreeと同じ
+Sのメンバ変数failが存在
+写像が適用不可能な時fail=trueを返す
+

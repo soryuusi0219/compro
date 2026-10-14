@@ -1,0 +1,5 @@
+{
+  "name": "point_set_range_frequency_dynamic_wavelet",
+  "problem": "data_structure/point_set_range_frequency",
+  "source": "verify/library_checker/data_structure/point_set_range_frequency_dynamic_wavelet.cpp"
+}

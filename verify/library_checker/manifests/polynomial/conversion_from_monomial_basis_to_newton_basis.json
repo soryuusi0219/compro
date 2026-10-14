@@ -1,0 +1,5 @@
+{
+  "name": "conversion_from_monomial_basis_to_newton_basis",
+  "problem": "polynomial/conversion_from_monomial_basis_to_newton_basis",
+  "source": "verify/library_checker/polynomial/conversion_from_monomial_basis_to_newton_basis.cpp"
+}

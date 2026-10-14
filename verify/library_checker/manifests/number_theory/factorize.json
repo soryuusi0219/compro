@@ -1,0 +1,5 @@
+{
+  "name": "factorize",
+  "problem": "number_theory/factorize",
+  "source": "verify/library_checker/number_theory/factorize.cpp"
+}

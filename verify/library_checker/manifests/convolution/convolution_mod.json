@@ -1,0 +1,5 @@
+{
+  "name": "convolution_mod",
+  "problem": "convolution/convolution_mod",
+  "source": "verify/library_checker/convolution/convolution_mod.cpp"
+}

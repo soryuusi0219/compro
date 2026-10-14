@@ -1,0 +1,5 @@
+{
+  "name": "sqrt_of_formal_power_series_sparse",
+  "problem": "polynomial/sqrt_of_formal_power_series_sparse",
+  "source": "verify/library_checker/polynomial/sqrt_of_formal_power_series_sparse.cpp"
+}

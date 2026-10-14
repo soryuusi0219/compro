@@ -1,0 +1,5 @@
+{
+  "name": "multipoint_evaluation_on_geometric_sequence",
+  "problem": "polynomial/multipoint_evaluation_on_geometric_sequence",
+  "source": "verify/library_checker/polynomial/multipoint_evaluation_on_geometric_sequence.cpp"
+}

@@ -1,0 +1,5 @@
+{
+  "name": "binomial_coefficient_prime_mod",
+  "problem": "enumerative_combinatorics/binomial_coefficient_prime_mod",
+  "source": "verify/library_checker/enumerative_combinatorics/binomial_coefficient_prime_mod.cpp"
+}

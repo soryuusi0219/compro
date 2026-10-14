@@ -1,0 +1,5 @@
+{
+  "name": "polynomial_root_finding",
+  "problem": "polynomial/polynomial_root_finding",
+  "source": "verify/library_checker/polynomial/polynomial_root_finding.cpp"
+}

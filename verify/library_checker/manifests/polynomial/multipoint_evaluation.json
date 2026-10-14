@@ -1,0 +1,5 @@
+{
+  "name": "multipoint_evaluation",
+  "problem": "polynomial/multipoint_evaluation",
+  "source": "verify/library_checker/polynomial/multipoint_evaluation.cpp"
+}

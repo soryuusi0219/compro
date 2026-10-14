@@ -1,0 +1,5 @@
+{
+  "name": "convolution_mod_semi_online",
+  "problem": "convolution/convolution_mod",
+  "source": "verify/library_checker/convolution/convolution_mod_semi_online.cpp"
+}

@@ -1,0 +1,5 @@
+{
+  "name": "range_parallel_unionfind",
+  "problem": "data_structure/range_parallel_unionfind",
+  "source": "verify/library_checker/data_structure/range_parallel_unionfind.cpp"
+}

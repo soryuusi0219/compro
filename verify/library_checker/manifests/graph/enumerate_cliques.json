@@ -1,0 +1,5 @@
+{
+  "name": "enumerate_cliques",
+  "problem": "graph/enumerate_cliques",
+  "source": "verify/library_checker/graph/enumerate_cliques.cpp"
+}

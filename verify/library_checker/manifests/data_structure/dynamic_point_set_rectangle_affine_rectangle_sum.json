@@ -1,0 +1,5 @@
+{
+  "name": "dynamic_point_set_rectangle_affine_rectangle_sum",
+  "problem": "data_structure/dynamic_point_set_rectangle_affine_rectangle_sum",
+  "source": "verify/library_checker/data_structure/dynamic_point_set_rectangle_affine_rectangle_sum.cpp"
+}

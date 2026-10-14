@@ -1,0 +1,5 @@
+{
+  "name": "polynomial_taylor_shift",
+  "problem": "polynomial/polynomial_taylor_shift",
+  "source": "verify/library_checker/polynomial/polynomial_taylor_shift.cpp"
+}

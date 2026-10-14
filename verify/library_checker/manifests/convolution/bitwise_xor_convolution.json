@@ -1,0 +1,5 @@
+{
+  "name": "bitwise_xor_convolution",
+  "problem": "convolution/bitwise_xor_convolution",
+  "source": "verify/library_checker/convolution/bitwise_xor_convolution.cpp"
+}

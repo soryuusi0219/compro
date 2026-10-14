@@ -1,0 +1,5 @@
+{
+  "name": "range_kth_smallest_wavelet_legacy",
+  "problem": "data_structure/range_kth_smallest",
+  "source": "verify/library_checker/data_structure/range_kth_smallest_wavelet_legacy.cpp"
+}

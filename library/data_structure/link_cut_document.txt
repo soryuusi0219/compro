@@ -1,0 +1,26 @@
+linkcuttree<T,op,e> lct(ll n)
+T: 型
+T op(T x, T y): 演算
+T e(): 単位元
+
+void link(ll i,ll j) 
+(iとjの間にpathはない)
+頂点iと頂点jをつなげる
+
+void cut(ll i,ll j)
+(iとjはつながっている)
+ 頂点iと頂点jを切る
+
+void set(ll i, T x) 頂点iの値をxに置き換える
+
+T get(ll i) 頂点iの値を取得
+
+T prod(ll i,ll j) 頂点iから頂点jへのpathの値の積を取得
+
+vi get_path(ll i, ll j) 頂点iから頂点jへのpathを取得
+
+void print(): 木の情報を出力
+
+void evert(ll i): 頂点iを根に持ってくる
+
+ll lca(ll i, ll j): 頂点iと頂点jの最小共通祖先を取得

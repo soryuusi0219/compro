@@ -1,0 +1,5 @@
+{
+  "name": "minimum_steiner_tree",
+  "problem": "graph/minimum_steiner_tree",
+  "source": "verify/library_checker/graph/minimum_steiner_tree.cpp"
+}

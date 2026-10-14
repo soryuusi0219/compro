@@ -1,0 +1,5 @@
+{
+  "name": "static_range_count_distinct_merge_sort_tree",
+  "problem": "data_structure/static_range_count_distinct",
+  "source": "verify/library_checker/data_structure/static_range_count_distinct_merge_sort_tree.cpp"
+}

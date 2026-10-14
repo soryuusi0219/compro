@@ -1,0 +1,5 @@
+{
+  "name": "vertex_set_path_composite",
+  "problem": "tree/vertex_set_path_composite",
+  "source": "verify/library_checker/tree/vertex_set_path_composite.cpp"
+}

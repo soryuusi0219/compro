@@ -1,0 +1,5 @@
+{
+  "name": "primality_test",
+  "problem": "number_theory/primality_test",
+  "source": "verify/library_checker/number_theory/primality_test.cpp"
+}
