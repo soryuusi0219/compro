@@ -1,14 +1,18 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/static_range_prod.hpp
 #pragma once
 #include <algorithm>
+#include <type_traits>
 #include <vector>
 
 namespace soryuusi {
 
 using namespace std;
 
-template<class S, S (*op)(S, S), S (*e)()>
+template<class S, auto op, auto e>
 struct StaticRangeProd{
+  static_assert(is_invocable_r_v<S, decltype(op), S, S>, "op must be callable with (S, S) and return a value convertible to S");
+  static_assert(is_invocable_r_v<S, decltype(e)>, "e must be callable with no arguments and return a value convertible to S");
+
   static constexpr int b = 3;
   static constexpr int B = 1 << b;
   int n, m, h;

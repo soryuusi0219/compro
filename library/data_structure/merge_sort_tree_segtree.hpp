@@ -4,6 +4,7 @@
 #include <cassert>
 #include <functional>
 #include <numeric>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -13,8 +14,11 @@ namespace soryuusi {
 
 using namespace std;
 
-template<class Key, class S, S op(S,S), S e(), class Compare = less<Key>>
+template<class Key, class S, auto op, auto e, class Compare = less<Key>>
 struct MergeSortTree_Segtree{
+  static_assert(is_invocable_r_v<S, decltype(op), S, S>, "op must be callable with (S, S) and return a value convertible to S");
+  static_assert(is_invocable_r_v<S, decltype(e)>, "e must be callable with no arguments and return a value convertible to S");
+
   int n = 0, b = 0, base = 1;
 
   vector<Key> key;

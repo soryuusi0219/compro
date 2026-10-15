@@ -2,13 +2,17 @@
 #pragma once
 #include <cassert>
 #include <stack>
+#include <type_traits>
 
 namespace soryuusi {
 
 using namespace std;
 
-template<typename T, T op(T,T), T e()>
+template<typename T, auto op, auto e>
 struct swag{
+  static_assert(is_invocable_r_v<T, decltype(op), T, T>, "op must be callable with (T, T) and return a value convertible to T");
+  static_assert(is_invocable_r_v<T, decltype(e)>, "e must be callable with no arguments and return a value convertible to T");
+
   stack<T> prefix;
   stack<T> suffix;
   T prefixprod;

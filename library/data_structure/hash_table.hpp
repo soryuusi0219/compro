@@ -2,14 +2,17 @@
 #pragma once
 #include <chrono>
 #include <cstdint>
+#include <type_traits>
 #include <vector>
 
 namespace soryuusi {
 
 using namespace std;
 
-template<class T, class U, uint64_t (*hash)(T)>
+template<class T, class U, auto hash>
 struct HashTable{
+  static_assert(is_invocable_r_v<uint64_t, decltype(hash), T>, "hash must be callable with (T) and return a value convertible to uint64_t");
+
   using u32 = uint32_t;
   using u64 = uint64_t;
   private:

@@ -4,6 +4,7 @@
 #include <cassert>
 #include <stack>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -11,8 +12,10 @@ namespace soryuusi {
 
 using namespace std;
 
-template<class T, T (*op)(T, T)>
+template<class T, auto op>
 struct dsu_undo_data {
+  static_assert(is_invocable_r_v<T, decltype(op), T, T>, "op must be callable with (T, T) and return a value convertible to T");
+
   int n;
   int state_snap = 0;
   vector<int> data;

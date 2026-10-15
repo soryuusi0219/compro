@@ -5,6 +5,7 @@
 #include <iostream>
 #include <iterator>
 #include <memory>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -12,8 +13,14 @@ namespace soryuusi {
 
 using namespace std;
 
-template<class T, T (*op)(T,T), T (*e)(), class F, T (*mapping)(F, T), F (*composition)(F, F), F (*id)()>
+template<class T, auto op, auto e, class F, auto mapping, auto composition, auto id>
 struct splay_tree {
+  static_assert(is_invocable_r_v<T, decltype(op), T, T>, "op must be callable with (T, T) and return a value convertible to T");
+  static_assert(is_invocable_r_v<T, decltype(e)>, "e must be callable with no arguments and return a value convertible to T");
+  static_assert(is_invocable_r_v<T, decltype(mapping), F, T>, "mapping must be callable with (F, T) and return a value convertible to T");
+  static_assert(is_invocable_r_v<F, decltype(composition), F, F>, "composition must be callable with (F, F) and return a value convertible to F");
+  static_assert(is_invocable_r_v<F, decltype(id)>, "id must be callable with no arguments and return a value convertible to F");
+
   struct node{  
     node* pp = nullptr;
     node* lp = nullptr;

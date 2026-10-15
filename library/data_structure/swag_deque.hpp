@@ -2,6 +2,7 @@
 #pragma once
 #include <cassert>
 #include <stack>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -9,8 +10,11 @@ namespace soryuusi {
 
 using namespace std;
 
-template<typename T, T op(T,T), T e()>
+template<typename T, auto op, auto e>
 struct swagdq{
+  static_assert(is_invocable_r_v<T, decltype(op), T, T>, "op must be callable with (T, T) and return a value convertible to T");
+  static_assert(is_invocable_r_v<T, decltype(e)>, "e must be callable with no arguments and return a value convertible to T");
+
   stack<pair<T,T>> prefix;
   stack<pair<T,T>> suffix;
   swagdq(){

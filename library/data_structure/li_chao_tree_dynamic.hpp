@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <functional>
 #include <iostream>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -12,8 +13,10 @@ namespace soryuusi {
 
 using namespace std;
 
-template<class X, class Y, class Line, Line (*INF)(), X XMIN, X XMAX, X EPS, class CompareX = less<X>, class CompareY = less<Y>>
+template<class X, class Y, class Line, auto INF, X XMIN, X XMAX, X EPS, class CompareX = less<X>, class CompareY = less<Y>>
 struct Dynamic_LiChaoTree{
+  static_assert(is_invocable_r_v<Line, decltype(INF)>, "INF must be callable with no arguments and return a value convertible to Line");
+
   private:
     struct node{
       Line L;

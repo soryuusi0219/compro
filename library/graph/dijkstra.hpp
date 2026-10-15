@@ -4,6 +4,7 @@
 #include <functional>
 #include <iterator>
 #include <queue>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -11,8 +12,12 @@ namespace soryuusi {
 
 using namespace std;
 
-template<class T, T (*e)(), T (*infty)(), T (*op)(T, T)>
+template<class T, auto e, auto infty, auto op>
 struct Dijkstra{
+  static_assert(is_invocable_r_v<T, decltype(e)>, "e must be callable with no arguments and return a value convertible to T");
+  static_assert(is_invocable_r_v<T, decltype(infty)>, "infty must be callable with no arguments and return a value convertible to T");
+  static_assert(is_invocable_r_v<T, decltype(op), T, T>, "op must be callable with (T, T) and return a value convertible to T");
+
   int n;
   vector<int> h, nxt, to, from;
   vector<T> w, d;
