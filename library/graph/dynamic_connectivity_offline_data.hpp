@@ -6,6 +6,7 @@
 #include <map>
 #include <stack>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -15,8 +16,10 @@ namespace soryuusi {
 
 using namespace std;
 
-template<class T, T (*op)(T, T)>
+template<class T, auto op>
 struct dynamic_connectivity_offline_data{
+  static_assert(is_invocable_r_v<T, decltype(op), T, T>, "op must be callable with (T, T) and return a value convertible to T");
+
   dsu_undo_data<T,op> uf;
   using edge = pair<int,int>;
   int n, q;

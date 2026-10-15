@@ -1,13 +1,20 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/dynamic_lazy_segtree.hpp
 #pragma once
 #include <functional>
+#include <type_traits>
 
 namespace soryuusi {
 
 using namespace std;
 
-template<class S, S (*op)(S,S), S (*e)(), class F, S (*mapping)(F,S), F (*composition)(F,F), F (*id)()>
+template<class S, auto op, auto e, class F, auto mapping, auto composition, auto id>
 struct Dynamic_LazySegtree{
+  static_assert(is_invocable_r_v<S, decltype(op), S, S>, "op must be callable with (S, S) and return a value convertible to S");
+  static_assert(is_invocable_r_v<S, decltype(e)>, "e must be callable with no arguments and return a value convertible to S");
+  static_assert(is_invocable_r_v<S, decltype(mapping), F, S>, "mapping must be callable with (F, S) and return a value convertible to S");
+  static_assert(is_invocable_r_v<F, decltype(composition), F, F>, "composition must be callable with (F, F) and return a value convertible to F");
+  static_assert(is_invocable_r_v<F, decltype(id)>, "id must be callable with no arguments and return a value convertible to F");
+
   private:
     struct node{
       S val;

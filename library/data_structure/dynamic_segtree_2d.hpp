@@ -1,13 +1,17 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/dynamic_segtree_2d.hpp
 #pragma once
+#include <type_traits>
 #include <utility>
 
 namespace soryuusi {
 
 using namespace std;
 
-template<class S, S (*op)(S,S), S (*e)()>
+template<class S, auto op, auto e>
 struct Dynamic_Segtree2D{
+  static_assert(is_invocable_r_v<S, decltype(op), S, S>, "op must be callable with (S, S) and return a value convertible to S");
+  static_assert(is_invocable_r_v<S, decltype(e)>, "e must be callable with no arguments and return a value convertible to S");
+
   private:
     int h, w;
     struct node1D{

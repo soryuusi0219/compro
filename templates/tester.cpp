@@ -31,8 +31,13 @@ using namespace atcoder;
 #define dame(...) {out(__VA_ARGS__);return 0;}
 #define decimal cout<<fixed<<setprecision(15);
 #define all(a) a.begin(),a.end()
-#define rsort(a) {sort(all(a));reverse(all(a));}
+#define rall(a) a.rbegin(),a.rend()
+#define sortv(a) (sort(all(a)))
+#define rsortv(a) (sort(rall(a)))
 #define dupli(a) {sort(all(a));a.erase(unique(all(a)),a.end());}
+#define maxv(a) (*max_element(all(a)))
+#define minv(a) (*min_element(all(a)))
+#define reducev(a) (reduce(all(a)))
 #define readi1(n0) ll n0; cin >> (n0);
 #define readi2(n0,n1) ll n0,n1; cin >> (n0) >> (n1);
 #define readi3(n0,n1,n2) ll n0,n1,n2; cin >> (n0) >> (n1) >> (n2);
@@ -271,19 +276,38 @@ template<class S, class T> pair<S,T> operator+(pair<S,T> p, const pair<S,T>& q){
 template<class S, class T> pair<S,T> operator-=(pair<S,T>& p, const pair<S,T>& q){p.fi-=q.fi, p.se-=q.se; return p;}
 template<class S, class T> pair<S,T> operator-(pair<S,T> p, const pair<S,T>& q){return (p -= q);}
 //////////////////////////////////////////////////////////
-template<class T> bool isin(T x,T l,T r){return (l)<=(x)&&(x)<=(r);}
-template<class T> void yesno(T b){if(b)out("yes");else out("no");}
-template<class T> void YesNo(T b){if(b)out("Yes");else out("No");}
-template<class T> void YESNO(T b){if(b)out("YES");else out("NO");}
-template<class T> void posimp(T b){if(b)out("possible");else out("impossible");}
-template<class T> void PosImp(T b){if(b)out("Possible");else out("Impossible");}
-template<class T> void POSIMP(T b){if(b)out("POSSIBLE");else out("IMPOSSIBLE");}
-template<class T> bool chmin(T&a,T b){if(a>b){a=b;return true;}return false;}
-template<class T> bool chmax(T&a,T b){if(a<b){a=b;return true;}return false;}
+// Example: unordered_set<pi, Hash<pi>> st;
+template<class T> struct Hash : std::hash<T> {};
+template<class T> size_t HashCombine(size_t seed,const T& v){return seed^(Hash<T>{}(v)+0x9e3779b9+(seed<<6)+(seed>>2));}
+template<class T,class U> struct Hash<pair<T,U>>{
+  size_t operator()(const pair<T,U>& v) const {return HashCombine(Hash<T>{}(v.first),v.second);}
+};
+template<class T,class Alloc> struct Hash<vector<T,Alloc>>{
+  size_t operator()(const vector<T,Alloc>& v) const {size_t seed=0; for(const T& x:v) seed=HashCombine(seed,x); return seed;}
+};
+template<class... Ts> struct Hash<tuple<Ts...>>{
+  size_t operator()(const tuple<Ts...>& v) const {size_t seed=0; std::apply([&](const auto&... x){((seed=HashCombine(seed,x)),...);},v); return seed;}
+};
+//////////////////////////////////////////////////////////
+template<class T> bool isin(T x,T l,T r){return l<=x&&x<r;}
+template<class T> bool isinbox(T x,T y,T h,T w){return 0<=x&&x<h&&0<=y&&y<w;}
+template<class T> bool isinbox(T x,T y,T l,T r,T u,T b){return l<=x&&x<r&&u<=y&&y<b;}
+template<class T> T yesno(T b){if(b)out("yes");else out("no");return b;}
+template<class T> T YesNo(T b){if(b)out("Yes");else out("No");return b;}
+template<class T> T YESNO(T b){if(b)out("YES");else out("NO");return b;}
+template<class T> T posimp(T b){if(b)out("possible");else out("impossible");return b;}
+template<class T> T PosImp(T b){if(b)out("Possible");else out("Impossible");return b;}
+template<class T> T POSIMP(T b){if(b)out("POSSIBLE");else out("IMPOSSIBLE");return b;}
+template<class T> T AliceBob(T b){if(b)out("Alice");else out("Bob");return b;}
+template<class T, class U> bool chmin(T&a,U b){return a>b ? a=b, true : false;}
+template<class T, class U> bool chmax(T&a,U b){return a<b ? a=b, true : false;}
 template<class T> T dist_sq(P<T> x, P<T> y){return (x.fi-y.fi)*(x.fi-y.fi)+(x.se-y.se)*(x.se-y.se);}
 template<class T> T cross_product(P<T> x, P<T> y){return x.fi * y.se - x.se * y.fi;}
 template<class T> bool compare_by_arg(P<T> x, P<T> y){if(x == y) return false; if(x.fi == 0 && x.se == 0) return true; if(y.fi == 0 && y.se == 0) return false; if(x.se >= 0 && y.se < 0) return true; if(x.se < 0 && y.se >= 0) return false; if(x.se == 0 && y.se == 0) return x.fi > y.fi; return x.fi * y.se > x.se * y.fi;}
-template<class T> void argsort(V<P<T>>& a){sort(all(a),compare_by_arg<T>);} 
+template<class T> void argsort(V<P<T>>& a){sort(all(a),compare_by_arg<T>);}
+template<class T, class Comp = less<>> inline vector<int> idxsort(const T& v, Comp comp = Comp()){vector<int> res(v.size()); iota(res.begin(), res.end(), 0); sort(res.begin(), res.end(), [&](int x, int y){return comp(v[x],v[y]);}); return res;}
+template<class T, class U> inline void sort_by_idx(T& v, const vector<U>& I){assert(v.size() == I.size()); T tmpv = v; for(int i = 0; i < (int)I.size(); ++i){v[i] = tmpv[I[i]];}}
+template<class T, class U, class Comp1 = less<T>, class Comp2 = less<U>> inline void sortpair(vector<T>& v1, vector<U>& v2, Comp1 comp1 = Comp1(), Comp2 comp2 = Comp2()){assert(v1.size() == v2.size()); vector<int> I(v1.size()); iota(I.begin(), I.end(), 0); sort(I.begin(), I.end(), [&](int x, int y){if(comp1(v1[x],v1[y])) return true; if(comp1(v1[y],v1[x])) return false; return comp2(v2[x],v2[y]);}); sort_by_idx(v1, I); sort_by_idx(v2, I);}
 const vpi adj = {{1,0},{0,1},{-1,0},{0,-1}};
 const vpi king = {{1,0},{1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1}};
 const vpi knight = {{2,1},{1,2},{-1,2},{-2,1},{-2,-1},{-1,-2},{1,-2},{2,-1}};

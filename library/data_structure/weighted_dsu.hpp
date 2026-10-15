@@ -2,6 +2,7 @@
 #pragma once
 #include <algorithm>
 #include <cassert>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -9,8 +10,12 @@ namespace soryuusi {
 
 using namespace std;
 
-template<typename T, T op(T,T), T e(), T inv(T)>
+template<typename T, auto op, auto e, auto inv>
 struct Weighted_dsu{
+  static_assert(is_invocable_r_v<T, decltype(op), T, T>, "op must be callable with (T, T) and return a value convertible to T");
+  static_assert(is_invocable_r_v<T, decltype(e)>, "e must be callable with no arguments and return a value convertible to T");
+  static_assert(is_invocable_r_v<T, decltype(inv), T>, "inv must be callable with (T) and return a value convertible to T");
+
   int n;
   vector<int> par;
   vector<T> w;
@@ -59,14 +64,30 @@ struct Weighted_dsu{
   }
 };
 
-// ll op(ll x,ll y) {return x+y;}
-// ll e() {return 0;}
-// ll inv(ll x) {return -x;}
-// Weighted_dsu<ll,op,e,inv>
+namespace internal {
 
-// bool op(bool x,bool y) {return x != y;}
-// bool e() {return false;}
-// bool inv(bool x) {return x;}
-// Weighted_dsu<bool,op,e,inv>
+  template<class T>
+  struct weighted_dsu_sum {
+    static constexpr T (*op)(T,T) = [](T x, T y)->T {return x+y;};
+    static constexpr T (*e)() = []()->T {return T(0);};
+    static constexpr T (*inv)(T) = [](T x)->T {return -x;};
+  };
+
+  template<class T>
+  struct weighted_dsu_xor {
+    static constexpr T (*op)(T,T) = [](T x, T y)->T {return x^y;};
+    static constexpr T (*e)() = []()->T {return T(0);};
+    static constexpr T (*inv)(T) = [](T x)->T {return x;};
+  };
+
+}  // namespace internal
+
+template<typename T>
+using Weighted_dsu_sum = Weighted_dsu<T,internal::weighted_dsu_sum<T>::op,internal::weighted_dsu_sum<T>::e,internal::weighted_dsu_sum<T>::inv>;
+
+template<typename T>
+using Weighted_dsu_xor = Weighted_dsu<T,internal::weighted_dsu_xor<T>::op,internal::weighted_dsu_xor<T>::e,internal::weighted_dsu_xor<T>::inv>;
+
+using Weighted_dsu_bool = Weighted_dsu_xor<bool>;
 
 }  // namespace soryuusi

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -10,8 +11,10 @@ namespace soryuusi {
 
 using namespace std;
 
-template<class T, uint64_t (*hash)(T)>
+template<class T, auto hash>
 struct PointSetRangeCount{
+  static_assert(is_invocable_r_v<uint64_t, decltype(hash), T>, "hash must be callable with (T) and return a value convertible to uint64_t");
+
   private:
     struct Compressor{
       using u32 = uint32_t;

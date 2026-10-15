@@ -1,0 +1,69 @@
+lazy_segtree_template.hpp
+
+LazySegtree を継承した定番の設定です。C++20 が必要です。
+各クラスは vector<T>、vector<value_type>、(n)、(n, x) から構築できます。
+(n) は n 個の 0、(n, x) は n 個の x で初期化します。
+vector<U> も U が T に暗黙変換できれば使用できます。
+FlipInversion の入力は 0 または 1 に限ります。vector<bool> も使えます。
+
+区間はすべて半開区間 [l, r) です。
+
+クラス / 更新 / prod(l,r), get(p), all_prod() の戻り値
+
+LazySegtreeAddSum<T, Sum=T>
+  add(l,r,x) / {sum, len}
+LazySegtreeAddMin<T>, LazySegtreeAddMax<T>
+  add(l,r,x) / {value, len} （value は最小値・最大値）
+LazySegtreeAddMinCount<T, Count=int>, LazySegtreeAddMaxCount<T, Count=int>
+  add(l,r,x) / pair<T,Count> {最小値・最大値, その出現回数}
+LazySegtreeAssignSum<T, Sum=T>
+  assign(l,r,x) / {sum, len}
+LazySegtreeAssignMin<T>, LazySegtreeAssignMax<T>
+  assign(l,r,x) / {value, len} （value は最小値・最大値）
+LazySegtreeAffineSum<T, Sum=T>
+  affine(l,r,a,b) （x -> a*x+b）
+  add(l,r,x), multiply(l,r,x), assign(l,r,x) / {sum, len}
+LazySegtreeXorXor<T>
+  xor_apply(l,r,x) / {value, len} （value は区間 XOR）
+LazySegtreeFlipInversion<Count=long long>
+  flip(l,r) / {zero, one, inversion} （0 の個数、1 の個数、転倒数）
+
+sum/len/value 等は value_type のメンバです。
+set(p,x) で単一要素を変更できます。set(p,value_type) も使用できます。
+元の apply(p,f)、apply(l,r,f)、all_apply(f)、max_right、min_left も使えます。
+max_right/min_left の述語は上記の集約値を受け取ります。
+述語には単位元で true となる単調な条件を指定してください。
+
+action_type は Add 系と XorXor では T、Assign 系では optional<T>、
+AffineSum では {a,b}、FlipInversion では bool です。
+Assign 系の nullopt は何もしない操作です。0 を含む全ての値を代入できます。
+AffineSum は modint でも使用できます。
+
+空区間では sum/XOR/転倒数/個数/len は 0 です。
+最小値の value/first は numeric_limits<T>::max()、
+最大値の value/first は numeric_limits<T>::lowest() です。
+空かどうかは len または出現回数で判定するので、これらの端点値も格納できます。
+vector<value_type> を渡す場合は、実要素に対応する len/個数を必ず設定してください。
+Count 付きクラスの個数には正の値を指定してください。
+
+T、Sum、Count は全ての計算結果を保持できる型を指定してください。
+Sum のみを広くしても T の遅延タグの合成でオーバーフローしないよう注意が必要です。
+FlipInversion の Count は最大 n*(n-1)/2 を保持できる必要があります。
+
+使用例:
+  using namespace soryuusi;
+  LazySegtreeAddSum<long long> sum(std::vector<long long>{1,2,3});
+  sum.add(0,2,5);
+  // sum.prod(0,3).sum == 16
+
+  LazySegtreeAddMinCount<int> mn(std::vector<int>{2,1,1});
+  mn.add(0,3,4);
+  // mn.prod(0,3) == std::pair<int,int>{5,2}
+
+  LazySegtreeFlipInversion<> inv(std::vector<int>{1,0,1});
+  inv.flip(0,2);
+  // inv.prod(0,3).inversion == 0
+
+全種類のランダム比較テスト:
+  g++ -std=c++20 -O2 -Wall -Wextra -I. verify/unit/lazy_segtree_template.cpp -o /tmp/lazy_segtree_template_test
+  /tmp/lazy_segtree_template_test

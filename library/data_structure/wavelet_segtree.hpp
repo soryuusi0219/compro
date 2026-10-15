@@ -1,6 +1,7 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/wavelet_segtree.hpp
 #pragma once
 #include <iterator>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -11,8 +12,11 @@ namespace soryuusi {
 
 using namespace std;
 
-template<class T, class U, U (*op)(U,U), U (*e)(), int B = 31>
+template<class T, class U, auto op, auto e, int B = 31>
 struct Wavelet_Segtree{
+  static_assert(is_invocable_r_v<U, decltype(op), U, U>, "op must be callable with (U, U) and return a value convertible to U");
+  static_assert(is_invocable_r_v<U, decltype(e)>, "e must be callable with no arguments and return a value convertible to U");
+
   private:
     int n;
     int z[B];

@@ -4,6 +4,7 @@
 #include <cassert>
 #include <functional>
 #include <iostream>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -13,8 +14,10 @@ namespace soryuusi {
 
 using namespace std;
 
-template<class X, class Y, class Line, Line (*INF)(), class CompareX = less<X>, class CompareY = less<Y>>
+template<class X, class Y, class Line, auto INF, class CompareX = less<X>, class CompareY = less<Y>>
 struct Static_LiChaoTree{
+  static_assert(is_invocable_r_v<Line, decltype(INF)>, "INF must be callable with no arguments and return a value convertible to Line");
+
   private:
     int n, b;
     vector<X> xl, xr;

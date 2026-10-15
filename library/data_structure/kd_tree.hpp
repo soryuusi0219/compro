@@ -2,6 +2,7 @@
 #pragma once
 #include <algorithm>
 #include <numeric>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -9,8 +10,11 @@ namespace soryuusi {
 
 using namespace std;
 
-template<class X, class Y, class S, S (*op)(S,S), S (*e)()>
+template<class X, class Y, class S, auto op, auto e>
 struct KDTree{
+  static_assert(is_invocable_r_v<S, decltype(op), S, S>, "op must be callable with (S, S) and return a value convertible to S");
+  static_assert(is_invocable_r_v<S, decltype(e)>, "e must be callable with no arguments and return a value convertible to S");
+
   private:
     using Point = pair<X,Y>;
     struct node{

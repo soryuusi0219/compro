@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <numeric>
 #include <queue>
+#include <type_traits>
 #include <vector>
 
 namespace soryuusi {
@@ -11,6 +12,9 @@ using namespace std;
 
 template<class S, auto rake, auto compress>
 struct StaticTopTree{
+  static_assert(is_invocable_r_v<S, decltype(rake), S, S>, "rake must be callable with (S, S) and return a value convertible to S");
+  static_assert(is_invocable_r_v<S, decltype(compress), S, S>, "compress must be callable with (S, S) and return a value convertible to S");
+
   private:
     int n;
     vector<int> par, deg, sz, hd, rev, lp, rp, pp, dep;

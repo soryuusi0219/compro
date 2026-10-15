@@ -1,14 +1,19 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/tree/rerooting.hpp
 #pragma once
 #include <functional>
+#include <type_traits>
 #include <vector>
 
 namespace soryuusi {
 
 using namespace std;
 
-template<class S, S op(S,S), S e(), class F, S mapping(F,S)>
+template<class S, auto op, auto e, class F, auto mapping>
 struct Rerooting{
+  static_assert(is_invocable_r_v<S, decltype(op), S, S>, "op must be callable with (S, S) and return a value convertible to S");
+  static_assert(is_invocable_r_v<S, decltype(e)>, "e must be callable with no arguments and return a value convertible to S");
+  static_assert(is_invocable_r_v<S, decltype(mapping), F, S>, "mapping must be callable with (F, S) and return a value convertible to S");
+
   struct Edge{
     int to;
     F f;

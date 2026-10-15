@@ -12,8 +12,14 @@ namespace soryuusi {
 
 using namespace std;
 
-template<class S, S (*op)(S,S), S (*e)(), class F, S (*mapping)(F, S), F (*composition)(F, F), F (*id)()>
+template<class S, auto op, auto e, class F, auto mapping, auto composition, auto id>
 struct lazy_EularTour{
+  static_assert(is_invocable_r_v<S, decltype(op), S, S>, "op must be callable with (S, S) and return a value convertible to S");
+  static_assert(is_invocable_r_v<S, decltype(e)>, "e must be callable with no arguments and return a value convertible to S");
+  static_assert(is_invocable_r_v<S, decltype(mapping), F, S>, "mapping must be callable with (F, S) and return a value convertible to S");
+  static_assert(is_invocable_r_v<F, decltype(composition), F, F>, "composition must be callable with (F, F) and return a value convertible to F");
+  static_assert(is_invocable_r_v<F, decltype(id)>, "id must be callable with no arguments and return a value convertible to F");
+
   static constexpr int inf = 1ll << 30;
   struct StaticRMQ{
     static constexpr int b = 3;

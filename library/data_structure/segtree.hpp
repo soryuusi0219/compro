@@ -1,14 +1,17 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/segtree.hpp
 #pragma once
 #include <bit>
+#include <type_traits>
 #include <vector>
 
 namespace soryuusi {
 
 using namespace std;
 
-template<class S, S (*op)(S,S), S (*e)(), class X = int>
+template<class S, auto op, auto e>
 struct Segtree{
+  static_assert(is_invocable_r_v<S, decltype(op), S, S>, "op must be callable with (S, S) and return a value convertible to S");
+  static_assert(is_invocable_r_v<S, decltype(e)>, "e must be callable with no arguments and return a value convertible to S");
   private:
     int n, b;
     vector<S> data;

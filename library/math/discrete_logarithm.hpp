@@ -3,6 +3,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstdint>
+#include <type_traits>
 #include <vector>
 
 #include "library/data_structure/hash_table.hpp"
@@ -11,8 +12,13 @@ namespace soryuusi {
 
 using namespace std;
 
-template<typename F, typename S, auto pow, auto inv, auto apply, uint64_t (*hash)(S)>
+template<typename F, typename S, auto pow, auto inv, auto apply, auto hash>
 long long DiscreteLogarithm(F f, S s, S t, long long MX){
+  static_assert(is_invocable_r_v<F, decltype(pow), F, long long>, "pow must be callable with (F, long long) and return a value convertible to F");
+  static_assert(is_invocable_r_v<uint64_t, decltype(hash), S>, "hash must be callable with (S) and return a value convertible to uint64_t");
+  static_assert(is_invocable_r_v<F, decltype(inv), F>, "inv must be callable with (F) and return a value convertible to F");
+  static_assert(is_invocable_r_v<S, decltype(apply), F, S>, "apply must be callable with (F, S) and return a value convertible to S");
+
   if(s == t) return 0;
   HashTable<S,long long, hash> table(sqrtl(MX)+1);
   table[t] = 0;
@@ -24,8 +30,12 @@ long long DiscreteLogarithm(F f, S s, S t, long long MX){
   return -1;
 }
 
-template<typename F, typename S, auto pow, auto apply, uint64_t (*hash)(S)>
+template<typename F, typename S, auto pow, auto apply, auto hash>
 long long DiscreteLogarithm_Monoid(F f, S s, S t, long long MX){
+  static_assert(is_invocable_r_v<F, decltype(pow), F, long long>, "pow must be callable with (F, long long) and return a value convertible to F");
+  static_assert(is_invocable_r_v<uint64_t, decltype(hash), S>, "hash must be callable with (S) and return a value convertible to uint64_t");
+  static_assert(is_invocable_r_v<S, decltype(apply), F, S>, "apply must be callable with (F, S) and return a value convertible to S");
+
   if(s == t) return 0;
   HashTable<S,long long, hash> table(sqrtl(MX)+1);
   table[t] = 0;

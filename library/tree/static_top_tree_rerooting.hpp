@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <numeric>
 #include <queue>
+#include <type_traits>
 #include <vector>
 
 namespace soryuusi {
@@ -11,6 +12,13 @@ using namespace std;
 
 template<class S, class Srev, auto rake, auto compress00, auto compress10, auto compress11, auto e, auto erev>
 struct StaticTopTreeRerooting{
+  static_assert(is_invocable_r_v<S, decltype(rake), S, S>, "rake must be callable with (S, S) and return a value convertible to S");
+  static_assert(is_invocable_r_v<S, decltype(compress00), S, S>, "compress00 must be callable with (S, S) and return a value convertible to S");
+  static_assert(is_invocable_r_v<Srev, decltype(compress10), Srev, S>, "compress10 must be callable with (Srev, S) and return a value convertible to Srev");
+  static_assert(is_invocable_r_v<Srev, decltype(compress11), Srev, Srev>, "compress11 must be callable with (Srev, Srev) and return a value convertible to Srev");
+  static_assert(is_invocable_r_v<S, decltype(e)>, "e must be callable with no arguments and return a value convertible to S");
+  static_assert(is_invocable_r_v<Srev, decltype(erev)>, "erev must be callable with no arguments and return a value convertible to Srev");
+
   private:
     int n;
     vector<int> par, deg, sz, hd, rev, lp, rp, pp, dep;

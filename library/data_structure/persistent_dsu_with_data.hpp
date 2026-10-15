@@ -4,14 +4,17 @@
 #include <cassert>
 #include <cstring>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 
 namespace soryuusi {
 
 using namespace std;
 
-template<class S, S op(S,S)> 
+template<class S, auto op>
 struct Persistent_dsu{
+  static_assert(is_invocable_r_v<S, decltype(op), S, S>, "op must be callable with (S, S) and return a value convertible to S");
+
   struct Persistent_Vector{
     struct node;
     using np=node*;

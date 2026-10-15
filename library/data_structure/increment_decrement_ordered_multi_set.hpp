@@ -3,6 +3,7 @@
 #include <numeric>
 #include <utility>
 #include <vector>
+#include <cassert>
 
 namespace soryuusi {
 

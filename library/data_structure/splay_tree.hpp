@@ -5,6 +5,7 @@
 #include <iostream>
 #include <iterator>
 #include <memory>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -12,8 +13,11 @@ namespace soryuusi {
 
 using namespace std;
 
-template<class T, T (*op)(T,T), T (*e)()>
+template<class T, auto op, auto e>
 struct splay_tree {
+  static_assert(is_invocable_r_v<T, decltype(op), T, T>, "op must be callable with (T, T) and return a value convertible to T");
+  static_assert(is_invocable_r_v<T, decltype(e)>, "e must be callable with no arguments and return a value convertible to T");
+
   struct node{  
     node* pp = nullptr;
     node* lp = nullptr;

@@ -4,6 +4,7 @@
 #include <cassert>
 #include <limits>
 #include <queue>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -11,7 +12,12 @@ namespace soryuusi {
 
 using namespace std;
 
-template <class Cap, class Cost, class Costfct, pair<Cost, Cap> (*FR)(Costfct, Cap), pair<Cost,Cap> (*FL)(Costfct, Cap), Cost (*MAXCOST)(), Cost (*ZEROCOST)()> struct mcf_graph_modified {
+template <class Cap, class Cost, class Costfct, auto FR, auto FL, auto MAXCOST, auto ZEROCOST> struct mcf_graph_modified {
+  static_assert(is_invocable_r_v<pair<Cost, Cap>, decltype(FR), Costfct, Cap>, "FR must be callable with (Costfct, Cap) and return a value convertible to pair<Cost, Cap>");
+  static_assert(is_invocable_r_v<pair<Cost,Cap>, decltype(FL), Costfct, Cap>, "FL must be callable with (Costfct, Cap) and return a value convertible to pair<Cost,Cap>");
+  static_assert(is_invocable_r_v<Cost, decltype(MAXCOST)>, "MAXCOST must be callable with no arguments and return a value convertible to Cost");
+  static_assert(is_invocable_r_v<Cost, decltype(ZEROCOST)>, "ZEROCOST must be callable with no arguments and return a value convertible to Cost");
+
   public:
     mcf_graph_modified() {}
     mcf_graph_modified(int n) : _n(n), g(n) {}

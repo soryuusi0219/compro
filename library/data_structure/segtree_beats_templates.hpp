@@ -1,117 +1,300 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/segtree_beats_templates.hpp
 #pragma once
+#include <algorithm>
+#include <limits>
+#include <optional>
+#include <type_traits>
+#include <vector>
+
+#include "library/data_structure/segtree_beats.hpp"
 
 namespace soryuusi {
 
-/*
-// Range (chmax,chmin,add)
-// Range (max,min,sum)
+namespace internal {
 
-struct S{
-  long long sum,len,mx1,mx2,mxc,mn1,mn2,mnc;
-  bool fail;
-  S() : sum(0), len(0), mx1(-INF), mx2(-INF), mxc(0), mn1(INF), mn2(INF), mnc(0), fail(false){}
-  S(long long x) : sum(x), len(1), mx1(x), mx2(-INF), mxc(1), mn1(x), mn2(INF), mnc(1), fail(false){}
+  template<class T, class Sum>
+  struct segtree_beats_chmin_chmax_add {
+    struct S {
+      Sum sum = 0;
+      int len = 0;
+      T mx1 = std::numeric_limits<T>::lowest(), mx2 = std::numeric_limits<T>::lowest();
+      int mxc = 0;
+      T mn1 = std::numeric_limits<T>::max(), mn2 = std::numeric_limits<T>::max();
+      int mnc = 0;
+      bool fail = false;
+      S() = default;
+      S(T x, int count = 1) : sum(Sum(x)*count), len(count), mx1(x), mxc(count), mn1(x), mnc(count) {}
+    };
+    // x -> clamp(x + delta, lower, upper); missing bounds are unbounded.
+    struct F {
+      T delta = 0;
+      std::optional<T> lower, upper;
+      static F chmin(T x) { F f; f.upper = x; return f; }
+      static F chmax(T x) { F f; f.lower = x; return f; }
+      static F add(T x) { F f; f.delta = x; return f; }
+    };
+
+    static constexpr S (*op)(S,S) = [](S x, S y)->S {
+      if(!x.len) return y;
+      if(!y.len) return x;
+      S ret;
+      ret.sum = x.sum+y.sum;
+      ret.len = x.len+y.len;
+      if(x.mx1 == y.mx1) {
+        ret.mx1 = x.mx1;
+        ret.mx2 = std::max(x.mx2,y.mx2);
+        ret.mxc = x.mxc+y.mxc;
+      } else if(x.mx1 > y.mx1) {
+        ret.mx1 = x.mx1;
+        ret.mx2 = std::max(x.mx2,y.mx1);
+        ret.mxc = x.mxc;
+      } else {
+        ret.mx1 = y.mx1;
+        ret.mx2 = std::max(x.mx1,y.mx2);
+        ret.mxc = y.mxc;
+      }
+      if(x.mn1 == y.mn1) {
+        ret.mn1 = x.mn1;
+        ret.mn2 = std::min(x.mn2,y.mn2);
+        ret.mnc = x.mnc+y.mnc;
+      } else if(x.mn1 < y.mn1) {
+        ret.mn1 = x.mn1;
+        ret.mn2 = std::min(x.mn2,y.mn1);
+        ret.mnc = x.mnc;
+      } else {
+        ret.mn1 = y.mn1;
+        ret.mn2 = std::min(x.mn1,y.mn2);
+        ret.mnc = y.mnc;
+      }
+      return ret;
+    };
+    static constexpr S (*e)() = []()->S {return S();};
+    static constexpr S (*mapping)(F,S) = [](F f, S x)->S {
+      if(!x.len) return x;
+      x.sum += Sum(f.delta)*x.len;
+      x.mx1 += f.delta;
+      x.mn1 += f.delta;
+      if(x.mxc != x.len) x.mx2 += f.delta;
+      if(x.mnc != x.len) x.mn2 += f.delta;
+      if(f.lower && x.mn1 < *f.lower) {
+        T bound = *f.lower;
+        if(x.mx1 <= bound) return S(bound,x.len);
+        if(x.mn2 <= bound) { x.fail = true; return x; }
+        x.sum += (Sum(bound)-Sum(x.mn1))*x.mnc;
+        if(x.mx2 == x.mn1) x.mx2 = bound;
+        x.mn1 = bound;
+      }
+      if(f.upper && *f.upper < x.mx1) {
+        T bound = *f.upper;
+        if(bound <= x.mn1) return S(bound,x.len);
+        if(bound <= x.mx2) { x.fail = true; return x; }
+        x.sum += (Sum(bound)-Sum(x.mx1))*x.mxc;
+        if(x.mn2 == x.mx1) x.mn2 = bound;
+        x.mx1 = bound;
+      }
+      return x;
+    };
+    // composition(f,g) applies g first, then f.
+    static constexpr F (*composition)(F,F) = [](F f, F g)->F {
+      auto transform = [&](T x)->T {
+        x += f.delta;
+        if(f.lower) x = std::max(x,*f.lower);
+        if(f.upper) x = std::min(x,*f.upper);
+        return x;
+      };
+      g.delta += f.delta;
+      g.lower = g.lower ? std::optional<T>(transform(*g.lower)) : f.lower;
+      g.upper = g.upper ? std::optional<T>(transform(*g.upper)) : f.upper;
+      return g;
+    };
+    static constexpr F (*id)() = []()->F {return F();};
+    using Base = segtree_beats<S,op,e,F,mapping,composition,id>;
+  };
+
+  template<class T, class Sum>
+  struct segtree_beats_chmin_add {
+    struct S {
+      Sum sum = 0;
+      int len = 0;
+      T mx1 = std::numeric_limits<T>::lowest(), mx2 = std::numeric_limits<T>::lowest();
+      int mxc = 0;
+      T mn1 = std::numeric_limits<T>::max();
+      bool fail = false;
+      S() = default;
+      S(T x, int count = 1) : sum(Sum(x)*count), len(count), mx1(x), mxc(count), mn1(x) {}
+    };
+    struct F {
+      T delta = 0;
+      std::optional<T> upper;
+      static F chmin(T x) { F f; f.upper = x; return f; }
+      static F add(T x) { F f; f.delta = x; return f; }
+    };
+
+    static constexpr S (*op)(S,S) = [](S x, S y)->S {
+      if(!x.len) return y;
+      if(!y.len) return x;
+      S ret;
+      ret.sum = x.sum+y.sum;
+      ret.len = x.len+y.len;
+      ret.mn1 = std::min(x.mn1,y.mn1);
+      if(x.mx1 == y.mx1) {
+        ret.mx1 = x.mx1;
+        ret.mx2 = std::max(x.mx2,y.mx2);
+        ret.mxc = x.mxc+y.mxc;
+      } else if(x.mx1 > y.mx1) {
+        ret.mx1 = x.mx1;
+        ret.mx2 = std::max(x.mx2,y.mx1);
+        ret.mxc = x.mxc;
+      } else {
+        ret.mx1 = y.mx1;
+        ret.mx2 = std::max(x.mx1,y.mx2);
+        ret.mxc = y.mxc;
+      }
+      return ret;
+    };
+    static constexpr S (*e)() = []()->S {return S();};
+    static constexpr S (*mapping)(F,S) = [](F f, S x)->S {
+      if(!x.len) return x;
+      x.sum += Sum(f.delta)*x.len;
+      x.mx1 += f.delta;
+      x.mn1 += f.delta;
+      if(x.mxc != x.len) x.mx2 += f.delta;
+      if(f.upper && *f.upper < x.mx1) {
+        T bound = *f.upper;
+        if(bound <= x.mn1) return S(bound,x.len);
+        if(bound <= x.mx2) { x.fail = true; return x; }
+        x.sum += (Sum(bound)-Sum(x.mx1))*x.mxc;
+        x.mx1 = bound;
+      }
+      return x;
+    };
+    static constexpr F (*composition)(F,F) = [](F f, F g)->F {
+      g.delta += f.delta;
+      if(g.upper) *g.upper += f.delta;
+      if(f.upper) g.upper = g.upper ? std::min(*g.upper,*f.upper) : *f.upper;
+      return g;
+    };
+    static constexpr F (*id)() = []()->F {return F();};
+    using Base = segtree_beats<S,op,e,F,mapping,composition,id>;
+  };
+
+  template<class T, class Sum>
+  struct segtree_beats_chmax_add {
+    struct S {
+      Sum sum = 0;
+      int len = 0;
+      T mx1 = std::numeric_limits<T>::lowest();
+      T mn1 = std::numeric_limits<T>::max(), mn2 = std::numeric_limits<T>::max();
+      int mnc = 0;
+      bool fail = false;
+      S() = default;
+      S(T x, int count = 1) : sum(Sum(x)*count), len(count), mx1(x), mn1(x), mnc(count) {}
+    };
+    struct F {
+      T delta = 0;
+      std::optional<T> lower;
+      static F chmax(T x) { F f; f.lower = x; return f; }
+      static F add(T x) { F f; f.delta = x; return f; }
+    };
+
+    static constexpr S (*op)(S,S) = [](S x, S y)->S {
+      if(!x.len) return y;
+      if(!y.len) return x;
+      S ret;
+      ret.sum = x.sum+y.sum;
+      ret.len = x.len+y.len;
+      ret.mx1 = std::max(x.mx1,y.mx1);
+      if(x.mn1 == y.mn1) {
+        ret.mn1 = x.mn1;
+        ret.mn2 = std::min(x.mn2,y.mn2);
+        ret.mnc = x.mnc+y.mnc;
+      } else if(x.mn1 < y.mn1) {
+        ret.mn1 = x.mn1;
+        ret.mn2 = std::min(x.mn2,y.mn1);
+        ret.mnc = x.mnc;
+      } else {
+        ret.mn1 = y.mn1;
+        ret.mn2 = std::min(x.mn1,y.mn2);
+        ret.mnc = y.mnc;
+      }
+      return ret;
+    };
+    static constexpr S (*e)() = []()->S {return S();};
+    static constexpr S (*mapping)(F,S) = [](F f, S x)->S {
+      if(!x.len) return x;
+      x.sum += Sum(f.delta)*x.len;
+      x.mx1 += f.delta;
+      x.mn1 += f.delta;
+      if(x.mnc != x.len) x.mn2 += f.delta;
+      if(f.lower && x.mn1 < *f.lower) {
+        T bound = *f.lower;
+        if(x.mx1 <= bound) return S(bound,x.len);
+        if(x.mn2 <= bound) { x.fail = true; return x; }
+        x.sum += (Sum(bound)-Sum(x.mn1))*x.mnc;
+        x.mn1 = bound;
+      }
+      return x;
+    };
+    static constexpr F (*composition)(F,F) = [](F f, F g)->F {
+      g.delta += f.delta;
+      if(g.lower) *g.lower += f.delta;
+      if(f.lower) g.lower = g.lower ? std::max(*g.lower,*f.lower) : *f.lower;
+      return g;
+    };
+    static constexpr F (*id)() = []()->F {return F();};
+    using Base = segtree_beats<S,op,e,F,mapping,composition,id>;
+  };
+
+}  // namespace internal
+
+// Query sum, minimum (mn1), and maximum (mx1). Sum can be wider than T.
+template<class T, class Sum = T>
+struct SegtreeBeatsChminChmaxAdd : internal::segtree_beats_chmin_chmax_add<T,Sum>::Base {
+  using Operations = internal::segtree_beats_chmin_chmax_add<T,Sum>;
+  using Base = typename Operations::Base;
+  using value_type = typename Operations::S;
+  using action_type = typename Operations::F;
+  using Base::Base;
+
+  SegtreeBeatsChminChmaxAdd() = default;
+  template<class U> requires std::is_same_v<T,U>
+  SegtreeBeatsChminChmaxAdd(const std::vector<U>& v) : Base(std::vector<value_type>(v.begin(),v.end())) {}
+
+  void chmin(int l, int r, T x) { this->apply(l, r, action_type::chmin(x)); }
+  void chmax(int l, int r, T x) { this->apply(l, r, action_type::chmax(x)); }
+  void add(int l, int r, T x) { this->apply(l, r, action_type::add(x)); }
 };
-S e() {
-  return S();
-}
-S op(S x, S y) {
-  S ret;
-  ret.sum = x.sum + y.sum;
-  ret.len = x.len + y.len;
-  if(x.mx1 == y.mx1){
-    ret.mx1 = x.mx1;
-    ret.mx2 = max(x.mx2,y.mx2);
-    ret.mxc = x.mxc+y.mxc;
-  }
-  else if(x.mx1 > y.mx1){
-    ret.mx1 = x.mx1;
-    ret.mx2 = max(x.mx2,y.mx1);
-    ret.mxc = x.mxc;
-  }
-  else{
-    ret.mx1 = y.mx1;
-    ret.mx2 = max(x.mx1,y.mx2);
-    ret.mxc = y.mxc;
-  }
-  if(x.mn1 == y.mn1){
-    ret.mn1 = x.mn1;
-    ret.mn2 = min(x.mn2,y.mn2);
-    ret.mnc = x.mnc+y.mnc;
-  }
-  else if(x.mn1 < y.mn1){
-    ret.mn1 = x.mn1;
-    ret.mn2 = min(x.mn2,y.mn1);
-    ret.mnc = x.mnc;
-  }
-  else{
-    ret.mn1 = y.mn1;
-    ret.mn2 = min(x.mn1,y.mn2);
-    ret.mnc = y.mnc;
-  }
-  return ret;
-}
-struct F{
-  long long mx,mn,add;
-  F() : mx(-INF), mn(INF), add(0){}
-  F(long long a, long long x){
-    if(a == 1) {mx = x; mn = INF; add = 0;} //mx
-    else if(a == 0) {mx = -INF; mn = x; add = 0;} //mn
-    else if(a == 2) {mx = -INF; mn = INF; add = x;} //add
-  }
-  bool operator==(F o){
-    return (mx == o.mx && mn == o.mn && add == o.add);
-  }
+
+template<class T, class Sum = T>
+struct SegtreeBeatsChminAdd : internal::segtree_beats_chmin_add<T,Sum>::Base {
+  using Operations = internal::segtree_beats_chmin_add<T,Sum>;
+  using Base = typename Operations::Base;
+  using value_type = typename Operations::S;
+  using action_type = typename Operations::F;
+  using Base::Base;
+
+  SegtreeBeatsChminAdd() = default;
+  template<class U> requires std::is_same_v<T,U>
+  SegtreeBeatsChminAdd(const std::vector<U>& v) : Base(std::vector<value_type>(v.begin(),v.end())) {}
+
+  void chmin(int l, int r, T x) { this->apply(l, r, action_type::chmin(x)); }
+  void add(int l, int r, T x) { this->apply(l, r, action_type::add(x)); }
 };
 
-S mapping(F f, S x){
-  S ret = x;
-  if(ret.mn2 < f.mx){
-    ret.fail = true;
-    return ret;
-  }
-  else if(ret.mn1 < f.mx){
-    ret.sum += ret.mnc * (f.mx-ret.mn1);
-    if(ret.mn1 == ret.mx1) ret.mx1 = f.mx;
-    else if(ret.mn1 == ret.mx2) ret.mx2 = f.mx;
-    ret.mn1 = f.mx;
-  }
-  if(ret.mx2 > f.mn){
-    ret.fail = true;
-    return ret;
-  }
-  else if(ret.mx1 > f.mn){
-    ret.sum += ret.mxc * (f.mn-ret.mx1);
-    if(ret.mx1 == ret.mn1) ret.mn1 = f.mn;
-    else if(ret.mx1 == ret.mn2) ret.mn2 = f.mn;
-    ret.mx1 = f.mn;
-  }
-  ret.sum += f.add * ret.len;
-  ret.mx1 += f.add;
-  ret.mx2 += f.add;
-  ret.mn1 += f.add;
-  ret.mn2 += f.add;
-  return ret;
-}
-F composition(F f, F g){
-  F ret = g;
-  long long k = f.mx;
-  k -= ret.add;
-  chmax(ret.mn,k);
-  chmax(ret.mx,k);
-  long long l = f.mn;
-  l -= ret.add;
-  chmin(ret.mn,l);
-  ret.add += f.add;
-  return ret;
-}
-F id(){
-  F ret;
-  return ret;
-}
+template<class T, class Sum = T>
+struct SegtreeBeatsChmaxAdd : internal::segtree_beats_chmax_add<T,Sum>::Base {
+  using Operations = internal::segtree_beats_chmax_add<T,Sum>;
+  using Base = typename Operations::Base;
+  using value_type = typename Operations::S;
+  using action_type = typename Operations::F;
+  using Base::Base;
 
-segtree_beats<S, op, e, F, mapping, composition, id>;
-*/
+  SegtreeBeatsChmaxAdd() = default;
+  template<class U> requires std::is_same_v<T,U>
+  SegtreeBeatsChmaxAdd(const std::vector<U>& v) : Base(std::vector<value_type>(v.begin(),v.end())) {}
+
+  void chmax(int l, int r, T x) { this->apply(l, r, action_type::chmax(x)); }
+  void add(int l, int r, T x) { this->apply(l, r, action_type::add(x)); }
+};
 
 }  // namespace soryuusi
