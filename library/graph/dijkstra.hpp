@@ -7,16 +7,19 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <limits>
 
 namespace soryuusi {
 
 using namespace std;
 
-template<class T, auto e, auto infty, auto op>
+template<class T, auto op, auto e, auto infty>
 struct Dijkstra{
   static_assert(is_invocable_r_v<T, decltype(e)>, "e must be callable with no arguments and return a value convertible to T");
   static_assert(is_invocable_r_v<T, decltype(infty)>, "infty must be callable with no arguments and return a value convertible to T");
   static_assert(is_invocable_r_v<T, decltype(op), T, T>, "op must be callable with (T, T) and return a value convertible to T");
+
+  const T INF = infty();
 
   int n;
   vector<int> h, nxt, to, from;
@@ -69,9 +72,20 @@ struct Dijkstra{
   }
 };
 
-long long  e() {return 0;}
-long long  op(long long  x, long long  y) {return x+y;}
-long long  infty() {return 1ll << 60;}
-using Dijkstrall = Dijkstra<long long, e, infty, op>;
+
+namespace internal {
+
+  template<class T>
+  struct dijkstra_sum {
+    static constexpr T (*op)(T,T) = [](T x, T y)->T {return x+y;};
+    static constexpr T (*e)() = []()->T {return T(0);};
+    static constexpr T (*infty)() = []()->T {return numeric_limits<T>::max()/2;};
+  };
+
+}  // namespace internal
+
+template<typename T>
+using Dijkstra_sum = Dijkstra<T,internal::dijkstra_sum<T>::op,internal::dijkstra_sum<T>::e,internal::dijkstra_sum<T>::infty>;
+using Dijkstrall = Dijkstra_sum<long long>;
 
 }  // namespace soryuusi

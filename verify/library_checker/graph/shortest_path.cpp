@@ -16,7 +16,7 @@ int main() {
   }
 
   const auto distance = graph.distance(source);
-  if (distance[target] == soryuusi::infty()) {
+  if (distance[target] == graph.INF) {
     soryuusi::cout << -1 << '\n';
     return 0;
   }
