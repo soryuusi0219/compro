@@ -44,16 +44,12 @@ namespace internal {
 
   template<class T, class Count, bool IsMin, bool WithCount, bool Assign>
   struct lazy_segtree_extreme {
-    static constexpr T identity = IsMin ? std::numeric_limits<T>::max() : std::numeric_limits<T>::lowest();
-    struct Value {
-      T value = identity;
-      int len = 0;
-    };
-    using S = std::conditional_t<WithCount,std::pair<T,Count>,Value>;
+    static constexpr T identity = IsMin ? std::numeric_limits<T>::max()/2 : std::numeric_limits<T>::lowest()/2;
+    using S = std::conditional_t<WithCount,std::pair<T,Count>,T>;
     using F = std::conditional_t<Assign,std::optional<T>,T>;
     static S leaf(T x) {
       if constexpr(WithCount) return {x,Count(1)};
-      else return {x,1};
+      else return x;
     }
     static constexpr S (*op)(S,S) = [](S x, S y)->S {
       if constexpr(WithCount) {
@@ -62,25 +58,24 @@ namespace internal {
         if(x.first == y.first) return {x.first,x.second+y.second};
         return (IsMin ? x.first < y.first : y.first < x.first) ? x : y;
       } else {
-        if(!x.len) return y;
-        if(!y.len) return x;
-        T value = (IsMin ? x.value < y.value : y.value < x.value) ? x.value : y.value;
-        return {value,x.len+y.len};
+        if(x == identity) return y;
+        if(y == identity) return x;
+        return (IsMin ? x < y : y < x) ? x : y;
       }
     };
     static constexpr S (*e)() = []()->S {
       if constexpr(WithCount) return {identity,Count(0)};
-      else return {};
+      else return identity;
     };
     static constexpr S (*mapping)(F,S) = [](F f, S x)->S {
       if constexpr(WithCount) {
         if(x.second != Count(0)) x.first += f;
       } else {
-        if(!x.len) return x;
+        if(x==identity) return x;
         if constexpr(Assign) {
           if(f) x.value = *f;
         } else {
-          x.value += f;
+          x += f;
         }
       }
       return x;
@@ -209,7 +204,7 @@ struct LazySegtreeAddSum : internal::lazy_segtree_add_template<internal::lazy_se
   using Base::Base;
 };
 
-// Query .value (minimum/maximum) and .len; empty ranges have len == 0.
+// Query (minimum/maximum).
 template<class T>
 struct LazySegtreeAddMin : internal::lazy_segtree_add_template<internal::lazy_segtree_extreme<T,int,true,false,false>,T> {
   using Base = internal::lazy_segtree_add_template<internal::lazy_segtree_extreme<T,int,true,false,false>,T>;

@@ -83,11 +83,11 @@ namespace internal {
   using SegtreeSum = Segtree<T,internal::segtree_sum<T>::op,internal::segtree_sum<T>::e>;
 
   // Minimum
-  template<class T, T INF = std::numeric_limits<T>::max()>
+  template<class T, T INF = std::numeric_limits<T>::max()/2>
   using SegtreeMin = Segtree<T,internal::segtree_min<T,INF>::op,internal::segtree_min<T,INF>::e>;
 
   // Minimum + count
-  template<class T, class U = int, T INF = std::numeric_limits<T>::max()>
+  template<class T, class U = int, T INF = std::numeric_limits<T>::max()/2>
   struct SegtreeMinCount : internal::segtree_min_count<T,U,INF>::Base {
     using Operations = internal::segtree_min_count<T,U,INF>;
     using Base = typename Operations::Base;
@@ -100,11 +100,11 @@ namespace internal {
   };
 
   // Maximum
-  template<class T, T LOWEST = std::numeric_limits<T>::lowest()>
+  template<class T, T LOWEST = std::numeric_limits<T>::lowest()/2>
   using SegtreeMax = Segtree<T,internal::segtree_max<T,LOWEST>::op,internal::segtree_max<T,LOWEST>::e>;
 
   // Maximum + count
-  template<class T, class U = int, T LOWEST = std::numeric_limits<T>::lowest()>
+  template<class T, class U = int, T LOWEST = std::numeric_limits<T>::lowest()/2>
   struct SegtreeMaxCount : internal::segtree_max_count<T,U,LOWEST>::Base {
     using Operations = internal::segtree_max_count<T,U,LOWEST>;
     using Base = typename Operations::Base;
