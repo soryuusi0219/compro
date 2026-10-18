@@ -17,9 +17,9 @@ namespace internal {
     struct S {
       Sum sum = 0;
       int len = 0;
-      T mx1 = std::numeric_limits<T>::lowest(), mx2 = std::numeric_limits<T>::lowest();
+      T mx1 = std::numeric_limits<T>::lowest()/2, mx2 = std::numeric_limits<T>::lowest()/2;
       int mxc = 0;
-      T mn1 = std::numeric_limits<T>::max(), mn2 = std::numeric_limits<T>::max();
+      T mn1 = std::numeric_limits<T>::max()/2, mn2 = std::numeric_limits<T>::max()/2;
       int mnc = 0;
       bool fail = false;
       S() = default;
@@ -116,9 +116,9 @@ namespace internal {
     struct S {
       Sum sum = 0;
       int len = 0;
-      T mx1 = std::numeric_limits<T>::lowest(), mx2 = std::numeric_limits<T>::lowest();
+      T mx1 = std::numeric_limits<T>::lowest()/2, mx2 = std::numeric_limits<T>::lowest()/2;
       int mxc = 0;
-      T mn1 = std::numeric_limits<T>::max();
+      T mn1 = std::numeric_limits<T>::max()/2;
       bool fail = false;
       S() = default;
       S(T x, int count = 1) : sum(Sum(x)*count), len(count), mx1(x), mxc(count), mn1(x) {}
@@ -183,8 +183,8 @@ namespace internal {
     struct S {
       Sum sum = 0;
       int len = 0;
-      T mx1 = std::numeric_limits<T>::lowest();
-      T mn1 = std::numeric_limits<T>::max(), mn2 = std::numeric_limits<T>::max();
+      T mx1 = std::numeric_limits<T>::lowest()/2;
+      T mn1 = std::numeric_limits<T>::max()/2, mn2 = std::numeric_limits<T>::max()/2;
       int mnc = 0;
       bool fail = false;
       S() = default;
