@@ -17,7 +17,7 @@ int main() {
       soryuusi::cin >> x;
       seg.add(l,r,x);
     } else {
-      soryuusi::cout << seg.prod(l,r).value << '\n';
+      soryuusi::cout << seg.prod(l,r) << '\n';
     }
   }
 }
