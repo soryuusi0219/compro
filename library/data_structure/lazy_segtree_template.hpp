@@ -73,7 +73,7 @@ namespace internal {
       } else {
         if(x==identity) return x;
         if constexpr(Assign) {
-          if(f) x.value = *f;
+          if(f) x = *f;
         } else {
           x += f;
         }
