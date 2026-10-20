@@ -1,0 +1,5 @@
+{
+  "name": "z_algorithm_rolling_hash",
+  "problem": "string/zalgorithm",
+  "source": "verify/library_checker/string/z_algorithm_rolling_hash.cpp"
+}

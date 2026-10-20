@@ -1,0 +1,5 @@
+{
+  "name": "biconnected_components",
+  "problem": "graph/biconnected_components",
+  "source": "verify/library_checker/graph/biconnected_components.cpp"
+}

@@ -1,0 +1,5 @@
+{
+  "name": "longest_common_substring_suffix_tree",
+  "problem": "string/longest_common_substring",
+  "source": "verify/library_checker/string/longest_common_substring_suffix_tree.cpp"
+}

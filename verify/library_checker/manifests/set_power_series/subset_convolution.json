@@ -1,0 +1,5 @@
+{
+  "name": "subset_convolution",
+  "problem": "set_power_series/subset_convolution",
+  "source": "verify/library_checker/set_power_series/subset_convolution.cpp"
+}

@@ -1,0 +1,5 @@
+{
+  "name": "persistent_queue",
+  "problem": "data_structure/persistent_queue",
+  "source": "verify/library_checker/data_structure/persistent_queue.cpp"
+}

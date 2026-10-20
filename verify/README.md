@@ -33,6 +33,31 @@ g++ -std=c++20 -O2 -Wall -Wextra -Werror -I. verify/unit/lazy_segtree_template.c
 遅延セグメント木の全11テンプレートについて、更新・集約、空区間、
 各コンストラクタ、型の上限・下限、modint、遅延伝播後の二分探索を検証します。
 
+suffix tree の suffix array、inverse suffix array、LCP、異なる部分文字列数、
+suffix LCP、パターン出現数、matching state、最長共通部分文字列、node accessor は
+ナイーブ実装とのランダム比較で検証します。
+
+```sh
+g++ -std=c++20 -O2 -Wall -Wextra -Werror -I. verify/unit/suffix_tree.cpp -o /tmp/suffix_tree_test
+/tmp/suffix_tree_test
+```
+
+rolling hash の単一・多重ハッシュ、mod演算、部分文字列比較、LCP、`push_back` は
+ナイーブ実装とのランダム比較で検証します。
+
+```sh
+g++ -std=c++20 -O2 -Wall -Wextra -Werror -I. verify/unit/rolling_hash.cpp -o /tmp/rolling_hash_test
+/tmp/rolling_hash_test
+```
+
+文字列・数列の連結結果を辞書順最小にする `O(N log^2 N)` のソートは、
+全順列とのランダム比較で検証します。
+
+```sh
+g++ -std=c++20 -O2 -Wall -Wextra -Werror -I. verify/unit/sort_concatenation_min.cpp -o /tmp/sort_concatenation_min_test
+/tmp/sort_concatenation_min_test
+```
+
 3種類のC++テンプレートの共通ヘルパーは、次のコマンドで検証します。
 `TEMPLATE_KIND` は順に main、main_noACL、tester を選びます。
 tester 本体の無限ループは実行しません。

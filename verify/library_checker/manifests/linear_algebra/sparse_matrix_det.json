@@ -1,0 +1,5 @@
+{
+  "name": "sparse_matrix_det",
+  "problem": "linear_algebra/sparse_matrix_det",
+  "source": "verify/library_checker/linear_algebra/sparse_matrix_det.cpp"
+}

@@ -117,24 +117,6 @@ class Instream {
     Instream& operator>>(std::string& dest){ dest = nextToken(); return *this; }
     Instream& operator>>(char& dest){ dest = nextChar(); return *this; }
 
-    template <class Mint>
-      requires (!std::is_integral_v<Mint> && requires(Mint value) {
-        Mint::mod();
-        value.val();
-        Mint(0);
-      })
-    Instream& operator>>(Mint& dest) {
-      skipSpace();
-      const bool negative = peek() == '-';
-      if (negative || peek() == '+') ++pos;
-      assert('0' <= peek() && peek() <= '9');
-      Mint value = 0;
-      while ('0' <= peek() && peek() <= '9') {
-        value = value * 10 + (buf[pos++] - '0');
-      }
-      dest = negative ? -value : value;
-      return *this;
-    }
 };
 
 template<unsigned int BUF_SIZE = (1U << 16)>
@@ -304,14 +286,6 @@ class Outstream {
     Outstream& operator<<(const char* targ){ nextCstr(targ); return *this; }
     Outstream& operator<<(char targ){ nextChar(targ); return *this; }
 
-    template <class Mint>
-      requires (!std::is_integral_v<Mint> && requires(const Mint& value) {
-        Mint::mod();
-        value.val();
-      })
-    Outstream& operator<<(const Mint& value) {
-      return *this << value.val();
-    }
     Outstream& operator<<(std::ostream& (*pf)(std::ostream&)) {
       using OstreamManip = std::ostream& (*)(std::ostream&);
       constexpr OstreamManip endl_ptr  = std::endl;

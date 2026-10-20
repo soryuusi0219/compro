@@ -55,7 +55,7 @@ struct SuffixTree{
         int i = 1 << h0;
         for(int j = i; j <= m; j += i << 1){
           temp = INTMX;
-          for(int k = j-1; k >= j - i; k--) temp = max(sparse_table[0][k], temp), sparse_table[h0][k] = temp;
+          for(int k = j-1; k >= j - i; k--) temp = min(sparse_table[0][k], temp), sparse_table[h0][k] = temp;
           temp = INTMX;
           for(int k = j; k < min(j + i,m+1); k++) sparse_table[h0][k] = temp, temp = min(temp, sparse_table[0][k]);
         }
@@ -259,16 +259,18 @@ struct SuffixTree{
               if(!~st.v) st.v = 0;
               start_idx = nodes[st.nxt].l, remain = st.l;
             }
+            bool on_leaf_edge = false;
             while(remain) {
               int child = get_next(st.v, s[start_idx]);
               int elen = nodes[child].len();
-              if(remain < elen){
+              if(remain < elen || (remain == elen && nodes[child].r == n)){
                 st.nxt = child, st.l = remain;
+                on_leaf_edge = true;
                 break;
               }
               remain -= elen, start_idx += elen, st.v = child;
             }
-            if(!remain) st.nxt = -1, st.l = 0;
+            if(!on_leaf_edge) st.nxt = -1, st.l = 0;
           }
         }
       }
@@ -299,7 +301,7 @@ struct SuffixTree{
     template<class U> int count_occurrences(const U& T){
       State st;
       for(auto c : T) next_state(st, c);
-      if(state_len(st) < T.size()) return 0;
+      if(state_len(st) < static_cast<int>(T.size())) return 0;
       return state_count(st);
     }
     // LCP of S[i,n) and S[j,n);

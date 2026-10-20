@@ -1,0 +1,5 @@
+{
+  "name": "two_edge_connected_components",
+  "problem": "graph/two_edge_connected_components",
+  "source": "verify/library_checker/graph/two_edge_connected_components.cpp"
+}

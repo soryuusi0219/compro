@@ -1,0 +1,5 @@
+{
+  "name": "minimum_spanning_tree",
+  "problem": "graph/minimum_spanning_tree",
+  "source": "verify/library_checker/graph/minimum_spanning_tree.cpp"
+}

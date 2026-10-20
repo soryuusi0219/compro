@@ -1,0 +1,5 @@
+{
+  "name": "discrete_logarithm_mod",
+  "problem": "number_theory/discrete_logarithm_mod",
+  "source": "verify/library_checker/number_theory/discrete_logarithm_mod.cpp"
+}

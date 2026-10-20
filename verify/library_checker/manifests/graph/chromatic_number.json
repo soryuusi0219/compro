@@ -1,0 +1,5 @@
+{
+  "name": "chromatic_number",
+  "problem": "graph/chromatic_number",
+  "source": "verify/library_checker/graph/chromatic_number.cpp"
+}

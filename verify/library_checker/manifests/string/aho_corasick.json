@@ -1,0 +1,5 @@
+{
+  "name": "aho_corasick",
+  "problem": "string/aho_corasick",
+  "source": "verify/library_checker/string/aho_corasick.cpp"
+}

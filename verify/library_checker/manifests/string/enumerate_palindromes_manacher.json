@@ -1,0 +1,5 @@
+{
+  "name": "enumerate_palindromes_manacher",
+  "problem": "string/enumerate_palindromes",
+  "source": "verify/library_checker/string/enumerate_palindromes_manacher.cpp"
+}

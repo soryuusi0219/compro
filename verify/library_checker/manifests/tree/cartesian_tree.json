@@ -1,0 +1,5 @@
+{
+  "name": "cartesian_tree",
+  "problem": "tree/cartesian_tree",
+  "source": "verify/library_checker/tree/cartesian_tree.cpp"
+}

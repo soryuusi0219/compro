@@ -7,9 +7,6 @@
 
 #include <cassert>
 #include <cstdint>
-#include <istream>
-#include <ostream>
-#include <string>
 #include <type_traits>
 
 #include "library/math/internal_math.hpp"
@@ -502,40 +499,18 @@ using is_dynamic_modint64_t = std::enable_if_t<is_dynamic_modint64<T>::value>;
 
 }  // namespace internal
 
-template <class CharT, class Traits, class Mint,
-          internal::is_modint_t<Mint>* = nullptr>
-std::basic_istream<CharT, Traits>& operator>>(
-    std::basic_istream<CharT, Traits>& stream, Mint& value) {
-    std::basic_string<CharT> token;
-    if (!(stream >> token)) return stream;
-    bool negative = false;
-    std::size_t position = 0;
-    if (!token.empty() && (token[0] == CharT('-') || token[0] == CharT('+'))) {
-        negative = token[0] == CharT('-');
-        position = 1;
-    }
-    if (position == token.size()) {
-        stream.setstate(std::ios_base::failbit);
-        return stream;
-    }
-    Mint result = 0;
-    for (; position < token.size(); ++position) {
-        const CharT c = token[position];
-        if (c < CharT('0') || CharT('9') < c) {
-            stream.setstate(std::ios_base::failbit);
-            return stream;
-        }
-        result = result * 10 + static_cast<int>(c - CharT('0'));
-    }
-    value = negative ? -result : result;
+template <class Stream, class Mint, internal::is_modint_t<Mint>* = nullptr>
+Stream& operator>>(Stream& stream, Mint& value) {
+    long long integer = 0;
+    stream >> integer;
+    value = integer;
     return stream;
 }
 
-template <class CharT, class Traits, class Mint,
-          internal::is_modint_t<Mint>* = nullptr>
-std::basic_ostream<CharT, Traits>& operator<<(
-    std::basic_ostream<CharT, Traits>& stream, const Mint& value) {
-    return stream << value.val();
+template <class Stream, class Mint, internal::is_modint_t<Mint>* = nullptr>
+Stream& operator<<(Stream& stream, const Mint& value) {
+    stream << value.val();
+    return stream;
 }
 
 }  // namespace soryuusi

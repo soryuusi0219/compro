@@ -1,0 +1,5 @@
+{
+  "name": "suffix_array_suffix_tree",
+  "problem": "string/suffixarray",
+  "source": "verify/library_checker/string/suffix_array_suffix_tree.cpp"
+}
