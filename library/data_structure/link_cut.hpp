@@ -1,7 +1,6 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/link_cut.hpp
 #pragma once
 #include <cassert>
-#include <functional>
 #include <iostream>
 #include <type_traits>
 #include <utility>
@@ -165,16 +164,16 @@ struct linkcuttree {
   //get_path
   vector<int> _get_path(node* x, node* y){
     vector<int> ret;
-    function<void(node*)> dfs = [&](node *c) {
+    auto dfs = [&](auto&& self, node *c) -> void {
       if(!c) return;
       c->push();
-      dfs(c->rp);
+      self(self,c->rp);
       ret.push_back(c->index);
-      dfs(c->lp);
+      self(self,c->lp);
     };
     _evert(y);
     _expose(x);
-    dfs(x);
+    dfs(dfs,x);
     return ret;
   }
   vector<node> tree;

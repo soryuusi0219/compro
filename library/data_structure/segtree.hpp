@@ -26,6 +26,7 @@ struct Segtree{
     void set(int i, S a){
       for(data[i += b] = a; i >>= 1;) _update(i);
     }
+    void reset(int i){ set(i,e());}
     S get(int i){return data[i + b];}
     S prod(int l, int r){
       S resl = e(), resr = e();

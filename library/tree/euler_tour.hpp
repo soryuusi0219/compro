@@ -1,12 +1,12 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/tree/euler_tour.hpp
 #pragma once
 #include <algorithm>
-#include <functional>
 #include <type_traits>
 #include <utility>
 #include <vector>
 
 #include "library/data_structure/segtree.hpp"
+#include "library/graph/static_graph.hpp"
 
 namespace soryuusi {
 
@@ -93,14 +93,13 @@ struct EularTour{
   };
   int N = 0;
   bool is_built = false;
-  vector<vector<int>> G;
+  static_graph<> G;
   vector<int> invertex, outvertex, tourid;
   vector<int> inseg, outseg;
   vector<S> data;
   StaticRMQ depth;
   Segtree<S,op,e> seg;
-  EularTour(int n) : N(n) {
-    G.resize(N);
+  EularTour(int n) : N(n), G(N,2*N-2) {
     invertex.resize(N);
     outvertex.resize(N);
     tourid.resize(2*N-1);
@@ -108,8 +107,7 @@ struct EularTour{
     inseg.resize(N);
     outseg.resize(N);
   }
-  EularTour(const vector<S>& a) : N(a.size()), data(a){
-    G.resize(N);
+  EularTour(const vector<S>& a) : N(a.size()), G(N,2*N-2), data(a){
     invertex.resize(N);
     outvertex.resize(N);
     tourid.resize(2*N-1);
@@ -117,28 +115,28 @@ struct EularTour{
     outseg.resize(N);
   }
   void add_edge(int u, int v){
-    G[u].push_back(v);
-    G[v].push_back(u);
+    G.add_edge(u,v,true);
   }
   void build(int root = 0){
+    G.build();
     int i = 0, j = 0;
     vector<pair<int,int>> depvec(2*N-1, {inf,-1});
     vector<S> datavec(N, e());
-    function<void(int,int,int)> dfs = [&](int v, int p, int dep){
+    auto dfs = [&](auto&& self, int v, int p, int dep) -> void {
       invertex[v] = i;
       inseg[v] = j;
       depvec[i] = {dep,v};
       tourid[i] = v; i++;
       datavec[j] = data[v]; j++;
-      for(int c : G[v]) if(c != p){
-        dfs(c,v,dep+1);
+      for(int c : G.vertices(v)) if(c != p){
+        self(self,c,v,dep+1);
         depvec[i] = {dep,v};
         tourid[i] = v; i++;
       }
       outvertex[v] = i;
       outseg[v] = j;
     };
-    dfs(root,-1,0);
+    dfs(dfs,root,-1,0);
     depth = StaticRMQ(depvec);
     seg = Segtree<S,op,e>(datavec);
     is_built = true;

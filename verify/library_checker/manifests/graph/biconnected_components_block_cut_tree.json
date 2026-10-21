@@ -1,0 +1,5 @@
+{
+  "name": "biconnected_components_block_cut_tree",
+  "problem": "graph/biconnected_components",
+  "source": "verify/library_checker/graph/biconnected_components_block_cut_tree.cpp"
+}

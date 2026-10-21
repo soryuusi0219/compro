@@ -2,7 +2,6 @@
 #pragma once
 #include <algorithm>
 #include <cassert>
-#include <functional>
 #include <map>
 #include <utility>
 #include <vector>
@@ -29,7 +28,7 @@ pair<T, vector<long long>> maximal_weighted_independent_set(vector<vector<long l
   auto popcountint128 = [&](ulll x){
     return __builtin_popcountll((ull)x) +  __builtin_popcountll((ull)(x >> 64));
   };
-  function<pair<T,ulll>(ulll)> rec = [&](ulll x){
+  auto rec = [&](auto&& self, ulll x) -> pair<T,ulll> {
     int degmax = -1, vmax = -1;
     ulll y = x;
     T ret = 0;
@@ -137,8 +136,8 @@ pair<T, vector<long long>> maximal_weighted_independent_set(vector<vector<long l
       } 
     }
     ulll z = x & ~(((ulll)1) << vmax);
-    auto [cret1, crets1] = rec(z);
-    auto [cret2, crets2] = rec(z & ~nbh[vmax]);
+    auto [cret1, crets1] = self(self,z);
+    auto [cret2, crets2] = self(self,z & ~nbh[vmax]);
     if(cret1 < cret2 + weight[vmax]){
       cret1 = cret2 + weight[vmax];
       crets1 = crets2 | (((ulll)1) << vmax);
@@ -146,7 +145,7 @@ pair<T, vector<long long>> maximal_weighted_independent_set(vector<vector<long l
     if(popcountint128(x) <= M) memo[x] = {cret1, crets1};
     return make_pair(ret + cret1, rets + crets1);
   };
-  auto [wmax, ansset] = rec(n == 128 ? ~((ulll)0) : (((ulll)1) << n)-1);
+  auto [wmax, ansset] = rec(rec,n == 128 ? ~((ulll)0) : (((ulll)1) << n)-1);
   vector<long long> ret;
   while(ansset){
     int v = ctzint128(ansset);

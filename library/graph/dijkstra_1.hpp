@@ -9,6 +9,8 @@
 #include <vector>
 #include <limits>
 
+#include "library/graph/static_graph.hpp"
+
 namespace soryuusi {
 
 using namespace std;
@@ -16,24 +18,16 @@ using namespace std;
 struct Dijkstra1{
 
   int n;
-  vector<int> h, nxt, to, from;
+  static_graph<> G;
+  vector<int> from;
   vector<int> d;
-  Dijkstra1(int n_) : n(n_), h(n,-1){}
-  Dijkstra1(int n_, int m) : n(n_), h(n,-1){
-    nxt.reserve(m);
-    to.reserve(m);
-  }
+  Dijkstra1(int n_) : n(n_), G(n){}
+  Dijkstra1(int n_, int m) : n(n_), G(n,m){}
   void add_edge(int u, int v, bool undirected = false){
-    nxt.push_back(h[u]);
-    h[u] = to.size();
-    to.push_back(v);
-    if(undirected) {
-      nxt.push_back(h[v]);
-      h[v] = to.size();
-      to.push_back(u);
-    }
+    G.add_edge(u,v,undirected);
   }
   vector<int> distance(int v){
+    G.build();
     d.assign(n,numeric_limits<int>::max());
     from.assign(n, -1);
     queue<int> que;
@@ -41,11 +35,11 @@ struct Dijkstra1{
     que.push(v);
     while(que.size()){
       auto u = que.front(); que.pop();
-      for(int t = h[u]; ~t; t = nxt[t]){
-        if(d[to[t]] > d[u]+1){
-          d[to[t]] = d[u]+1;
-          from[to[t]] = u;
-          que.push(to[t]);
+      for(int c : G.vertices(u)){
+        if(d[c] > d[u]+1){
+          d[c] = d[u]+1;
+          from[c] = u;
+          que.push(c);
         }
       }
     }

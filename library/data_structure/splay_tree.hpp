@@ -1,7 +1,6 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/splay_tree.hpp
 #pragma once
 #include <algorithm>
-#include <functional>
 #include <iostream>
 #include <iterator>
 #include <memory>
@@ -295,19 +294,19 @@ struct splay_tree {
   splay_tree(vector<T>& v){
     int n = v.size();
     for(int i = 0; i < n; i++) make_node(v[i]);
-    function<node*(int, int)> dfs = [&](int l, int r){
+    auto dfs = [&](auto&& self, int l, int r) -> node* {
       if(l >= r) return (node*)nullptr;
       if(l == r-1) return nodes[l].get();
       int mid = (r+l)/2;
       node* c = nodes[mid].get();
-      node* d1 = dfs(l,mid);
-      node* d2 = dfs(mid+1,r);
+      node* d1 = self(self,l,mid);
+      node* d2 = self(self,mid+1,r);
       if(d1) {d1->pp = c;c->lp = d1;}
       if(d2) {d2->pp = c;c->rp = d2;}
       c->cul();
       return c;
     };
-    root = dfs(0,n);
+    root = dfs(dfs,0,n);
   }
   
   void print(){

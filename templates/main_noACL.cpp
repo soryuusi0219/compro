@@ -72,7 +72,8 @@ using namespace atcoder;
 #define readg(G,n,m) vvi G(n);rep(i,m){readi(a,b);a--;b--;G[a].push_back(b);G[b].push_back(a);}
 #define readgd(G,n,m) vvi G(n);rep(i,m){readi(a,b);a--;b--;G[a].push_back(b);}
 #define readgdrev(G,n,m) vvi G(n);rep(i,m){readi(a,b);a--;b--;G[b].push_back(a);}
-#define readt(G,n) vvi G(n);rep(i,n-1){readi(a,b);a--;b--;G[a].push_back(b);G[b].push_back(a);}
+#define readt(G,n) readg(G,n,n-1)
+#define readtp(G,n) vvi G(n);rep(i,1,n){readi(a);a--;G[a].push_back(i);G[i].push_back(a);}
 using ll = long long;
 using ull = unsigned long long;
 using ld = long double;

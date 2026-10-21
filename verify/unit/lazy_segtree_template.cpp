@@ -86,7 +86,7 @@ void extremes(int n) {
   using Set = std::conditional_t<IsMin,LazySegtreeAssignMin<ll>,LazySegtreeAssignMax<ll>>;
   using Count = std::conditional_t<IsMin,LazySegtreeAddMinCount<ll,ll>,LazySegtreeAddMaxCount<ll,ll>>;
   using Seg = std::conditional_t<WithCount,Count,std::conditional_t<Assign,Set,Add>>;
-  const ll identity = IsMin ? std::numeric_limits<ll>::max() : std::numeric_limits<ll>::lowest();
+  const ll identity = IsMin ? std::numeric_limits<ll>::max()/2 : std::numeric_limits<ll>::lowest()/2;
   std::vector<ll> a(n);
   Seg seg(a);
   auto check = [&](int l, int r, auto s) {
@@ -98,7 +98,7 @@ void extremes(int n) {
     if constexpr(WithCount) {
       assert(s.first == value && s.second == count);
     } else {
-      assert(s.value == value && s.len == r-l);
+      assert(s == value);
     }
   };
   for(int step = 0; step < 1500; ++step) {
@@ -128,12 +128,13 @@ void extremes(int n) {
       check(p,p+1,seg.get(p));
     }
   }
-  // The identity's numeric value can also be a real element.
-  Seg edge(std::vector<ll>{identity,identity});
-  if constexpr(Assign) edge.assign(0,2,0);
-  else edge.add(0,2,IsMin ? -1 : 1);
-  a = {Assign ? 0 : identity+(IsMin ? -1 : 1),Assign ? 0 : identity+(IsMin ? -1 : 1)};
-  check(0,2,edge.prod(0,2));
+  if constexpr(WithCount) {
+    // The count distinguishes the identity's value from an empty range.
+    Seg edge(std::vector<ll>{identity,identity});
+    edge.add(0,2,IsMin ? -1 : 1);
+    a = {identity+(IsMin ? -1 : 1),identity+(IsMin ? -1 : 1)};
+    check(0,2,edge.prod(0,2));
+  }
 }
 
 template<class T>
@@ -257,6 +258,24 @@ int main() {
   assert(weighted.all_prod().sum == 6000000000LL);
   LazySegtreeAddMinCount<int,ll> counts(std::vector<std::pair<int,ll>>{{1,3},{1,5}});
   assert(counts.all_prod().second == 8);
+  LazySegtreeAddMin<int,100> custom_add_min(std::vector<int>{3,1,4});
+  LazySegtreeAddMax<int,-100> custom_add_max(std::vector<int>{3,1,4});
+  custom_add_min.add(0,2,5);
+  custom_add_max.add(1,3,-5);
+  assert(custom_add_min.prod(0,3) == 4 && custom_add_min.prod(0,0) == 100);
+  assert(custom_add_max.prod(0,3) == 3 && custom_add_max.prod(0,0) == -100);
+  LazySegtreeAddMinCount<int,ll,100> custom_min_count(std::vector<int>{2,1,1});
+  LazySegtreeAddMaxCount<int,ll,-100> custom_max_count(std::vector<int>{2,2,1});
+  assert((custom_min_count.prod(0,3) == std::pair<int,ll>(1,2)));
+  assert((custom_min_count.prod(0,0) == std::pair<int,ll>(100,0)));
+  assert((custom_max_count.prod(0,3) == std::pair<int,ll>(2,2)));
+  assert((custom_max_count.prod(0,0) == std::pair<int,ll>(-100,0)));
+  LazySegtreeAssignMin<int,100> custom_assign_min(std::vector<int>{3,1,4});
+  LazySegtreeAssignMax<int,-100> custom_assign_max(std::vector<int>{3,1,4});
+  custom_assign_min.assign(0,2,8);
+  custom_assign_max.assign(1,3,-8);
+  assert(custom_assign_min.all_prod() == 4 && custom_assign_min.prod(0,0) == 100);
+  assert(custom_assign_max.all_prod() == 3 && custom_assign_max.prod(0,0) == -100);
   for(int n : {0,1,2,3,5,8,17,31,64}) {
     sums<false>(n); sums<true>(n);
     extremes<true,false,false>(n); extremes<false,false,false>(n);

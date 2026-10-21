@@ -12,25 +12,25 @@ using namespace std;
 
 template<class T>
 struct Prim{
-  struct Edge{
-    int to;
-    T cost;
-  };
-  using Graph = vector<vector<Edge>>;
-  Graph G;
-  Prim(int n){
-    G.resize(n);
-  }
+  int n;
+  vector<int> h, nxt, to;
+  vector<T> w;
+  Prim(int n_) : n(n_), h(n,-1) {}
   void add_edge(int u, int v, T cost){
-    G[u].push_back(Edge{v,cost});
-    G[v].push_back(Edge{u,cost});
+    nxt.push_back(h[u]);
+    h[u] = to.size();
+    to.push_back(v);
+    w.push_back(cost);
+    nxt.push_back(h[v]);
+    h[v] = to.size();
+    to.push_back(u);
+    w.push_back(cost);
   }
   pair<T,vector<pair<long long,long long>>> solve(int x = 0){
-    int n = G.size();
     priority_queue<tuple<T,int,int>,vector<tuple<T,int,int>>,greater<tuple<T,int,int>>> que;
     vector<bool> v(n,false);
     v[0] = true;
-    for(auto e : G[x]) que.push({e.cost,x,e.to});
+    for(int i = h[x]; ~i; i = nxt[i]) que.push({w[i],x,to[i]});
     vector<pair<long long,long long>> ret;
     T cost = 0;
     int v_size = 0;
@@ -43,7 +43,7 @@ struct Prim{
       v[u2] = true;
       cost += c;
       ret.push_back({u1,u2});
-      for(auto e : G[u2]) if(!v[e.to]) que.push({e.cost,u2,e.to});
+      for(int i = h[u2]; ~i; i = nxt[i]) if(!v[to[i]]) que.push({w[i],u2,to[i]});
     }
     return {cost,ret};
   }

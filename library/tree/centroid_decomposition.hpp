@@ -2,35 +2,32 @@
 #pragma once
 #include <vector>
 
+#include "library/graph/static_graph.hpp"
+
 namespace soryuusi {
 
 using namespace std;
 
 struct CentroidDecomposition{
   int n;
-  vector<int> h, nxt, to, sz, dfs_order;
+  static_graph<> G;
+  vector<int> sz, dfs_order;
   CentroidDecomposition() {}
-  CentroidDecomposition(int n_) : n(n_), h(n,-1), sz(n,n) {
-    nxt.reserve(2*n-2);
-    to.reserve(2*n-2);
+  CentroidDecomposition(int n_) : n(n_), G(n,2*n-2), sz(n,n) {
     dfs_order.reserve(n);
   }
   void addEdge(int u, int v){
-    nxt.emplace_back(h[u]);
-    h[u] = to.size();
-    to.emplace_back(v);
-    nxt.emplace_back(h[v]);
-    h[v] = to.size();
-    to.emplace_back(u);
+    G.add_edge(u,v,true);
   }
   void build(){
+    G.build();
     int g = -1, thre = n;
     vector<bool> seen(n,0);
     auto rec = [&](auto self, int v, int p) -> bool {
       sz[v] = 1;
-      for(int e = h[v]; ~e; e=nxt[e]) if(!seen[to[e]] && to[e] != p){
-        if(self(self,to[e],v)) return true;
-        sz[v] += sz[to[e]];
+      for(int c : G.vertices(v)) if(!seen[c] && c != p){
+        if(self(self,c,v)) return true;
+        sz[v] += sz[c];
       }
       if(sz[v]*2 >= thre){
         g = v;
@@ -48,7 +45,7 @@ struct CentroidDecomposition{
       dfs_order.emplace_back(g);
       sz[g] = thre;
       seen[g] = true;
-      for(int e = h[g]; ~e; e=nxt[e]) if(!seen[to[e]]) st.push_back(to[e]);
+      for(int c : G.vertices(g)) if(!seen[c]) st.push_back(c);
     }
   }
 };
