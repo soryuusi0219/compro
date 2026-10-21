@@ -1,0 +1,5 @@
+{
+  "name": "tree_diameter_graph_general",
+  "problem": "tree/tree_diameter",
+  "source": "verify/library_checker/tree/tree_diameter_graph_general.cpp"
+}

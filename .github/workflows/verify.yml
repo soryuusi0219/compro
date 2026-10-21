@@ -21,11 +21,6 @@ jobs:
         with:
           python-version: "3.11"
 
-      - uses: actions/cache@v4
-        with:
-          path: build/library-checker-problems
-          key: library-checker-problems-e64660561a995c357cdc61ddee1bde68b80528db
-
       - name: Select affected verify targets
         id: affected
         env:
@@ -35,13 +30,9 @@ jobs:
       - name: Check library dependencies and expansion
         run: python3 tools/library_manager.py all
 
-      - name: Prepare Library Checker Problems
-        if: steps.affected.outputs.count != '0'
-        run: python3 tools/verify.py --prepare-only
-
       - name: No affected verify targets
         if: steps.affected.outputs.count == '0'
-        run: echo "No Library Checker targets are affected by this change."
+        run: echo "No verify targets are affected by this change."
 
   verify:
     needs: prepare
@@ -59,15 +50,24 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements-verify.txt
+
+      - name: Install verification helper
+        run: python3 -m pip install -r requirements-verify.txt
 
       - uses: actions/cache@v4
         with:
-          path: build/library-checker-problems
-          key: library-checker-problems-e64660561a995c357cdc61ddee1bde68b80528db
-          fail-on-cache-miss: true
+          path: ~/.cache/online-judge-tools/library-checker-problems
+          key: library-checker-problems-${{ hashFiles('requirements-verify.txt') }}
+
+      - uses: actions/cache@v4
+        with:
+          path: .verify-helper/cache
+          key: oj-verify-${{ hashFiles('requirements-verify.txt') }}-${{ matrix.target }}
 
       - name: Expand ${{ matrix.target }}
         run: python3 tools/library_manager.py expand-verify "${{ matrix.target }}"
 
       - name: Verify ${{ matrix.target }}
-        run: python3 tools/verify.py --offline --expanded "${{ matrix.target }}"
+        run: python3 tools/verify.py --expanded "${{ matrix.target }}"

@@ -6,6 +6,7 @@
 /build/library_status.json
 /build/library_status.md
 /.cache/
+/.verify-helper/
 /work/
 
 # Compiler output

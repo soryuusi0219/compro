@@ -1,287 +1,232 @@
 #!/usr/bin/env python3
-"""Run local verification with yosupo06/library-checker-problems."""
+"""Run the registered online judge and unit verification targets."""
 
 from __future__ import annotations
 
 import argparse
 import json
 import os
-from pathlib import Path
-import re
+from pathlib import Path, PurePosixPath
 import shutil
 import subprocess
 import sys
-import tempfile
-import time
-from typing import Any, Optional
+from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-VERIFY_DIR = ROOT / "verify/library_checker"
-CONFIG_PATH = VERIFY_DIR / "config.json"
-MANIFEST_DIR = VERIFY_DIR / "manifests"
-DEFAULT_PROBLEMS_DIR = ROOT / "build/library-checker-problems"
-BUILD_DIR = ROOT / "build/verify"
+ONLINE_SECTIONS = ("library_checker", "aoj")
+MANIFEST_DIRS = tuple(
+    ROOT / "verify" / section / "manifests" for section in ONLINE_SECTIONS
+)
+UNIT_DIR = ROOT / "verify/unit"
 EXPANDED_DIR = ROOT / "build/expanded"
+BUILD_DIR = ROOT / "build/verify/oj"
+CONFIG_PATH = BUILD_DIR / "config.toml"
+TEST_SOURCE_DIR = BUILD_DIR / "sources"
 
 
 class VerificationError(RuntimeError):
     pass
 
 
-def load_json(path: Path) -> Any:
-    with path.open(encoding="utf-8") as file:
-        return json.load(file)
-
-
 def load_targets() -> list[dict[str, Any]]:
-    return [load_json(path) for path in sorted(MANIFEST_DIR.rglob("*.json"))]
-
-
-def run(command: list[str], *, cwd: Optional[Path] = None) -> None:
-    print("+", " ".join(command), flush=True)
-    subprocess.run(command, cwd=cwd, check=True)
-
-
-def raise_stack_limit() -> None:
-    if os.name == "nt":
-        return
-    try:
-        import resource
-
-        _, hard = resource.getrlimit(resource.RLIMIT_STACK)
-        resource.setrlimit(resource.RLIMIT_STACK, (hard, hard))
-    except (ImportError, OSError, ValueError):
-        pass
-
-
-def prepare_problems(config: dict[str, Any], problems_dir: Path, offline: bool) -> None:
-    repository = str(config["repository"])
-    revision = str(config["revision"])
-
-    if not (problems_dir / ".git").is_dir():
-        if offline:
-            raise VerificationError(f"Library Checker Problems is not available: {problems_dir}")
-        problems_dir.parent.mkdir(parents=True, exist_ok=True)
-        run(["git", "clone", "--filter=blob:none", repository, str(problems_dir)])
-
-    current = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
-        cwd=problems_dir,
-        check=True,
-        capture_output=True,
-        text=True,
-    ).stdout.strip()
-    if current != revision:
-        if offline:
-            raise VerificationError(
-                f"Expected Library Checker Problems {revision}, but found {current}"
-            )
-        run(["git", "fetch", "origin", revision], cwd=problems_dir)
-        run(["git", "checkout", "--detach", revision], cwd=problems_dir)
-
-    if not (problems_dir / "generate.py").is_file():
-        raise VerificationError(f"generate.py was not found in {problems_dir}")
-
-
-def find_problem(problems_dir: Path, problem: str) -> Path:
-    direct = problems_dir / problem
-    if (direct / "info.toml").is_file():
-        return direct
-
-    matches = list(problems_dir.glob(f"**/{problem}/info.toml"))
-    if len(matches) == 1:
-        return matches[0].parent
-    if not matches:
-        raise VerificationError(f"Unknown Library Checker problem: {problem}")
-    raise VerificationError(f"Ambiguous Library Checker problem name: {problem}")
-
-
-def read_problem_setting(info_path: Path, key: str, default: str) -> str:
-    pattern = re.compile(rf'^\s*{re.escape(key)}\s*=\s*[\"\']?([^\"\'\s#]+)')
-    for line in info_path.read_text(encoding="utf-8").splitlines():
-        match = pattern.match(line)
-        if match:
-            return match.group(1)
-    return default
-
-
-def generate_tests(problems_dir: Path, problem_dir: Path) -> None:
-    run(
-        [sys.executable, str(problems_dir / "generate.py"), str(problem_dir / "info.toml")],
-        cwd=problems_dir,
+    targets: list[dict[str, Any]] = []
+    paths = sorted(
+        path for directory in MANIFEST_DIRS for path in directory.rglob("*.json")
     )
+    for path in paths:
+        with path.open(encoding="utf-8") as file:
+            target = json.load(file)
+        section = path.relative_to(ROOT / "verify").parts[0]
+        target["name"] = f"{section}/{target['name']}"
+        target["kind"] = "online"
+        targets.append(target)
+    for path in sorted(UNIT_DIR.glob("*.cpp")):
+        targets.append(
+            {
+                "name": f"unit/{path.stem}",
+                "problem": "local/unit",
+                "source": path.relative_to(ROOT).as_posix(),
+                "kind": "unit",
+            }
+        )
+    return sorted(targets, key=lambda target: str(target["name"]))
 
 
-def compile_solution(target: dict[str, Any], expanded: bool) -> Path:
-    name = str(target["name"])
-    source = (EXPANDED_DIR if expanded else ROOT) / str(target["source"])
-    if not source.is_file():
-        raise VerificationError(f"Verification source was not found: {source}")
+def select_targets(
+    targets: list[dict[str, Any]], requested: list[str]
+) -> list[dict[str, Any]]:
+    if not requested:
+        return targets
+    by_name = {str(target["name"]): target for target in targets}
+    unknown = sorted(set(requested) - by_name.keys())
+    if unknown:
+        names = ", ".join(unknown)
+        raise VerificationError(f"Unknown verification target(s): {names}")
+    return [by_name[name] for name in requested]
 
-    binary_dir = BUILD_DIR / "bin"
-    binary_dir.mkdir(parents=True, exist_ok=True)
-    binary = binary_dir / name
-    flags = [str(flag) for flag in target.get("cxxflags", [])]
-    command = [
-        os.environ.get("CXX", "g++"),
+
+def toml_string(value: str) -> str:
+    # A JSON string is also a valid TOML basic string.
+    return json.dumps(value)
+
+
+def write_config() -> None:
+    compiler = os.environ.get("CXX", "g++")
+    flags = [
         "-std=gnu++20",
         "-O2",
         "-pipe",
+        "-Ithird_party/ac-library",
     ]
-    if not expanded:
-        command.extend(["-I", str(ROOT)])
-    command.extend(["-I", str(ROOT / "third_party/ac-library")])
-    command.extend([*flags, str(source), "-o", str(binary)])
-    run(command, cwd=ROOT)
-    return binary
+    CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    values = ", ".join(toml_string(flag) for flag in flags)
+    CONFIG_PATH.write_text(
+        "[[languages.cpp.environments]]\n"
+        f"CXX = {toml_string(compiler)}\n"
+        f"CXXFLAGS = [{values}]\n",
+        encoding="utf-8",
+    )
 
 
-def save_failure(name: str, input_path: Path, actual_path: Path) -> Path:
-    failure_dir = BUILD_DIR / "failures" / name
-    if failure_dir.exists():
-        shutil.rmtree(failure_dir)
-    failure_dir.mkdir(parents=True)
-    shutil.copy2(input_path, failure_dir / input_path.name)
-    if actual_path.exists():
-        shutil.copy2(actual_path, failure_dir / actual_path.name)
-    return failure_dir
-
-
-def judge_target(
-    target: dict[str, Any], problem_dir: Path, binary: Path, timeout_scale: float
-) -> None:
+def write_test_source(target: dict[str, Any], expanded: bool) -> Path:
     name = str(target["name"])
-    info_path = problem_dir / "info.toml"
-    time_limit = float(read_problem_setting(info_path, "timelimit", "5.0")) * timeout_scale
-    checker_source = problem_dir / read_problem_setting(info_path, "checker", "checker.cpp")
-    checker = checker_source.with_suffix("")
-    inputs = sorted((problem_dir / "in").glob("*.in"))
+    problem = str(target["problem"])
+    problem_name = PurePosixPath(problem).name
+    problem_url = str(
+        target.get("url", f"https://judge.yosupo.jp/problem/{problem_name}")
+    )
+    source = Path(str(target["source"]))
+    if expanded:
+        source = EXPANDED_DIR.relative_to(ROOT) / source
+    if not (ROOT / source).is_file():
+        raise VerificationError(f"Verification source was not found: {source}")
 
-    if not checker.is_file() or not inputs:
-        raise VerificationError(
-            f"Generated checker or test cases are missing for {target['problem']}"
-        )
+    test_source = TEST_SOURCE_DIR / f"{name}.test.cpp"
+    test_source.parent.mkdir(parents=True, exist_ok=True)
+    test_source.write_text(
+        f"#define PROBLEM {toml_string(problem_url)}\n"
+        f'#include "{source.as_posix()}"\n',
+        encoding="utf-8",
+    )
+    return test_source.relative_to(ROOT)
 
-    print(f"\n==> {name}: {target['problem']} ({len(inputs)} cases)", flush=True)
-    with tempfile.TemporaryDirectory(prefix=f"{name}-", dir=BUILD_DIR) as temporary:
-        temporary_dir = Path(temporary)
-        for index, input_path in enumerate(inputs, start=1):
-            expected_path = problem_dir / "out" / f"{input_path.stem}.out"
-            actual_path = temporary_dir / f"{input_path.stem}.out"
-            started = time.monotonic()
-            try:
-                with input_path.open("rb") as input_file, actual_path.open("wb") as output_file:
-                    result = subprocess.run(
-                        [str(binary)],
-                        stdin=input_file,
-                        stdout=output_file,
-                        stderr=subprocess.PIPE,
-                        timeout=time_limit,
-                    )
-            except subprocess.TimeoutExpired as error:
-                failure = save_failure(name, input_path, actual_path)
-                raise VerificationError(
-                    f"TLE: {input_path.name} exceeded {time_limit:.2f}s; saved to {failure}"
-                ) from error
 
-            elapsed_ms = int((time.monotonic() - started) * 1000)
-            if result.returncode != 0:
-                failure = save_failure(name, input_path, actual_path)
-                stderr = result.stderr.decode(errors="replace").strip()
-                raise VerificationError(
-                    f"RE: {input_path.name} exited with {result.returncode}; "
-                    f"saved to {failure}\n{stderr}"
-                )
+def run_unit_target(target: dict[str, Any], expanded: bool) -> int:
+    name = str(target["name"])
+    source = Path(str(target["source"]))
+    if expanded:
+        source = EXPANDED_DIR.relative_to(ROOT) / source
+    if not (ROOT / source).is_file():
+        raise VerificationError(f"Unit source was not found: {source}")
 
-            checked = subprocess.run(
-                [str(checker), str(input_path), str(actual_path), str(expected_path)],
-                capture_output=True,
-                text=True,
-            )
-            if checked.returncode != 0:
-                failure = save_failure(name, input_path, actual_path)
-                message = (checked.stdout + checked.stderr).strip()
-                raise VerificationError(
-                    f"WA: {input_path.name}; saved to {failure}\n{message}"
-                )
-            print(f"  [{index:02d}/{len(inputs):02d}] AC {input_path.name} ({elapsed_ms} ms)")
+    binary_dir = BUILD_DIR / "unit"
+    binary_dir.mkdir(parents=True, exist_ok=True)
+    configurations = (0, 1, 2) if name == "unit/templates" else (None,)
+    for configuration in configurations:
+        suffix = f"-{configuration}" if configuration is not None else ""
+        binary = binary_dir / f"{PurePosixPath(name).name}{suffix}"
+        command = [
+            os.environ.get("CXX", "g++"),
+            "-std=c++20",
+            "-O2",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-I.",
+            "-Ithird_party/ac-library",
+        ]
+        if configuration is not None:
+            command.append(f"-DTEMPLATE_KIND={configuration}")
+        command.extend([str(source), "-o", str(binary.relative_to(ROOT))])
+        print("+", " ".join(command), flush=True)
+        compiled = subprocess.run(command, cwd=ROOT, check=False)
+        if compiled.returncode != 0:
+            return compiled.returncode
+        run_command = [str(binary.relative_to(ROOT))]
+        print("+", " ".join(run_command), flush=True)
+        result = subprocess.run(run_command, cwd=ROOT, check=False)
+        if result.returncode != 0:
+            return result.returncode
+    return 0
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Verify this library with yosupo06/library-checker-problems"
+        description="Run registered online judge and unit verification targets"
     )
-    parser.add_argument("targets", nargs="*", help="target names from manifests/")
+    parser.add_argument("targets", nargs="*", help="verification target names")
     parser.add_argument("--list", action="store_true", help="list verification targets")
-    parser.add_argument("--offline", action="store_true", help="disable clone and fetch")
-    parser.add_argument("--no-generate", action="store_true", help="reuse generated cases")
-    parser.add_argument(
-        "--prepare-only",
-        action="store_true",
-        help="prepare Library Checker Problems without running targets",
-    )
     parser.add_argument(
         "--expanded",
         action="store_true",
         help="verify standalone sources generated under build/expanded",
     )
-    parser.add_argument(
-        "--problems-dir",
-        type=Path,
-        default=DEFAULT_PROBLEMS_DIR,
-        help="path to a library-checker-problems checkout",
-    )
-    parser.add_argument(
-        "--timeout-scale",
-        type=float,
-        default=1.0,
-        help="multiply each official time limit by this value",
-    )
+    parser.add_argument("-j", "--jobs", type=int, default=1, help="parallel oj jobs")
+    parser.add_argument("--timeout", type=float, help="overall timeout in seconds")
+    parser.add_argument("--tle", type=float, help="per-case time limit in seconds")
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
-    config = load_json(CONFIG_PATH)
     targets = load_targets()
-
     if args.list:
         for target in targets:
             print(f"{target['name']}: {target['problem']} <- {target['source']}")
         return 0
-    if args.timeout_scale <= 0:
-        raise VerificationError("--timeout-scale must be positive")
+    if args.jobs <= 0:
+        raise VerificationError("--jobs must be positive")
+    if args.timeout is not None and args.timeout <= 0:
+        raise VerificationError("--timeout must be positive")
+    if args.tle is not None and args.tle <= 0:
+        raise VerificationError("--tle must be positive")
 
-    selected_names = set(args.targets)
-    selected = [target for target in targets if not selected_names or target["name"] in selected_names]
-    unknown = selected_names - {target["name"] for target in targets}
-    if unknown:
-        raise VerificationError(f"Unknown verification target(s): {', '.join(sorted(unknown))}")
+    selected = select_targets(targets, args.targets)
     if not selected:
         raise VerificationError("No verification targets are configured")
+    online_targets = [target for target in selected if target["kind"] == "online"]
+    unit_targets = [target for target in selected if target["kind"] == "unit"]
 
-    raise_stack_limit()
-    problems_dir = args.problems_dir.resolve()
-    prepare_problems(config, problems_dir, args.offline)
-    if args.prepare_only:
-        print(f"Library Checker Problems is ready at {problems_dir}")
-        return 0
+    if online_targets:
+        oj_verify = shutil.which("oj-verify")
+        if oj_verify is None:
+            raise VerificationError(
+                "oj-verify was not found; install requirements-verify.txt first"
+            )
+        write_config()
+        shutil.rmtree(TEST_SOURCE_DIR, ignore_errors=True)
+        sources = [
+            write_test_source(target, args.expanded) for target in online_targets
+        ]
+        command = [
+            oj_verify,
+            "--config-file",
+            str(CONFIG_PATH.relative_to(ROOT)),
+            "run",
+            *(str(source) for source in sources),
+            "--jobs",
+            str(args.jobs),
+        ]
+        if args.timeout is not None:
+            command.extend(["--timeout", str(args.timeout)])
+        if args.tle is not None:
+            command.extend(["--tle", str(args.tle)])
+        print("+", " ".join(command), flush=True)
+        result = subprocess.run(command, cwd=ROOT, check=False)
+        if result.returncode != 0:
+            return result.returncode
 
-    for target in selected:
-        problem_dir = find_problem(problems_dir, str(target["problem"]))
-        if not args.no_generate:
-            generate_tests(problems_dir, problem_dir)
-        binary = compile_solution(target, args.expanded)
-        judge_target(target, problem_dir, binary, args.timeout_scale)
-
-    print(f"\nAll {len(selected)} verification target(s) passed.")
+    for target in unit_targets:
+        result = run_unit_target(target, args.expanded)
+        if result != 0:
+            return result
     return 0
 
 
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
-    except (VerificationError, subprocess.CalledProcessError) as error:
+    except VerificationError as error:
         print(f"verify: {error}", file=sys.stderr)
         raise SystemExit(1)

@@ -23,7 +23,7 @@ make help
 ├── library/       # 自作ライブラリ
 ├── templates/     # 解答・tester のテンプレート
 ├── third_party/   # AtCoder Library などの外部ライブラリ
-├── verify/        # Library Checker 用の検証コードと設定
+├── verify/        # Library Checker・AOJ 別の検証コードと設定
 ├── tools/         # 依存関係管理、展開、検証用ツール
 ├── misc/          # 問題固有のコードや補助ファイル
 ├── work/          # make contest で作る作業ディレクトリ
@@ -40,7 +40,7 @@ make help
 ```sh
 make check
 make verify-list
-make verify TARGETS=convolution_mod
+make verify TARGETS=library_checker/convolution_mod
 make expand path/to/main.cpp
 make all
 ```
@@ -148,31 +148,42 @@ make all
 make expand-library
 make expand-library HEADERS=library/data_structure/bit.hpp
 make expand-verify
-make expand-verify TARGETS=convolution_mod_1000000007
+make expand-verify TARGETS=library_checker/convolution_mod_1000000007
 make report
 ```
 
 生成先は次のとおりです。
 
 - 展開済みライブラリ: `build/expanded/library/`
-- 展開済み verify コード: `build/expanded/verify/library_checker/`
+- 展開済み verify コード: `build/expanded/verify/library_checker/`、
+  `build/expanded/verify/aoj/`、`build/expanded/verify/unit/`
 - 検証状況レポート: `build/library_status.md`、`build/library_status.json`
 
 ## 検証
 
-登録済みライブラリは、固定バージョンの `yosupo06/library-checker-problems` の
-公式テストケースと checker で検証できます。必要なリポジトリは初回実行時に
-`build/` 以下へ取得されます。
+登録済みライブラリは `online-judge-tools/verification-helper` の `oj-verify` を使った
+Library Checker・AOJ の公開テストケースと、ローカルのunitテストで検証できます。
+オンラインジャッジのターゲットを実行する場合は、初回のみ依存パッケージを
+インストールしてください。
+
+```sh
+python3 -m pip install -r requirements-verify.txt
+```
 
 ```sh
 make verify-list
 make verify
-make verify TARGETS=convolution_mod
+make verify TARGETS=library_checker/convolution_mod
+make verify TARGETS=aoj/range_min_segtree_template
+make verify TARGETS=unit/rolling_hash
 make verify VERIFY_ARGS=--expanded
 ```
 
+ターゲット名はそれぞれ `library_checker/<name>`、`aoj/<name>`、`unit/<name>` です。
+
 対象の追加方法や設定の詳細は
-[`verify/library_checker/README.md`](verify/library_checker/README.md) を参照してください。
+[`verify/library_checker/README.md`](verify/library_checker/README.md) と
+[`verify/aoj/README.md`](verify/aoj/README.md) を参照してください。
 ツールごとの詳しい引数は [`tools/README.md`](tools/README.md) にまとめています。
 
 ## ライセンス

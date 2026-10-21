@@ -1,0 +1,5 @@
+{
+  "name": "maximum_independent_set",
+  "problem": "graph/maximum_independent_set",
+  "source": "verify/library_checker/graph/maximum_independent_set.cpp"
+}

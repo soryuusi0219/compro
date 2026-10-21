@@ -110,7 +110,7 @@ int main() {
   assert(x * y == soryuusi::RolHashValue<3>(77));
   assert(x < y && y > x && x <= x && y >= x);
 
-  const soryuusi::rolhash<2, 7> compatibility_alias(a);
+  const soryuusi::RollingHash<2, 7> compatibility_alias(a);
   assert(compatibility_alias.size() == static_cast<int>(a.size()));
 
   std::cout << "rolling_hash: all tests passed\n";
