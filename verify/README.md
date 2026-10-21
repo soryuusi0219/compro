@@ -26,12 +26,14 @@ verify/
 Library Checker のターゲットとは独立して実行します。
 
 ```sh
-g++ -std=c++20 -O2 -Wall -Wextra -Werror -I. verify/unit/lazy_segtree_template.cpp -o /tmp/lazy_segtree_template_test
-/tmp/lazy_segtree_template_test
+for test in segtree_template lazy_segtree_template; do
+  g++ -std=c++20 -O2 -Wall -Wextra -Werror -I. "verify/unit/$test.cpp" -o "/tmp/$test-test"
+  "/tmp/$test-test"
+done
 ```
 
 遅延セグメント木の全11テンプレートについて、更新・集約、空区間、
-各コンストラクタ、型の上限・下限、modint、遅延伝播後の二分探索を検証します。
+各コンストラクタ、カスタムINF/LOWEST、modint、遅延伝播後の二分探索を検証します。
 
 suffix tree の suffix array、inverse suffix array、LCP、異なる部分文字列数、
 suffix LCP、パターン出現数、matching state、最長共通部分文字列、node accessor は
@@ -73,6 +75,16 @@ done
 
 ```sh
 for test in min_cost_flow_modified steiner_tree; do
+  g++ -std=c++20 -O2 -Wall -Wextra -Werror -I. "verify/unit/$test.cpp" -o "/tmp/$test-test"
+  "/tmp/$test-test"
+done
+```
+
+CSRグラフ本体、0-1 BFS・BFS・重心分解・offline dynamic connectivity、
+およびCSR化したEuler Tour系は、次の専用テストで検証します。
+
+```sh
+for test in static_graph csr_graph recursive_tree; do
   g++ -std=c++20 -O2 -Wall -Wextra -Werror -I. "verify/unit/$test.cpp" -o "/tmp/$test-test"
   "/tmp/$test-test"
 done

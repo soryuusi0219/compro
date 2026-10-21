@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "library/data_structure/segtree.hpp"
+#include "library/graph/static_graph.hpp"
 
 namespace soryuusi {
 
@@ -92,13 +93,13 @@ struct EularTour{
   };
   int N = 0;
   bool is_built = false;
-  vector<int> h, nxt, to;
+  static_graph<> G;
   vector<int> invertex, outvertex, tourid;
   vector<int> inseg, outseg;
   vector<S> data;
   StaticRMQ depth;
   Segtree<S,op,e> seg;
-  EularTour(int n) : N(n), h(N,-1) {
+  EularTour(int n) : N(n), G(N,2*N-2) {
     invertex.resize(N);
     outvertex.resize(N);
     tourid.resize(2*N-1);
@@ -106,7 +107,7 @@ struct EularTour{
     inseg.resize(N);
     outseg.resize(N);
   }
-  EularTour(const vector<S>& a) : N(a.size()), h(N,-1), data(a){
+  EularTour(const vector<S>& a) : N(a.size()), G(N,2*N-2), data(a){
     invertex.resize(N);
     outvertex.resize(N);
     tourid.resize(2*N-1);
@@ -114,14 +115,10 @@ struct EularTour{
     outseg.resize(N);
   }
   void add_edge(int u, int v){
-    nxt.push_back(h[u]);
-    h[u] = to.size();
-    to.push_back(v);
-    nxt.push_back(h[v]);
-    h[v] = to.size();
-    to.push_back(u);
+    G.add_edge(u,v,true);
   }
   void build(int root = 0){
+    G.build();
     int i = 0, j = 0;
     vector<pair<int,int>> depvec(2*N-1, {inf,-1});
     vector<S> datavec(N, e());
@@ -131,8 +128,7 @@ struct EularTour{
       depvec[i] = {dep,v};
       tourid[i] = v; i++;
       datavec[j] = data[v]; j++;
-      for(int k = h[v]; ~k; k = nxt[k]) if(to[k] != p){
-        int c = to[k];
+      for(int c : G.vertices(v)) if(c != p){
         self(self,c,v,dep+1);
         depvec[i] = {dep,v};
         tourid[i] = v; i++;

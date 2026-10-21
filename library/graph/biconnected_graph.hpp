@@ -10,6 +10,8 @@
 
 #include <iostream>
 
+#include "library/graph/static_graph.hpp"
+
 namespace soryuusi {
 
 using namespace std;
@@ -17,29 +19,25 @@ using namespace std;
 
 struct biconnected_graph{
   int n;
-  vector<int> h, nxt, to, ord, low, par;
+  static_graph<> G;
+  vector<int> h, nxt, ord, low, par;
   bool initialized = false;
   biconnected_graph() {}
-  biconnected_graph(int n_) : n(n_), h(n,-1), ord(n), low(n), par(n,-1) {}
-  biconnected_graph(int n_, int m) : n(n_), h(n,-1), ord(n), low(n), par(n,-1) {nxt.reserve(m*2); to.reserve(m*2);}
+  biconnected_graph(int n_) : n(n_), G(n), ord(n), low(n), par(n,-1) {}
+  biconnected_graph(int n_, int m) : n(n_), G(n,2*m), ord(n), low(n), par(n,-1) {}
   void add_edge(int u, int v){
-    nxt.push_back(h[u]);
-    h[u] = to.size();
-    to.push_back(v);
-    nxt.push_back(h[v]);
-    h[v] = to.size();
-    to.push_back(u);
+    G.add_edge(u,v,true);
   }
   void low_link(){
     if(initialized) return;
     initialized = true;
+    G.build();
     vector<bool> seen(n,false);
     auto dfs = [&](auto&& self, int v, int p, int noword = 0) -> void {
       par[v] = p;
       seen[v] = true;
       ord[v] = noword, low[v] = noword;
-      for(int e = h[v]; ~e; e = nxt[e]) {
-        int c = to[e];
+      for(int c : G.vertices(v)) {
         if(c == p) continue;
         if(!seen[c]){
           self(self,c,v,noword+1);

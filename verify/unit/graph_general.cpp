@@ -54,6 +54,23 @@ int main() {
   assert(weighted_distance == 36);
   assert((soryuusi::tree_get_centroids(weighted) == std::pair<int,int>(0,0)));
 
+  soryuusi::static_graph static_graph(7,12);
+  static_graph.add_edge(0,1,true);
+  static_graph.add_edge(0,2,true);
+  static_graph.add_edge(1,3,true);
+  static_graph.add_edge(1,4,true);
+  static_graph.add_edge(2,5,true);
+  static_graph.add_edge(5,6,true);
+  static_graph.build();
+  assert(soryuusi::get_path(static_graph,3,6) == soryuusi::get_path(graph,3,6));
+  assert(soryuusi::diameter(static_graph) == soryuusi::diameter(graph));
+  assert(soryuusi::tree_get_centroids(static_graph) == soryuusi::tree_get_centroids(graph));
+
+  soryuusi::static_graph<long long> static_weighted(weighted);
+  assert(soryuusi::get_path(static_weighted,4,6) == soryuusi::get_path(weighted,4,6));
+  assert(soryuusi::diameter(static_weighted) == soryuusi::diameter(weighted));
+  assert(soryuusi::tree_get_centroids(static_weighted) == soryuusi::tree_get_centroids(weighted));
+
   std::vector<std::vector<int>> even_path(6);
   for(int i = 0; i + 1 < 6; ++i) add_edge(even_path,i,i+1);
   assert((soryuusi::tree_get_centroids(even_path) == std::pair<int,int>(2,3)));

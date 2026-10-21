@@ -9,6 +9,8 @@
 #include <vector>
 #include <limits>
 
+#include "library/graph/static_graph.hpp"
+
 namespace soryuusi {
 
 using namespace std;
@@ -16,28 +18,16 @@ using namespace std;
 struct Dijkstra01{
 
   int n;
-  vector<int> h, nxt, to, from;
-  vector<bool> w;
+  static_graph<bool> G;
+  vector<int> from;
   vector<int> d;
-  Dijkstra01(int n_) : n(n_), h(n,-1){}
-  Dijkstra01(int n_, int m) : n(n_), h(n,-1){
-    nxt.reserve(m);
-    to.reserve(m);
-    w.reserve(m);
-  }
+  Dijkstra01(int n_) : n(n_), G(n){}
+  Dijkstra01(int n_, int m) : n(n_), G(n,m){}
   void add_edge(int u, int v, bool cost, bool undirected = false){
-    nxt.push_back(h[u]);
-    h[u] = to.size();
-    to.push_back(v);
-    w.push_back(cost);
-    if(undirected) {
-      nxt.push_back(h[v]);
-      h[v] = to.size();
-      to.push_back(u);
-      w.push_back(cost);
-    }
+    G.add_edge(u,v,cost,undirected);
   }
   vector<int> distance(int v){
+    G.build();
     d.assign(n,numeric_limits<int>::max());
     from.assign(n, -1);
     deque<pair<int,int>> que;
@@ -46,12 +36,12 @@ struct Dijkstra01{
     while(que.size()){
       auto [d0,u] = que.front(); que.pop_front();
       if(d[u] < d0) continue;
-      for(int t = h[u]; ~t; t = nxt[t]){
-        if(d[to[t]] > d0+w[t]){
-          d[to[t]] = d0+w[t];
-          from[to[t]] = u;
-          if(w[t]) que.emplace_back(d[to[t]], to[t]);
-          else que.emplace_front(d[to[t]], to[t]);
+      for(auto t : G[u]){
+        if(d[t.to] > d0+t.cost){
+          d[t.to] = d0+t.cost;
+          from[t.to] = u;
+          if(t.cost) que.emplace_back(d[t.to], t.to);
+          else que.emplace_front(d[t.to], t.to);
         }
       }
     }

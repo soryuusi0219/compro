@@ -9,6 +9,8 @@
 #include <vector>
 #include <limits>
 
+#include "library/graph/static_graph.hpp"
+
 namespace soryuusi {
 
 using namespace std;
@@ -22,27 +24,16 @@ struct Dijkstra{
   const T INF = infty();
 
   int n;
-  vector<int> h, nxt, to, from;
-  vector<T> w, d;
-  Dijkstra(int n_) : n(n_), h(n,-1){}
-  Dijkstra(int n_, int m) : n(n_), h(n,-1){
-    nxt.reserve(m);
-    to.reserve(m);
-    w.reserve(m);
-  }
+  static_graph<T> G;
+  vector<int> from;
+  vector<T> d;
+  Dijkstra(int n_) : n(n_), G(n){}
+  Dijkstra(int n_, int m) : n(n_), G(n,m){}
   void add_edge(int u, int v, T cost, bool undirected = false){
-    nxt.push_back(h[u]);
-    h[u] = to.size();
-    to.push_back(v);
-    w.push_back(cost);
-    if(undirected) {
-      nxt.push_back(h[v]);
-      h[v] = to.size();
-      to.push_back(u);
-      w.push_back(cost);
-    }
+    G.add_edge(u,v,cost,undirected);
   }
   vector<T> distance(int v){
+    G.build();
     d.assign(n,infty());
     from.assign(n, -1);
     priority_queue<pair<T,int>, vector<pair<T,int>>, greater<pair<T,int>>> que;
@@ -51,11 +42,11 @@ struct Dijkstra{
     while(!que.empty()){
       auto [d0,u] = que.top(); que.pop();
       if(d[u] < d0) continue;
-      for(int t = h[u]; ~t; t = nxt[t]){
-        if(d[to[t]] > op(d0, w[t])){
-          d[to[t]] = op(d0, w[t]);
-          from[to[t]] = u;
-          que.push({d[to[t]], to[t]});
+      for(auto t : G[u]){
+        if(d[t.to] > op(d0, t.cost)){
+          d[t.to] = op(d0, t.cost);
+          from[t.to] = u;
+          que.push({d[t.to], t.to});
         }
       }
     }

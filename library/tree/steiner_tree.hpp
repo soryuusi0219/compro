@@ -7,6 +7,8 @@
 #include <utility>
 #include <vector>
 
+#include "library/graph/static_graph.hpp"
+
 namespace soryuusi {
 
 using namespace std;
@@ -14,25 +16,14 @@ using namespace std;
 template<class T, T e = 0, T infty = 1ll << 60, class INT = int>
 struct steiner_tree{
   int n;
-  vector<int> h, nxt, to;
-  vector<T> w;
-  steiner_tree(int n_) : n(n_), h(n,-1) {}
-  steiner_tree(const vector<vector<pair<INT,T>>>& G) : steiner_tree(G.size()) {
-    for(int i = 0; i < n; i++) for(auto [j,cost] : G[i]) add_edge(i,j,cost,false);
-  }
+  static_graph<T> G;
+  steiner_tree(int n_) : n(n_), G(n) {}
+  steiner_tree(const vector<vector<pair<INT,T>>>& G0) : n(G0.size()), G(G0) {}
   void add_edge(int u, int v, T cost, bool undirected = true){
-    nxt.push_back(h[u]);
-    h[u] = to.size();
-    to.push_back(v);
-    w.push_back(cost);
-    if(undirected){
-      nxt.push_back(h[v]);
-      h[v] = to.size();
-      to.push_back(u);
-      w.push_back(cost);
-    }
+    G.add_edge(u,v,cost,undirected);
   }
   pair<T,vector<tuple<INT,INT,T>>> solve(const vector<INT>& terminals){
+    G.build();
     int k = terminals.size();
     int K = 1 << k;
     if(k <= 1) return {e,{}};
@@ -47,9 +38,9 @@ struct steiner_tree{
         auto p = q.top(); q.pop();
         int j = p.second;
         if(dp[i][j] < p.first) continue;
-        for(int id = h[j]; ~id; id = nxt[id]) {
-          int j2 = to[id];
-          T w2 = w[id];
+        for(auto e0 : G[j]) {
+          int j2 = e0.to;
+          T w2 = e0.cost;
           if(dp[i][j] + w2 < dp[i][j2]) {
             dp[i][j2] = dp[i][j] + w2;
             dp_back[i][j2] = {K,j};

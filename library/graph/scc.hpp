@@ -5,6 +5,8 @@
 #include <utility>
 #include <vector>
 
+#include "library/graph/static_graph.hpp"
+
 namespace soryuusi{
 
 using namespace std;
@@ -12,20 +14,16 @@ using namespace std;
 struct SCC{
   private:
     int n;
-    vector<int> h, nxt, to, from;
+    static_graph<> G;
   public:
     SCC() {}
-    SCC(int n_) : n(n_), h(n,-1) {}
-    SCC(int n_, int m) : n(n_), h(n,-1) {
-      nxt.reserve(m);
-      to.reserve(m);
-    }
+    SCC(int n_) : n(n_), G(n) {}
+    SCC(int n_, int m) : n(n_), G(n,m) {}
     void add_edge(int u, int v){
-      nxt.push_back(h[u]);
-      h[u] = to.size();
-      to.push_back(v);
+      G.add_edge(u,v);
     }
     pair<int,vector<int>> scc_ids(){
+      G.build();
       vector<int> ids(n,-1);
       vector<int> recst, st, ord(n,-1), low(n,-1), par(n,-1);
       recst.reserve(n);
@@ -47,7 +45,7 @@ struct SCC{
               par[v] = p;
               p = v;
               st.push_back(v);
-              for(int e = h[v]; ~e; e = nxt[e]) recst.push_back(to[e]);
+              for(int c : G.vertices(v)) recst.push_back(c);
             }
           }else{
             recst.pop_back();
@@ -78,7 +76,7 @@ struct SCC{
     tuple<int, vector<vector<int>>, vector<int>> scc_compressed(bool allow_self_edge = false, bool allow_double_edge = false) {
       auto [g, ids] = scc_ids();
       vector<vector<int>> graph(g);
-      for(int i = 0; i < n; ++i) for(int e = h[i]; ~e; e = nxt[e]) if(allow_self_edge || ids[i] != ids[to[e]])  graph[ids[i]].push_back(ids[to[e]]);
+      for(int i = 0; i < n; ++i) for(int c : G.vertices(i)) if(allow_self_edge || ids[i] != ids[c]) graph[ids[i]].push_back(ids[c]);
       if(!allow_double_edge) for(auto& v : graph) {
         sort(v.begin(), v.end());
         v.erase(unique(v.begin(), v.end()), v.end());

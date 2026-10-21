@@ -12,14 +12,17 @@ FlipInversion の入力は 0 または 1 に限ります。vector<bool> も使�
 
 LazySegtreeAddSum<T, Sum=T>
   add(l,r,x) / {sum, len}
-LazySegtreeAddMin<T>, LazySegtreeAddMax<T>
-  add(l,r,x) / {value, len} （value は最小値・最大値）
-LazySegtreeAddMinCount<T, Count=int>, LazySegtreeAddMaxCount<T, Count=int>
+LazySegtreeAddMin<T, INF=numeric_limits<T>::max()/2>
+LazySegtreeAddMax<T, LOWEST=numeric_limits<T>::lowest()/2>
+  add(l,r,x) / T （最小値・最大値）
+LazySegtreeAddMinCount<T, Count=int, INF=numeric_limits<T>::max()/2>
+LazySegtreeAddMaxCount<T, Count=int, LOWEST=numeric_limits<T>::lowest()/2>
   add(l,r,x) / pair<T,Count> {最小値・最大値, その出現回数}
 LazySegtreeAssignSum<T, Sum=T>
   assign(l,r,x) / {sum, len}
-LazySegtreeAssignMin<T>, LazySegtreeAssignMax<T>
-  assign(l,r,x) / {value, len} （value は最小値・最大値）
+LazySegtreeAssignMin<T, INF=numeric_limits<T>::max()/2>
+LazySegtreeAssignMax<T, LOWEST=numeric_limits<T>::lowest()/2>
+  assign(l,r,x) / T （最小値・最大値）
 LazySegtreeAffineSum<T, Sum=T>
   affine(l,r,a,b) （x -> a*x+b）
   add(l,r,x), multiply(l,r,x), assign(l,r,x) / {sum, len}
@@ -28,7 +31,7 @@ LazySegtreeXorXor<T>
 LazySegtreeFlipInversion<Count=long long>
   flip(l,r) / {zero, one, inversion} （0 の個数、1 の個数、転倒数）
 
-sum/len/value 等は value_type のメンバです。
+sum/len/value 等は各 value_type のメンバです。非Count版のMin/MaxはTを直接返します。
 set(p,x) で単一要素を変更できます。set(p,value_type) も使用できます。
 元の apply(p,f)、apply(l,r,f)、all_apply(f)、max_right、min_left も使えます。
 max_right/min_left の述語は上記の集約値を受け取ります。
@@ -40,10 +43,9 @@ Assign 系の nullopt は何もしない操作です。0 を含む全ての値�
 AffineSum は modint でも使用できます。
 
 空区間では sum/XOR/転倒数/個数/len は 0 です。
-最小値の value/first は numeric_limits<T>::max()、
-最大値の value/first は numeric_limits<T>::lowest() です。
-空かどうかは len または出現回数で判定するので、これらの端点値も格納できます。
-vector<value_type> を渡す場合は、実要素に対応する len/個数を必ず設定してください。
+Min/Maxはテンプレート引数で指定したINF/LOWESTを返します。
+非Count版ではINF/LOWESTを実要素に使用できません。Count版は個数で空区間を判定します。
+vector<value_type> を渡す場合は、実要素に対応する個数を必ず設定してください。
 Count 付きクラスの個数には正の値を指定してください。
 
 T、Sum、Count は全ての計算結果を保持できる型を指定してください。
