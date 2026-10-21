@@ -5,19 +5,17 @@
 int main() {
   int n, m;
   soryuusi::cin >> n >> m;
-  soryuusi::biconnected_graph graph(n);
+  soryuusi::biconnected_graph graph(n,m);
   while(m--) {
     int u, v;
     soryuusi::cin >> u >> v;
     graph.add_edge(u,v);
   }
-  const auto [tree,index,components] = graph.two_edge_connected_components();
-  (void)tree;
-  (void)index;
+  const auto components = graph.two_edge_connected_components();
   soryuusi::cout << components.size() << '\n';
   for(const auto& component : components) {
     soryuusi::cout << component.size();
-    for(long long vertex : component) soryuusi::cout << ' ' << vertex;
+    for(auto vertex : component) soryuusi::cout << ' ' << vertex;
     soryuusi::cout << '\n';
   }
 }

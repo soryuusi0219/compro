@@ -8,35 +8,41 @@
 #include <utility>
 #include <vector>
 
+#include <iostream>
+
 namespace soryuusi {
 
 using namespace std;
 
 
 struct biconnected_graph{
-  vector<vector<int>> G;
   int n;
-  vector<int> ord;
-  vector<int> low;
+  vector<int> h, nxt, to, ord, low, par;
   bool initialized = false;
-  vector<vector<int>> tree;
-  biconnected_graph(vector<vector<int>>& G) : G(G), n(G.size()), ord(vector<int>(n)), low(vector<int>(n)){}
-  biconnected_graph(int n) : G(vector<vector<int>>(n)), n(n), ord(vector<int>(n)), low(vector<int>(n)){}
-  void add_edge(int a, int b){G[a].push_back(b); G[b].push_back(a); initialized = false;}
+  biconnected_graph() {}
+  biconnected_graph(int n_) : n(n_), h(n,-1), ord(n), low(n), par(n,-1) {}
+  biconnected_graph(int n_, int m) : n(n_), h(n,-1), ord(n), low(n), par(n,-1) {nxt.reserve(m*2); to.reserve(m*2);}
+  void add_edge(int u, int v){
+    nxt.push_back(h[u]);
+    h[u] = to.size();
+    to.push_back(v);
+    nxt.push_back(h[v]);
+    h[v] = to.size();
+    to.push_back(u);
+  }
   void low_link(){
     if(initialized) return;
     initialized = true;
-    vector<bool> visited(n,false);
-    tree = vector<vector<int>>(n);
-    function<void(int, int, int)> dfs = [&](int v, int p, int noword = 0){
-      visited[v] = true;
-      ord[v] = noword;
-      low[v] = noword;
-      for(auto c:G[v]) if(c != p){
-        if(!visited[c]){
-          tree[v].push_back(c);
-          tree[c].push_back(v);
-          dfs(c,v,noword+1);
+    vector<bool> seen(n,false);
+    auto dfs = [&](auto&& self, int v, int p, int noword = 0) -> void {
+      par[v] = p;
+      seen[v] = true;
+      ord[v] = noword, low[v] = noword;
+      for(int e = h[v]; ~e; e = nxt[e]) {
+        int c = to[e];
+        if(c == p) continue;
+        if(!seen[c]){
+          self(self,c,v,noword+1);
           low[v] = min(low[v],low[c]);
         }else{
           if(ord[c] < ord[v]) low[v] = min(low[v],ord[c]);
@@ -44,134 +50,166 @@ struct biconnected_graph{
         }
       }
     };
-    for(int i = 0; i < n; i++) if(!visited[i]) dfs(i,-1,0);
+    for(int i = 0; i < n; ++i) if(!seen[i]) dfs(dfs,i,-1,0);
+    h.assign(par.begin(),par.end());
+    nxt.assign(n,-1);
+    for(int c = 0; c < n; ++c) if(~par[c]) nxt[c] = h[par[c]], h[par[c]] = c;
   }
   bool is_bridge(int u, int v){
     if(!initialized) low_link();
     return low[v] > ord[u] || low[u] > ord[v];
   }
-  vector<long long> two_edge_connected_component(int v){
+  vector<int> two_edge_connected_component(int v){
     if(!initialized) low_link();
-    vector<long long> ret;
-    function<void(int, int)> dfs = [&](int v, int p){
-      ret.push_back(v);
-      for(auto c: tree[v]) if(c != p && !is_bridge(v,c)) dfs(c,v);
+    vector<int> res;
+    auto dfs = [&](auto&& self, int v) -> void {
+      res.push_back(v);
+      for(int c = h[v]; c != par[v]; c = nxt[c]) if(!is_bridge(v,c)) self(self,c);
     };
-    dfs(v,-1);
-    return ret; 
+    while(~par[v] && !is_bridge(par[v],v)) v = par[v];
+    dfs(dfs,v);
+    return res;
   }
-  tuple<vector<vector<long long>>,vector<long long>,vector<vector<long long>>> two_edge_connected_components(){
+  vector<vector<int>> two_edge_connected_components(){
     if(!initialized) low_link();
-    vector<vector<long long>> retG;
-    vector<long long> ind(n,-1);
-    vector<vector<long long>> grps;
+    vector<vector<int>> grps;
+    vector<int> q;
+    q.reserve(n);
+    int m = 0;
+    auto dfs = [&](auto self, int v) -> void {
+      grps.back().push_back(v);
+      for(int c = h[v]; c != par[v]; c = nxt[c]){
+        if(is_bridge(v,c)){
+          m++;
+          q.push_back(c);
+        }else self(self,c);
+      }
+    };
+    for(int i = 0; i < n; i++){
+      if(~par[i]) continue;
+      q.push_back(i);
+      m++;
+      while(q.size()){
+        int v = q.back(); q.pop_back();
+        grps.emplace_back();
+        dfs(dfs,v);
+      }
+    } 
+    return grps;
+  }
+  // (compressed tree, index, grpups)
+  tuple<vector<vector<int>>,vector<int>,vector<vector<int>>> two_edge_connected_compressed(){
+    if(!initialized) low_link();
+    vector<vector<int>> rest;
+    vector<int> ind(n,-1);
+    vector<vector<int>> grps;
     queue<int> q;
     int k = 0;
     int m = 0;
-    function<void(int, int)> dfs = [&](int v, int p){
+    auto dfs = [&](auto self, int v) -> void {
       ind[v] = k;
       grps[k].push_back(v);
-      for(auto c: tree[v]) if(c != p){
+      for(int c = h[v]; c != par[v]; c = nxt[c]){
         if(is_bridge(v,c)){
           if(ind[c] == -1){
-            retG.push_back({k});
-            retG[k].push_back(m);
+            rest.emplace_back(1,k);
+            rest[k].push_back(m);
             m++;
             q.push(c); 
           }
-        }else dfs(c,v);
+        }else self(self,c);
       }
     };
     for(int i = 0; i < n; i++){
       if(ind[i] != -1) continue;
       q.push(i);
-      retG.push_back({});
+      rest.emplace_back();
       m++;
-      while(!q.empty()){
-        grps.push_back({});
-        dfs(q.front(),-1);
-        q.pop();
+      while(q.size()){
+        int v = q.front(); q.pop();
+        grps.emplace_back();
+        dfs(dfs,v);
         k++;
       }
     } 
-    return {retG,ind,grps};
+    return {rest,ind,grps};
   }
-  vector<vector<long long>> two_vertex_connected_components(){
+  vector<vector<int>> two_vertex_connected_components(){
     if(!initialized) low_link();
-    vector<vector<long long>> grps;
-    queue<pair<int,int>> q;
-    function<void(int, int)> dfs = [&](int v, int p){
+    vector<vector<int>> grps;
+    vector<int> q;
+    auto dfs = [&](auto&& self, int v) -> void {
       grps.back().push_back(v);
-      for(auto c: tree[v]) if(c != p){
-        if(low[c] >= ord[v]) q.push({c,v});
-        else dfs(c,v);
+      for(int c = h[v]; c != par[v]; c = nxt[c]){
+        if(low[c] >= ord[v]) q.emplace_back(c);
+        else self(self,c);
       }
     };
     for(int i = 0; i < n; i++){
       if(ord[i]) continue;
-      if(tree[i].empty()) {
-        grps.push_back({i});
+      if(!~h[i]) {
+        grps.emplace_back(1,i);
         continue;
       }
-      for(int j : tree[i]) q.push({j,i});
+      for(int c = h[i]; ~c; c = nxt[c]) q.emplace_back(c);
       while(!q.empty()){
-        grps.push_back({q.front().second});
-        dfs(q.front().first, q.front().second);
-        q.pop();
+        auto v = q.back(); q.pop_back();
+        grps.emplace_back(1,par[v]);
+        dfs(dfs,v);
       }
     } 
     return grps;
   }
-  pair<vector<vector<long long>>,vector<long long>> block_cut_tree(){
+  pair<vector<vector<int>>,vector<int>> block_cut_tree(){
     if(!initialized) low_link();
-    vector<vector<long long>> rett;
-    vector<long long> ind(n,-1);
-    queue<tuple<int,int,int>> q;
+    vector<vector<int>> rest;
+    vector<int> ind(n,-1);
+    vector<pair<int,int>> q;
     int m = 0;
     int k;
-    function<void(int, int)> dfs = [&](int v, int p){
-      for(auto c: tree[v]) if(c != p){
+    auto dfs = [&](auto&& self, int v) -> void {
+      for(int c = h[v]; c != par[v]; c = nxt[c]){
         if(low[c] >= ord[v]) {
           if(ind[v] == -1){
-            rett.push_back({k});
-            rett[k].push_back(m);
+            rest.emplace_back(1,k);
+            rest[k].push_back(m);
             ind[v] = m;
             m++;
           }
-          q.push({c,v,ind[v]});
+          q.emplace_back(c,ind[v]);
         }
-        else dfs(c,v);
+        else self(self,c);
       }
       if(ind[v] == -1) ind[v] = k;
     };
     for(int i = 0; i < n; i++){
       if(ord[i]) continue;
-      if(tree[i].empty()) {
-        rett.push_back({});
+      if(!~h[i]) {
+        rest.emplace_back();
         ind[i] = m;
         m++;
         continue;
       }
-      if(tree[i].size() == 1) q.push({tree[i][0],i,-1});
+      if(!~nxt[h[i]]) q.emplace_back(h[i],-1);
       else{
-        rett.push_back({});
+        rest.emplace_back();
         ind[i] = m;
-        for(int j : tree[i]) q.push({j,i,m});
+        for(int c = h[i]; ~c; c = nxt[c]) q.emplace_back(c,m);
         m++;
       }
       while(!q.empty()){
-        auto [u,v,x] = q.front();
-        rett.push_back({});
+        auto [u,x] = q.back();
+        q.pop_back();
+        rest.emplace_back();
         if(x != -1){
-          rett[x].push_back(m);
-          rett[m].push_back(x);
-        }else ind[v] = m;
+          rest[x].push_back(m);
+          rest[m].push_back(x);
+        }else ind[par[u]] = m;
         k = m++;
-        dfs(u, v);
-        q.pop();
+        dfs(dfs,u);
       }
     } 
-    return {rett,ind};
+    return {rest,ind};
   }
 };
 

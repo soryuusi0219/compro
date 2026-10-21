@@ -54,6 +54,7 @@ struct LazySegtree{
       d[p] = x;
       build(p, p + 1);
     }
+    void reset(int i){ set(i,e());}
     S get(int p) {
       p += b;
       prop(p, p + 1);
