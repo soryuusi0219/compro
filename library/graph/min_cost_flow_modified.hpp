@@ -20,18 +20,21 @@ template <class Cap, class Cost, class Costfct, auto FR, auto FL, auto MAXCOST, 
 
   public:
     mcf_graph_modified() {}
-    mcf_graph_modified(int n) : _n(n), g(n) {}
+    mcf_graph_modified(int n) : _n(n), h(n,-1) {}
 
     int add_edge(int from, int to, Cap cap, Costfct costfct) {
         assert(0 <= from && from < _n);
         assert(0 <= to && to < _n);
         int m = int(pos.size());
-        pos.push_back({from, int(g[from].size())});
-        int from_id = int(g[from].size());
-        int to_id = int(g[to].size());
-        if (from == to) to_id++;
-        g[from].push_back(_edge{to, to_id, cap, cap, costfct, false});
-        g[to].push_back(_edge{from, from_id, 0, cap, costfct, true});
+        pos.push_back({from, int(g.size())});
+        nxt.push_back(h[from]);
+        h[from] = g.size();
+        this->to.push_back(to);
+        g.push_back(_edge{cap, cap, costfct, false});
+        nxt.push_back(h[to]);
+        h[to] = g.size();
+        this->to.push_back(from);
+        g.push_back(_edge{0, cap, costfct, true});
         return m;
     }
 
@@ -44,10 +47,11 @@ template <class Cap, class Cost, class Costfct, auto FR, auto FL, auto MAXCOST, 
     edge get_edge(int i) {
         int m = int(pos.size());
         assert(0 <= i && i < m);
-        auto _e = g[pos[i].first][pos[i].second];
-        auto _re = g[_e.to][_e.rev];
+        int id = pos[i].second;
+        auto _e = g[id];
+        auto _re = g[id^1];
         return edge{
-            pos[i].first, _e.to, _e.cap + _re.cap, _re.cap, _e.cost,
+            pos[i].first, to[id], _e.cap + _re.cap, _re.cap, _e.costfct,
         };
     }
     vector<edge> edges() {
@@ -94,15 +98,15 @@ template <class Cap, class Cost, class Costfct, auto FR, auto FL, auto MAXCOST, 
                 if (vis[v]) continue;
                 vis[v] = true;
                 if (v == t) break;
-                for (int i = 0; i < int(g[v].size()); i++) {
-                    auto e = g[v][i];
-                    if (vis[e.to] || !e.cap) continue;
-                    Cost cost = e.cost() - dual[e.to] + dual[v];
-                    if (dist[e.to] - dist[v] > cost) {
-                        dist[e.to] = dist[v] + cost;
-                        pv[e.to] = v;
-                        pe[e.to] = i;
-                        que.push(Q{dist[e.to], e.to});
+                for (int i = h[v]; ~i; i = nxt[i]) {
+                    auto e = g[i];
+                    if (vis[to[i]] || !e.cap) continue;
+                    Cost cost = e.cost() - dual[to[i]] + dual[v];
+                    if (dist[to[i]] - dist[v] > cost) {
+                        dist[to[i]] = dist[v] + cost;
+                        pv[to[i]] = v;
+                        pe[to[i]] = i;
+                        que.push(Q{dist[to[i]], to[i]});
                     }
                 }
             }
@@ -124,12 +128,12 @@ template <class Cap, class Cost, class Costfct, auto FR, auto FL, auto MAXCOST, 
             if (!dual_ref()) break;
             Cap c = flow_limit - flow;
             for (int v = t; v != s; v = pv[v]) {
-                c = min(c, g[pv[v]][pe[v]].next_cap());
+                c = min(c, g[pe[v]].next_cap());
             }
             for (int v = t; v != s; v = pv[v]) {
-                auto& e = g[pv[v]][pe[v]];
+                auto& e = g[pe[v]];
                 e.cap -= c;
-                g[v][e.rev].cap += c;
+                g[pe[v]^1].cap += c;
             }
             Cost d = -dual[s];
             flow += c;
@@ -147,7 +151,6 @@ template <class Cap, class Cost, class Costfct, auto FR, auto FL, auto MAXCOST, 
     int _n;
 
     struct _edge {
-      int to, rev;
       Cap cap, maxcap;
       Costfct costfct;
       bool inverted;
@@ -155,7 +158,8 @@ template <class Cap, class Cost, class Costfct, auto FR, auto FL, auto MAXCOST, 
       Cap next_cap() {return min((inverted ? cap - FL(costfct, cap).second : FR(costfct, maxcap-cap).second + cap - maxcap), cap);}
     };
     vector<pair<int, int>> pos;
-    vector<vector<_edge>> g;
+    vector<int> h, nxt, to;
+    vector<_edge> g;
 };
 // using Cap = ll;
 // using Cost = ll;

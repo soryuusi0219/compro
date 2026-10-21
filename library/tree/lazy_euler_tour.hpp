@@ -1,7 +1,6 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/tree/lazy_euler_tour.hpp
 #pragma once
 #include <algorithm>
-#include <functional>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -96,14 +95,13 @@ struct lazy_EularTour{
   };
   int N = 0;
   bool is_built = false;
-  vector<vector<int>> G;
+  vector<int> h, nxt, to;
   vector<int> invertex, outvertex, tourid;
   vector<int> inseg, outseg;
   vector<S> data;
   StaticRMQ depth;
   LazySegtree<S,op,e,F,mapping,composition,id> seg;
-  lazy_EularTour(int n) : N(n) {
-    G.resize(N);
+  lazy_EularTour(int n) : N(n), h(N,-1) {
     invertex.resize(N);
     outvertex.resize(N);
     tourid.resize(2*N-1);
@@ -111,8 +109,7 @@ struct lazy_EularTour{
     inseg.resize(N);
     outseg.resize(N);
   }
-  lazy_EularTour(const vector<S>& a) : N(a.size()), data(a){
-    G.resize(N);
+  lazy_EularTour(const vector<S>& a) : N(a.size()), h(N,-1), data(a){
     invertex.resize(N);
     outvertex.resize(N);
     tourid.resize(2*N-1);
@@ -120,28 +117,33 @@ struct lazy_EularTour{
     outseg.resize(N);
   }
   void add_edge(int u, int v){
-    G[u].push_back(v);
-    G[v].push_back(u);
+    nxt.push_back(h[u]);
+    h[u] = to.size();
+    to.push_back(v);
+    nxt.push_back(h[v]);
+    h[v] = to.size();
+    to.push_back(u);
   }
   void build(int root = 0){
     int i = 0, j = 0;
     vector<pair<int,int>> depvec(2*N-1, {inf,-1});
     vector<S> datavec(N, e());
-    function<void(int,int,int)> dfs = [&](int v, int p, int dep){
+    auto dfs = [&](auto&& self, int v, int p, int dep) -> void {
       invertex[v] = i;
       inseg[v] = j;
       depvec[i] = {dep,v};
       tourid[i] = v; i++;
       datavec[j] = data[v]; j++;
-      for(int c : G[v]) if(c != p){
-        dfs(c,v,dep+1);
+      for(int k = h[v]; ~k; k = nxt[k]) if(to[k] != p){
+        int c = to[k];
+        self(self,c,v,dep+1);
         depvec[i] = {dep,v};
         tourid[i] = v; i++;
       }
       outvertex[v] = i;
       outseg[v] = j;
     };
-    dfs(root,-1,0);
+    dfs(dfs,root,-1,0);
     depth = StaticRMQ(depvec);
     seg = LazySegtree<S,op,e,F,mapping,composition,id>(datavec);
     is_built = true;

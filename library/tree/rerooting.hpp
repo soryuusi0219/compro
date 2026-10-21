@@ -1,6 +1,5 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/tree/rerooting.hpp
 #pragma once
-#include <functional>
 #include <type_traits>
 #include <vector>
 
@@ -14,48 +13,49 @@ struct Rerooting{
   static_assert(is_invocable_r_v<S, decltype(e)>, "e must be callable with no arguments and return a value convertible to S");
   static_assert(is_invocable_r_v<S, decltype(mapping), F, S>, "mapping must be callable with (F, S) and return a value convertible to S");
 
-  struct Edge{
-    int to;
-    F f;
-  };
   int n;
   vector<S> data;
-  vector<Edge> edges;
+  vector<int> h, nxt, to;
+  vector<F> fs;
   int m = 0;
-  vector<vector<int>> G;
   vector<S> edge_answers;
   vector<S> vertex_answers;
-  Rerooting(int n0) : n(n0){
-    G.resize(n);
+  Rerooting(int n0) : n(n0), h(n,-1){
     data.resize(n);
   }
-  Rerooting(int n0, vector<S> data0) : n(n0), data(data0){
-    G.resize(n);
-  }
+  Rerooting(int n0, vector<S> data0) : n(n0), data(data0), h(n,-1){}
   void set(int i, S x){data[i] = x;}
   int add_edge(int i, int j, F f){
-    G[i].push_back(m<<1);
-    G[j].push_back((m<<1)+1);
-    edges.push_back({j,f});
-    edges.push_back({i,f});
+    nxt.push_back(h[i]);
+    h[i] = to.size();
+    to.push_back(j);
+    fs.push_back(f);
+    nxt.push_back(h[j]);
+    h[j] = to.size();
+    to.push_back(i);
+    fs.push_back(f);
     return m++;
   }
   int add_edge(int i, int j, F f, F g){
-    G[i].push_back(m<<1);
-    G[j].push_back((m<<1)+1);
-    edges.push_back({j,g});
-    edges.push_back({i,f});
+    nxt.push_back(h[i]);
+    h[i] = to.size();
+    to.push_back(j);
+    fs.push_back(g);
+    nxt.push_back(h[j]);
+    h[j] = to.size();
+    to.push_back(i);
+    fs.push_back(f);
     return m++;
   }
   void build(){
     edge_answers.resize(m << 1);
     vertex_answers.resize(n);
     vector<vector<S>> lprod(n,{e()}), rprod(n);
-    function<S(int,int)> dfs1 = [&](int v, int p){
-      for(int id : G[v]){
-        int c = edges[id].to;
+    auto dfs1 = [&](auto&& self, int v, int p) -> S {
+      for(int id = h[v]; ~id; id = nxt[id]){
+        int c = to[id];
         if(c != p) {
-          S cval = mapping(edges[id].f, dfs1(c,v));
+          S cval = mapping(fs[id],self(self,c,v));
           edge_answers[id] = cval;
           lprod[v].push_back(cval);
         }
@@ -73,27 +73,27 @@ struct Rerooting{
       vertex_answers[v] = rprod[v][0];
       return op(data[v],rprod[v][0]);
     };
-    dfs1(0,-1);
+    dfs1(dfs1,0,-1);
 
-    function<void(int,int,S)> dfs2 = [&](int v, int p, S x){
+    auto dfs2 = [&](auto&& self, int v, int p, S x) -> void {
       vertex_answers[v] = op(vertex_answers[v],x);
-      for(int i = 0; i < (int)G[v].size(); i++){
-        int id = G[v][i];
-        int c = edges[id].to;
+      int i = 0;
+      for(int id = h[v]; ~id; id = nxt[id], i++){
+        int c = to[id];
         if(c != p) {
-          S y = mapping(edges[id^1].f, op(op(x,lprod[v][i]), rprod[v][i+1]));
+          S y = mapping(fs[id^1], op(op(x,lprod[v][i]), rprod[v][i+1]));
           edge_answers[id^1] = y;
-          dfs2(c,v,op(y,data[c]));
+          self(self,c,v,op(y,data[c]));
         }
       }
     };
-    dfs2(0,-1,data[0]);
+    dfs2(dfs2,0,-1,data[0]);
   }
   vector<S> answers(){return vertex_answers;}
   S answer(int v){return vertex_answers[v];}
   vector<S> subanswers(int v){
     vector<S> ret;
-    for(int id : G[v]) ret.push_back(edge_answers[id]);
+    for(int id = h[v]; ~id; id = nxt[id]) ret.push_back(edge_answers[id]);
     return ret;
   }
   S subanswer(int id){return edge_answers[id];}

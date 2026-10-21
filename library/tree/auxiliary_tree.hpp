@@ -2,7 +2,6 @@
 #pragma once
 #include <algorithm>
 #include <cassert>
-#include <functional>
 #include <stack>
 #include <tuple>
 #include <unordered_map>
@@ -14,15 +13,13 @@ namespace soryuusi {
 using namespace std;
 
 struct Auxiliary_Tree{
-  vector<vector<int>> G;
   int n;
+  vector<int> h, nxt, to;
   vector<vector<int>> ancs;
   vector<int> depth;
   vector<int> ord;
   int root;
-  Auxiliary_Tree(int n0, int r = 0){
-    n = n0;
-    G.resize(n);
+  Auxiliary_Tree(int n0, int r = 0) : n(n0), h(n,-1){
     ancs.resize(n);
     depth.resize(n);
     ord.resize(n);
@@ -31,22 +28,27 @@ struct Auxiliary_Tree{
   void add_edge(int u,int v){
     assert(0 <= u && u < n);
     assert(0 <= v && v < n);
-    G[u].push_back(v);
-    G[v].push_back(u);
+    nxt.push_back(h[u]);
+    h[u] = to.size();
+    to.push_back(v);
+    nxt.push_back(h[v]);
+    h[v] = to.size();
+    to.push_back(u);
   }
   void set_up(){
-    function<void(int,int,int,int&)> dfs = [&](int v, int p, int dep, int& cnt){
+    auto dfs = [&](auto&& self, int v, int p, int dep, int& cnt) -> void {
       ord[v] = cnt;
       cnt++;
       ancs[v].push_back(p);
       while(ancs[v].back() != root) ancs[v].push_back(ancs[ancs[v].back()][min(ancs[v].size(), ancs[ancs[v].back()].size())-1]);
       depth[v] = dep;
-      for(int c: G[v]) if(c != p){
-        dfs(c,v,dep+1,cnt);
+      for(int i = h[v]; ~i; i = nxt[i]) if(to[i] != p){
+        int c = to[i];
+        self(self,c,v,dep+1,cnt);
       }
     };
     int cnt = 0;
-    dfs(root,root,0,cnt);
+    dfs(dfs,root,root,0,cnt);
   }
   int up(int v, int k){
     if(n < k) k = n;

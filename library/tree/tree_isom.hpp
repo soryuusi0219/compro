@@ -1,7 +1,6 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/tree/tree_isom.hpp
 #pragma once
 #include <algorithm>
-#include <functional>
 #include <map>
 #include <type_traits>
 #include <utility>
@@ -21,9 +20,9 @@ namespace tree_hash{
   vector<int> get_rooted_hashs(const vector<vector<long long>>& t, int r = 0){
     int n = t.size();
     vector<int> ret(n);
-    function<int(int, int)> get_hash = [&](int v, int p){
+    auto get_hash = [&](auto&& self, int v, int p) -> int {
       vector<int> re;
-		  for(int c : t[v]) if(c != p) re.push_back(get_hash(c,v));
+		  for(int c : t[v]) if(c != p) re.push_back(self(self,c,v));
       sort(re.begin(),re.end());
 		  if(!hash.count(re)){
 		    hash[re]=hashvec.size();
@@ -31,17 +30,17 @@ namespace tree_hash{
 	  	}
       return (ret[v] = hash[re]);
     };
-    get_hash(r,-1);
+    get_hash(get_hash,r,-1);
     return ret;
   }
   pair<long long, long long> tree_get_centroids(const vector<vector<long long>>& G){
     int n = G.size();
     long long u = -1;
     long long v = -1;
-    function<int(int, int)> dfs = [&](int x, int p){
+    auto dfs = [&](auto&& self, int x, int p) -> int {
       int sz = 1;
       for(int c : G[x])if(p != c){
-        int csz = dfs(c,x);
+        int csz = self(self,c,x);
         if(u >= 0) break;
         sz += csz;
       }
@@ -51,7 +50,7 @@ namespace tree_hash{
       }
       return sz;
     };
-    dfs(0,-1);
+    dfs(dfs,0,-1);
     if(u > v) swap(u,v);
     return {u,v};
   }

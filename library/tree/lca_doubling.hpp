@@ -1,6 +1,5 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/tree/lca_doubling.hpp
 #pragma once
-#include <functional>
 #include <utility>
 #include <vector>
 
@@ -11,20 +10,23 @@ using namespace std;
 
 struct lca_doubling{
   int N = 0;
-  vector<vector<int>> G;
+  vector<int> h, nxt, to;
   vector<vector<int>> ancs;
   vector<int> depth;
-  lca_doubling(int n) : N(n) {
-    G.resize(N);
+  lca_doubling(int n) : N(n), h(N,-1) {
     ancs.resize(N);
     depth.resize(N);
   }
   void add_edge(int u, int v){
-    G[u].push_back(v);
-    G[v].push_back(u);
+    nxt.push_back(h[u]);
+    h[u] = to.size();
+    to.push_back(v);
+    nxt.push_back(h[v]);
+    h[v] = to.size();
+    to.push_back(u);
   }
   void build() {
-    function<void(int, int, int)> dfs = [&](int v, int p, int dep){
+    auto dfs = [&](auto&& self, int v, int p, int dep) -> void {
       ancs[v].push_back(p);
       int d = dep >> 1;
       int i = 0;
@@ -34,12 +36,13 @@ struct lca_doubling{
         d >>= 1;
       }
       depth[v] = dep;
-      for(int c : G[v]){
+      for(int i = h[v]; ~i; i = nxt[i]){
+        int c = to[i];
         if(c==p) continue;
-        dfs(c,v,dep+1);
+        self(self,c,v,dep+1);
       }
     };
-    dfs(0,-1,0);
+    dfs(dfs,0,-1,0);
   }
   int up(int u, int n){
     int i = 0;

@@ -2,7 +2,6 @@
 #pragma once
 #include <algorithm>
 #include <cassert>
-#include <functional>
 #include <map>
 #include <stack>
 #include <tuple>
@@ -69,7 +68,9 @@ struct dynamic_connectivity_offline_data{
     for(auto &[l, r, e] : pende) _adde(l,r,e);
     for(auto &[l, x, v] : pendv) _addv(l,x,v);
   }
-  void run(const function<void(int)> &f){
+  template<class F>
+  void run(F&& f){
+    static_assert(is_invocable_r_v<void, F, int>);
     vector<int> states(szlog+1,0);
     int j, k = szlog;
     for(int i = 0; i < q; i++){

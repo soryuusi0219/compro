@@ -1,7 +1,6 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/tree/simple_euler_tour.hpp
 #pragma once
 #include <algorithm>
-#include <functional>
 #include <utility>
 #include <vector>
 
@@ -85,36 +84,40 @@ struct SimpleEularTour{
     }
   };
   int N = 0;
-  vector<vector<int>> G;
+  vector<int> h, nxt, to;
   vector<int> invertex, outvertex, tourid;
   StaticRMQ depth;
-  SimpleEularTour(int n) : N(n) {
-    G.resize(N);
+  SimpleEularTour(int n) : N(n), h(N,-1) {
     invertex.resize(N);
     outvertex.resize(N);
     tourid.resize(2*N-1);
   }
   void add_edge(int u, int v){
-    G[u].push_back(v);
-    G[v].push_back(u);
+    nxt.push_back(h[u]);
+    h[u] = to.size();
+    to.push_back(v);
+    nxt.push_back(h[v]);
+    h[v] = to.size();
+    to.push_back(u);
   }
   void build(int root = 0){
     int i = 0;
     vector<pair<int,int>> depvec(2*N-1, {inf,-1});
-    function<void(int,int,int)> dfs = [&](int v, int p, int dep){
+    auto dfs = [&](auto&& self, int v, int p, int dep) -> void {
       depvec[i] = {dep,v};
       invertex[v] = i;
       tourid[i] = v;
       i++;
-      for(int c : G[v]) if(c != p){
-        dfs(c,v,dep+1);
+      for(int k = h[v]; ~k; k = nxt[k]) if(to[k] != p){
+        int c = to[k];
+        self(self,c,v,dep+1);
         depvec[i] = {dep,v};
         tourid[i] = v;
         i++;
       }
       outvertex[v] = i;
     };
-    dfs(root,-1,0);
+    dfs(dfs,root,-1,0);
     depth = StaticRMQ(depvec);
   }
   int get_depth(int u){

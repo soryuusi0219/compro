@@ -58,6 +58,26 @@ g++ -std=c++20 -O2 -Wall -Wextra -Werror -I. verify/unit/sort_concatenation_min.
 /tmp/sort_concatenation_min_test
 ```
 
+再帰ラムダを使うグラフ・木・link-cut tree・splay treeの各実装は、
+次の専用テストで結果と内部操作を検証します。
+
+```sh
+for test in graph_general independent_set link_cut recursive_tree splay_tree splay_tree_lazy; do
+  g++ -std=c++20 -O2 -Wall -Wextra -Werror -I. "verify/unit/$test.cpp" -o "/tmp/$test-test"
+  "/tmp/$test-test"
+done
+```
+
+平坦な隣接リストへ変更した modified min-cost-flow と Steiner tree は、
+次の専用テストで逆辺、辺復元、両コンストラクタを検証します。
+
+```sh
+for test in min_cost_flow_modified steiner_tree; do
+  g++ -std=c++20 -O2 -Wall -Wextra -Werror -I. "verify/unit/$test.cpp" -o "/tmp/$test-test"
+  "/tmp/$test-test"
+done
+```
+
 3種類のC++テンプレートの共通ヘルパーは、次のコマンドで検証します。
 `TEMPLATE_KIND` は順に main、main_noACL、tester を選びます。
 tester 本体の無限ループは実行しません。

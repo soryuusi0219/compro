@@ -14,7 +14,7 @@ using namespace std;
 template<class T, class Compare = less<T>>
 vector<pair<int,T>> SMAWK(int h, int w, const function<T(long long, long long)>& f, const Compare &comp = Compare()){
   vector<pair<int,T>> res(h);
-  function<void(int,vector<int>&)> solve = [&](int k, const vector<int> col){
+  auto solve = [&](auto&& self, int k, const vector<int>& col) -> void {
     int n = h >> k;
     if(!n) return;
     vector<int> c2;
@@ -30,7 +30,7 @@ vector<pair<int,T>> SMAWK(int h, int w, const function<T(long long, long long)>&
         ++i;
       }
     }
-    solve(k+1,c2);
+    self(self,k+1,c2);
     i = 1;
     res[(1<<k)-1] = {col[0],f((1<<k)-1, col[0])};
     for(int j : col){
@@ -44,7 +44,7 @@ vector<pair<int,T>> SMAWK(int h, int w, const function<T(long long, long long)>&
   vector<int> row(h), col(w);
   iota(row.begin(),row.end(),0);
   iota(col.begin(),col.end(),0);
-  solve(0,col);
+  solve(solve,0,col);
   return res;
 }
 
