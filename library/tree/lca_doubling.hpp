@@ -10,23 +10,29 @@ using namespace std;
 
 struct lca_doubling{
   int N = 0;
-  vector<int> h, nxt, to;
+  vector<int> par, deg;
   vector<vector<int>> ancs;
   vector<int> depth;
-  lca_doubling(int n) : N(n), h(N,-1) {
+  lca_doubling(int n) : N(n), par(N,0), deg(N,0) {
     ancs.resize(N);
     depth.resize(N);
   }
   void add_edge(int u, int v){
-    nxt.push_back(h[u]);
-    h[u] = to.size();
-    to.push_back(v);
-    nxt.push_back(h[v]);
-    h[v] = to.size();
-    to.push_back(u);
+    par[u] ^= v, par[v] ^= u, ++deg[u], ++deg[v];
   }
   void build() {
-    auto dfs = [&](auto&& self, int v, int p, int dep) -> void {
+    vector<int> ord;
+    ord.reserve(N-1);
+    deg[0] = 0;
+    for(int i = 1; i < N; i++) if(deg[i] == 1) ord.push_back(i);
+    for(int i = 0; i < (int)ord.size(); i++){
+      int v = ord[i], p = par[v];
+      par[p] ^= v;
+      if(--deg[p] == 1) ord.push_back(p);
+    }
+    ancs[0].push_back(-1);
+    for(int j = (int)ord.size()-1; j >= 0; j--){
+      int v = ord[j], p = par[v], dep = depth[p]+1;
       ancs[v].push_back(p);
       int d = dep >> 1;
       int i = 0;
@@ -36,13 +42,7 @@ struct lca_doubling{
         d >>= 1;
       }
       depth[v] = dep;
-      for(int i = h[v]; ~i; i = nxt[i]){
-        int c = to[i];
-        if(c==p) continue;
-        self(self,c,v,dep+1);
-      }
-    };
-    dfs(dfs,0,-1,0);
+    }
   }
   int up(int u, int n){
     int i = 0;

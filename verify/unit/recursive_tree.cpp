@@ -84,9 +84,10 @@ int main() {
   assert(auxiliary.lca(3,4) == 1);
   assert(auxiliary.lca(3,6) == 0);
   assert(auxiliary.up(6,2) == 2);
+  assert(auxiliary.get_depth(6) == 3);
   const auto [compressed,index,root] = auxiliary.auxiliary_tree({3,4,6});
-  assert(std::set<long long>(index.begin(),index.end()) ==
-         std::set<long long>({0,1,3,4,6}));
+  assert(std::set<int>(index.begin(),index.end()) ==
+         std::set<int>({0,1,3,4,6}));
   assert(index[root] == 0);
   std::size_t edge_count = 0;
   for(const auto& adjacent : compressed) edge_count += adjacent.size();
@@ -97,12 +98,25 @@ int main() {
   std::size_t weighted_edge_count = 0;
   for(int u = 0; u < static_cast<int>(weighted_compressed.size()); ++u) {
     for(const auto& [v,distance] : weighted_compressed[u]) {
-      assert(distance == auxiliary.depth[weighted_index[v]]-
-                         auxiliary.depth[weighted_index[u]]);
+      assert(distance == auxiliary.get_depth(weighted_index[v])-
+                         auxiliary.get_depth(weighted_index[u]));
       ++weighted_edge_count;
     }
   }
   assert(weighted_edge_count == edge_count);
+  const auto [empty_compressed,empty_index,empty_root] = auxiliary.auxiliary_tree({});
+  assert(empty_compressed.empty() && empty_index.empty() && empty_root == -1);
+
+  soryuusi::Auxiliary_Tree rooted_auxiliary(7,5);
+  add_edges(rooted_auxiliary);
+  rooted_auxiliary.set_up();
+  assert(rooted_auxiliary.lca(3,6) == 5);
+  assert(rooted_auxiliary.up(3,2) == 0);
+  assert(rooted_auxiliary.up(3,4) == 5);
+  const auto [rooted_compressed,rooted_index,rooted_root] =
+      rooted_auxiliary.auxiliary_tree({3,4,6});
+  assert(rooted_index[rooted_root] == 5);
+  assert(rooted_compressed.size() == 5);
 
   soryuusi::Rerooting<long long,sum,zero,int,identity_mapping> rerooting(7,values);
   rerooting.add_edge(0,1,0);
