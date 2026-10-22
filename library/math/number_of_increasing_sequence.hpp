@@ -38,8 +38,8 @@ mint num_inc_seq_under(long long n, long long m, vector<long long> a){
     w1.insert(w1.begin(),w.begin()+y0,w.begin()+y1);
     for(int j = 0; j < min(x,y); j++) v1[j] += w0[y-1-j] * factorials.mint_inv_factorial(j) * (j&1?-1:1);
     for(int j = 0; j < min(x,y); j++) w1[j] += v0[x-1-j] * factorials.mint_inv_factorial(j) * (j&1?-1:1);
-    for(int j = 0; j < x; j++) cv[j] = factorials.nCk(y+j-1,j);
-    for(int j = 0; j < y; j++) cw[j] = factorials.nCk(x+j-1,j);
+    for(int j = 0; j < x; j++) cv[j] = factorials.template nCk<true>(y+j-1,j);
+    for(int j = 0; j < y; j++) cw[j] = factorials.template nCk<true>(x+j-1,j);
     v1 = convolution(v1,cv);
     w1 = convolution(w1,cw);
     for(int j = 0; j < x; j++) v[j+x0] = v1[j];

@@ -1,0 +1,5 @@
+{
+  "name": "matrix_det_matrix",
+  "problem": "linear_algebra/matrix_det",
+  "source": "verify/library_checker/linear_algebra/matrix_det_matrix.cpp"
+}

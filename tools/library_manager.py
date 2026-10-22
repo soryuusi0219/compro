@@ -17,7 +17,12 @@ from typing import Iterable
 ROOT = Path(__file__).resolve().parents[1]
 LIBRARY_DIR = ROOT / "library"
 ATCODER_DIR = ROOT / "third_party/ac-library/atcoder"
-MANIFEST_DIR = ROOT / "verify/library_checker/manifests"
+ONLINE_SECTIONS = ("library_checker", "aoj")
+VERIFY_SECTIONS = (*ONLINE_SECTIONS, "unit")
+MANIFEST_DIRS = tuple(
+    ROOT / "verify" / section / "manifests" for section in ONLINE_SECTIONS
+)
+UNIT_DIR = ROOT / "verify/unit"
 DEFAULT_EXPANDED_DIR = ROOT / "build/expanded"
 DEFAULT_REPORT_PREFIX = ROOT / "build/library_status"
 GITHUB_LIBRARY_BASE = "https://github.com/soryuusi0219/compro/blob/main/"
@@ -144,30 +149,43 @@ def transitive_dependencies(
 def load_verify_targets(graph: dict[str, list[str]]) -> list[dict[str, object]]:
     targets: list[dict[str, object]] = []
     names: set[str] = set()
-    manifest_paths = sorted(MANIFEST_DIR.rglob("*.json"))
+    manifest_paths = sorted(
+        path for directory in MANIFEST_DIRS for path in directory.rglob("*.json")
+    )
     for manifest_path in manifest_paths:
         target = json.loads(manifest_path.read_text(encoding="utf-8"))
-        name = str(target["name"])
-        if not re.fullmatch(r"[a-z0-9_]+", name):
+        manifest_name = str(target["name"])
+        if not re.fullmatch(r"[a-z0-9_]+", manifest_name):
             raise LibraryError(
-                f"invalid verify target name {name!r}; use lowercase snake_case"
+                f"invalid verify target name {manifest_name!r}; use lowercase snake_case"
             )
-        if name in names:
-            raise LibraryError(f"duplicate verify target: {name}")
-        if manifest_path.stem != name:
+        if manifest_path.stem != manifest_name:
             raise LibraryError(
-                f"{relative(manifest_path)}: filename must match target name {name!r}"
+                f"{relative(manifest_path)}: filename must match target name "
+                f"{manifest_name!r}"
             )
-        names.add(name)
+        if "url" in target and not str(target["url"]).startswith(
+            ("http://", "https://")
+        ):
+            raise LibraryError(
+                f"{manifest_name}: invalid problem URL {target['url']!r}"
+            )
         source_name = str(target["source"])
         source_path = Path(source_name)
+        manifest_relative = manifest_path.relative_to(ROOT / "verify")
+        section = manifest_relative.parts[0]
+        name = f"{section}/{manifest_name}"
+        if name in names:
+            raise LibraryError(f"duplicate verify target: {name}")
+        names.add(name)
+        manifest_dir = ROOT / "verify" / section / "manifests"
         try:
-            source_category = source_path.relative_to("verify/library_checker").parent
+            source_category = source_path.relative_to(f"verify/{section}").parent
         except ValueError as error:
             raise LibraryError(
                 f"{name}: invalid verify source path {source_name}"
             ) from error
-        manifest_category = manifest_path.relative_to(MANIFEST_DIR).parent
+        manifest_category = manifest_path.relative_to(manifest_dir).parent
         if manifest_category != source_category:
             raise LibraryError(
                 f"{relative(manifest_path)}: category must match {source_category.as_posix()}"
@@ -188,6 +206,7 @@ def load_verify_targets(graph: dict[str, list[str]]) -> list[dict[str, object]]:
             {
                 "name": name,
                 "problem": str(target["problem"]),
+                **({"url": str(target["url"])} if "url" in target else {}),
                 "source": source_name,
                 "manifest": relative(manifest_path),
                 "direct_libraries": direct_libraries,
@@ -200,7 +219,41 @@ def load_verify_targets(graph: dict[str, list[str]]) -> list[dict[str, object]]:
                 ),
             }
         )
-    return targets
+
+    for source in sorted(UNIT_DIR.glob("*.cpp")):
+        name = f"unit/{source.stem}"
+        if name in names:
+            raise LibraryError(f"duplicate verify target: {name}")
+        names.add(name)
+        source_name = relative(source)
+        direct = dependency_includes(source)
+        missing = [dependency for dependency in direct if dependency not in graph]
+        if missing:
+            raise LibraryError(f"{name}: missing dependency {', '.join(missing)}")
+        all_dependencies: set[str] = set(direct)
+        for dependency in direct:
+            all_dependencies.update(transitive_dependencies(dependency, graph))
+        targets.append(
+            {
+                "name": name,
+                "problem": "local/unit",
+                "source": source_name,
+                "manifest": "",
+                "direct_libraries": [
+                    item for item in direct if item.startswith("library/")
+                ],
+                "all_libraries": sorted(
+                    item for item in all_dependencies if item.startswith("library/")
+                ),
+                "direct_atcoder_dependencies": [
+                    item for item in direct if item.startswith("atcoder/")
+                ],
+                "all_atcoder_dependencies": sorted(
+                    item for item in all_dependencies if item.startswith("atcoder/")
+                ),
+            }
+        )
+    return sorted(targets, key=lambda target: str(target["name"]))
 
 
 def expand_source(source_name: str, graph: dict[str, list[str]], *, header: bool) -> str:
@@ -362,7 +415,7 @@ def markdown_report(data: dict[str, object]) -> str:
         "# Library status",
         "",
         "このファイルは `python3 tools/library_manager.py report` で生成されます。",
-        "verify 状態は `verify/library_checker/manifests/` への登録状況を表します。",
+        "verify 状態はオンラインジャッジ用manifestとunitテストへの登録状況を表します。",
         "",
         f"- Libraries: {summary['libraries']}",
         f"- Directly verified: {summary['directly_verified']}",
@@ -481,7 +534,11 @@ def affected_verify_targets(
 ) -> tuple[list[str], bool]:
     all_names = [str(target["name"]) for target in targets]
     by_source = {str(target["source"]): str(target["name"]) for target in targets}
-    by_manifest = {str(target["manifest"]): str(target["name"]) for target in targets}
+    by_manifest = {
+        str(target["manifest"]): str(target["name"])
+        for target in targets
+        if target["manifest"]
+    }
     selected: set[str] = set()
     force_all = False
 
@@ -491,13 +548,13 @@ def affected_verify_targets(
             continue
         if path in {
             ".github/workflows/verify.yml",
-            "verify/library_checker/config.json",
+            "requirements-verify.txt",
         } or path.startswith("tools/"):
             force_all = True
             continue
         if status == "D" and (
             path.startswith("library/")
-            or path.startswith("verify/library_checker/")
+            or any(path.startswith(f"verify/{section}/") for section in VERIFY_SECTIONS)
             or path.startswith("third_party/ac-library/atcoder/")
         ):
             force_all = True
@@ -543,7 +600,7 @@ def parse_args() -> argparse.Namespace:
     expand.add_argument("--output-dir", type=Path, default=DEFAULT_EXPANDED_DIR)
 
     expand_verify = subparsers.add_parser(
-        "expand-verify", help="generate standalone Library Checker submissions"
+        "expand-verify", help="generate standalone verification sources"
     )
     expand_verify.add_argument(
         "targets", nargs="*", help="verify target names; defaults to all targets"

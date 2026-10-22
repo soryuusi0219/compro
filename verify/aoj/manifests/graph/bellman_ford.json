@@ -1,0 +1,6 @@
+{
+  "name": "bellman_ford",
+  "problem": "aizu/GRL_1_B",
+  "url": "https://onlinejudge.u-aizu.ac.jp/problems/GRL_1_B",
+  "source": "verify/aoj/graph/bellman_ford.cpp"
+}

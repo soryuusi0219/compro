@@ -1,15 +1,18 @@
 # Library Checker verification
 
-[`yosupo06/library-checker-problems`](https://github.com/yosupo06/library-checker-problems)
-が生成する公式テストケースと output checker を使って、自作ライブラリを検証します。
+[`online-judge-tools/verification-helper`](https://github.com/online-judge-tools/verification-helper)
+の `oj-verify` を使い、Library Checker のシステムケースで
+自作ライブラリを検証します。
 
 ## Requirements
 
 - Python 3.8 以上
 - `g++` または `CXX` で指定した C++ コンパイラ
-- Git
+- `requirements-verify.txt` に記載した Python パッケージ
 
-色付きログを利用する場合のみ、任意で `colorlog` をインストールできます。
+```sh
+python3 -m pip install -r requirements-verify.txt
+```
 
 ## Run
 
@@ -22,7 +25,7 @@ make verify
 ターゲットを指定することもできます。
 
 ```sh
-make verify TARGETS=point_add_range_sum
+make verify TARGETS=library_checker/point_add_range_sum
 ```
 
 自作ライブラリを埋め込み、AtCoder Libraryのincludeを残した提出用コードは、次のコマンドで
@@ -32,8 +35,8 @@ make verify TARGETS=point_add_range_sum
 make expand-verify
 ```
 
-生成したコードを公式ケースで検証する場合は `--expanded` を指定します。この場合は
-リポジトリのincludeパスを渡さず、AtCoder Libraryのincludeパスだけをコンパイラへ渡します。
+生成したコードを公式ケースで検証する場合は `--expanded` を指定します。
+verification-helper用の `.test.cpp` は展開後のソースを読み込みます。
 
 ```sh
 make all
@@ -46,16 +49,17 @@ make verify VERIFY_ARGS=--expanded
 make verify-list
 ```
 
-初回実行時は `config.json` で固定した Library Checker Problems を
-`build/library-checker-problems/` に clone します。生成済みテストケースを再利用する場合は
-`--no-generate`、ネットワークアクセスを禁止する場合は `--offline` を指定します。
+`tools/verify.py` はmanifestから `build/verify/oj/sources/` に `.test.cpp` を生成し、
+`oj-verify run` へ渡します。取得したシステムケースはverification-helperにより
+`.verify-helper/cache/` へキャッシュされます。並列数、全体のタイムアウト、各ケースの
+制限時間はそれぞれ `-j`、`--timeout`、`--tle` で指定できます。
 
 ## Add a target
 
 1. 問題の入出力と `library/` を接続する C++ コードを分野別ディレクトリへ追加します。
 2. `manifests/<分野>/<target名>.json` に名前、Library Checker の問題パス、
    ソースパスを記述します。分野ディレクトリはverifyソースと同じ階層にします。
-3. `make verify TARGETS=<name>` を実行します。
+3. `make verify TARGETS=library_checker/<name>` を実行します。
 
 ```json
 {
@@ -65,6 +69,8 @@ make verify-list
 }
 ```
 
-失敗した入力と実際の出力は `build/verify/failures/<name>/` に保存されます。
-Library Checker Problems の更新は `config.json` の `revision` と
-GitHub Actions のキャッシュキーを同じコミットへ変更して行います。
+manifest内の`name`には接頭辞を付けません。公開されるverifyターゲット名は、
+配置先から自動的に`library_checker/<name>`になります。
+
+`problem` の末尾から Library Checker の問題URLを生成します。
+verification-helperのバージョンは `requirements-verify.txt` で固定しています。

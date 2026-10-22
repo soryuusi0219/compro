@@ -130,6 +130,7 @@ struct StaticTopTreeRerooting{
       }
       pp.back() = -1;
     }
+    inline int parent(int v) const {return par[v];}
     void set_data(const vector<S>& v, const vector<Srev>& vrev){
       for(int i = 0; i < n; ++i) data[i] = v[i], datarev[i] = vrev[i];
       for(int i = n; i < n*2-1; ++i) upd(i); 

@@ -1,0 +1,5 @@
+{
+  "name": "range_affine_point_get_dual_segtree",
+  "problem": "data_structure/range_affine_point_get",
+  "source": "verify/library_checker/data_structure/range_affine_point_get_dual_segtree.cpp"
+}

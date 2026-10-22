@@ -1,0 +1,5 @@
+{
+  "name": "dynamic_tree_vertex_add_path_sum_lazy_link_cut",
+  "problem": "tree/dynamic_tree_vertex_add_path_sum",
+  "source": "verify/library_checker/tree/dynamic_tree_vertex_add_path_sum_lazy_link_cut.cpp"
+}

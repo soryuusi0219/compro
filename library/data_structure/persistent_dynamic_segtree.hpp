@@ -94,7 +94,7 @@ struct Dynamic_Segtree{
     NP set(NP p, int i, S x){return _set(p,0,n,i,x);}
     S get(NP p, int i) const {return _get(p,0,n,i);}
     S prod(NP p, int l, int r) const {return _prod(p,0,n,l,r);}
-    S all_prod(NP p) const {return (p ? p->val : e());}
+    S all_prod(NP p) const {return (p ? p->sum : e());}
     template<class F> S max_right(NP p, int i, F f) const {S x = e(); return _max_right(p, 0, n, i, x, f);}
     template<class F> S min_left(NP p, int i, F f) const {S x = e(); return _min_left(p, 0, n, i, x, f);}
 };

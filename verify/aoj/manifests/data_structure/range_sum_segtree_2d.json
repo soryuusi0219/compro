@@ -1,0 +1,6 @@
+{
+  "name": "range_sum_segtree_2d",
+  "problem": "aizu/DSL_2_B",
+  "url": "https://onlinejudge.u-aizu.ac.jp/problems/DSL_2_B",
+  "source": "verify/aoj/data_structure/range_sum_segtree_2d.cpp"
+}

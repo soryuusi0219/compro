@@ -26,7 +26,7 @@ struct BellmanFord{
   vector<Edge> graph;
   BellmanFord(int n0){
     n = n0;
-    graph.resize(n);
+    graph.reserve(n);
   }
   void add_edge(int from, int to, T cost, bool undirected = false){
     assert(0 <= from && from < n);
@@ -39,10 +39,12 @@ struct BellmanFord{
     dis[s] = e();
     for(int _ = 0; _ < n-1; _++){
       for(Edge edge:graph){
+        if(dis[edge.from] == infty()) continue;
         dis[edge.to] = min(dis[edge.to], op(dis[edge.from], edge.cost));
       }
     }
     for(Edge edge:graph){
+      if(dis[edge.from] == infty()) continue;
       if(dis[edge.to] > op(dis[edge.from], edge.cost)){
         return {false,dis}; 
       }
