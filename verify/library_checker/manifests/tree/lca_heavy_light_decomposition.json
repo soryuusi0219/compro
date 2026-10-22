@@ -1,0 +1,5 @@
+{
+  "name": "lca_heavy_light_decomposition",
+  "problem": "tree/lca",
+  "source": "verify/library_checker/tree/lca_heavy_light_decomposition.cpp"
+}

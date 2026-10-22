@@ -119,6 +119,7 @@ struct StaticTopTree{
       }
       pp.back() = -1;
     }
+    inline int parent(int v) const {return par[v];}
     void set_data(const vector<S>& v){
       for(int i = 0; i < n; ++i) data[i] = v[i];
       for(int i = n; i < n*2-1; ++i) data[i] = (type[i-n] ? compress : rake)(data[lp[i]],data[rp[i]]);

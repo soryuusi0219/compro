@@ -69,12 +69,12 @@ struct SimpleEularTour{
       }
       for(int i = 1; i <= m; i += 2) sparse_table[0][i] = {inf,-1};
     }
-    pair<int,int> naive_prod(int l, int r){
+    pair<int,int> naive_prod(int l, int r) const {
       pair<int,int> res = {inf,-1};
       for(int i = l; i < r; i++) res = min(res,data[i]);
       return res;
     }
-    pair<int,int> prod(int l, int r){
+    pair<int,int> prod(int l, int r) const {
       if(l >= r) return {inf,-1};
       if(r-l <= 8) return naive_prod(l,r);
       int l1 = (l >> b) + 1;
@@ -117,14 +117,14 @@ struct SimpleEularTour{
     dfs(dfs,root,-1,0);
     depth = StaticRMQ(depvec);
   }
-  int get_depth(int u){
+  inline int get_depth(int u) const {
     return depth.data[invertex[u]].first;
   }
-  int lca(int u, int v){
+  inline int lca(int u, int v) const {
     if(invertex[u] > outvertex[v]) swap(u,v);
     return depth.prod(invertex[u], outvertex[v]).second;
   }
-  int dist(int u, int v){
+  inline int dist(int u, int v) const {
     int w = lca(u,v);
     return get_depth(u)+get_depth(v)-get_depth(w)*2;
   }

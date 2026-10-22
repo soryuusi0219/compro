@@ -44,7 +44,7 @@ struct lca_doubling{
       depth[v] = dep;
     }
   }
-  int up(int u, int n){
+  int up(int u, int n) const {
     int i = 0;
     while(n){
       if(n&1) u = ancs[u][i];
@@ -53,7 +53,7 @@ struct lca_doubling{
     }
     return u;
   }
-  int lca(int u, int v){
+  int lca(int u, int v) const {
     if(depth[v] < depth[u]) swap(u,v);
     v = up(v, depth[v] - depth[u]);
     if(u==v) return u;
@@ -67,10 +67,10 @@ struct lca_doubling{
     }
     return ancs[u][0];
   }
-  int dist(int u, int v){
+  int dist(int u, int v) const {
     return depth[u] + depth[v] - 2 * depth[lca(u,v)];
   }
-  int jump(int u, int v, int k){
+  int jump(int u, int v, int k) const {
     int w = lca(u,v);
     int d = depth[u] + depth[v] - 2 * depth[w];
     if(k > d) return -1;
