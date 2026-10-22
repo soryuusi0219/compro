@@ -1,0 +1,5 @@
+{
+  "name": "sum_of_totient_function_dirichlet_sum",
+  "problem": "number_theory/sum_of_totient_function",
+  "source": "verify/library_checker/number_theory/sum_of_totient_function_dirichlet_sum.cpp"
+}

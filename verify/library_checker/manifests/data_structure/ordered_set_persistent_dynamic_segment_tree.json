@@ -1,0 +1,5 @@
+{
+  "name": "ordered_set_persistent_dynamic_segment_tree",
+  "problem": "data_structure/ordered_set",
+  "source": "verify/library_checker/data_structure/ordered_set_persistent_dynamic_segment_tree.cpp"
+}

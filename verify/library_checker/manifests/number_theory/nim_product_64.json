@@ -1,0 +1,5 @@
+{
+  "name": "nim_product_64",
+  "problem": "number_theory/nim_product_64",
+  "source": "verify/library_checker/number_theory/nim_product_64.cpp"
+}

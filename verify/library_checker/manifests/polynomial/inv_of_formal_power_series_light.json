@@ -1,0 +1,5 @@
+{
+  "name": "inv_of_formal_power_series_light",
+  "problem": "polynomial/inv_of_formal_power_series",
+  "source": "verify/library_checker/polynomial/inv_of_formal_power_series_light.cpp"
+}

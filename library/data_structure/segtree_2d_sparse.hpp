@@ -82,7 +82,7 @@ struct Segtree2D_Sparse{
       }
       return res;
     }
-    S all_prod(){return data[1];}
+    S all_prod(){return data[1].all_prod();}
 };
 
 }  // namespace soryuusi

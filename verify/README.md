@@ -30,7 +30,8 @@ verify/
 
 `unit/` には、オンラインジャッジで直接検証できない細かなAPI、内部操作、
 ランダム比較を残します。対応する実問題がある主要操作は
-`library_checker/` または `aoj/` にもverifyを登録し、両方を独立して実行します。
+`library_checker/` または `aoj/` のverifyへ移しています。同じライブラリでも、問題で
+使わないコンストラクタや補助操作はunitテストに残します。
 
 各 `verify/unit/<name>.cpp` は `unit/<name>` として自動登録されます。個別または
 全ターゲットを、オンラインジャッジ用ターゲットと同じコマンドで実行できます。
@@ -47,8 +48,11 @@ make verify
 主要操作のオンラインジャッジ側への移行先は次のとおりです。
 
 - Library Checker: independent set、汎用グラフ、CSR graph、rerooting、Euler Tour、
-  link-cut tree、splay tree
-- AOJ: BFS、modified min-cost-flow、segtree/lazy segtree template
+  link-cut tree、splay tree、dual/sparse/2次元/永続セグメント木、疎BIT、rollback Mo、
+  頻度・最頻値クエリ、persistent union-find、incremental MSF、行列式、nim積、
+  一般化floor sum、Dirichlet和、軽量FPS、monotone minima、SMAWK
+- AOJ: BFS、Bellman–Ford、modified min-cost-flow、segtree/lazy segtree template、
+  trie、2次元BIT・2次元セグメント木
 
 suffix tree、rolling hash、Steiner treeには既存の Library Checker ターゲットが
 あります。オンラインジャッジで表現しにくい互換別名、空区間、辺復元、
@@ -82,3 +86,7 @@ tester 本体の無限ループは実行しません。
 
 集約・ソートのマクロ、添字ソート、比較器、半開区間の判定、
 出力ヘルパーの戻り値と出力、入れ子のハッシュキーを検証します。
+
+このほか、各オンラインverifyでは表現できない疎・2次元・永続データ構造の補助API、
+平面グラフ、static top tree、trieの検索補助、行列・有限体・nimber・Dirichlet和・FPSの
+追加演算、区分線形関数、monotone minima DPなどを決定的テストとナイーブ比較で検証します。

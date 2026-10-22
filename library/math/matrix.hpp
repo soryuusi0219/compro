@@ -58,18 +58,18 @@ struct Matrix : vector<vector<T>>{
   Matrix operator/(const T &k) const { return (Matrix(*this) /= k); }
   Matrix operator%(const T &k) const { return (Matrix(*this) %= k); }
 
-  Matrix &operator-() const {
+  Matrix operator-() const {
     Matrix ret(*this);
     for(int i = 0; i < height(); i++) for(int j = 0; j < width(); j++) ret[i][j] = -ret[i][j];
     return ret;
   }
 
-  Matrix &operator==(const Matrix &other) const {
+  bool operator==(const Matrix &other) const {
     assert(hwsize() == other.hwsize());
     for(int i = 0; i < height(); i++) for(int j = 0; j < width(); j++) if((*this)[i][j] != other[i][j]) return false;
     return true;
   }
-  Matrix &operator!=(const Matrix &other) const {
+  bool operator!=(const Matrix &other) const {
     assert(hwsize() == other.hwsize());
     for(int i = 0; i < height(); i++) for(int j = 0; j < width(); j++) if((*this)[i][j] != other[i][j]) return true;
     return false;
@@ -114,11 +114,11 @@ struct Matrix : vector<vector<T>>{
         x = 0;
         continue;
       }
-      if(k != c) swap((*this)[k],(*this)[c]);
+      if(k != c) swap((*this)[k],(*this)[c]), x = -x;
       x *= (*this)[c][i];
       T ai = T(1)/(*this)[c][i];
       for(int ii = i; ii < width(); ii++) (*this)[c][ii] *= ai;
-      for(int j = k+1; j < height(); j++){
+      for(int j = c+1; j < height(); j++){
         if((*this)[j][i] != 0) {
           T b = (*this)[j][i];
           for(int ii = i; ii < width(); ii++) (*this)[j][ii] -=  (*this)[c][ii] * b;

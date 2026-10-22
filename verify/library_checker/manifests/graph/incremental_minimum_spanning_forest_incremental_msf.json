@@ -1,0 +1,5 @@
+{
+  "name": "incremental_minimum_spanning_forest_incremental_msf",
+  "problem": "graph/incremental_minimum_spanning_forest",
+  "source": "verify/library_checker/graph/incremental_minimum_spanning_forest_incremental_msf.cpp"
+}

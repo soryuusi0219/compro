@@ -78,7 +78,7 @@ struct Trie{
     return nodes[0].sz;
   }
   VC kth(int k) const {
-    string res;
+    VC res;
     int p = 0;
     while (true) {
       if (nodes[p].sz > 0) {
@@ -115,7 +115,7 @@ struct Trie{
   int lcp(const VC& s) const {
     int p = 0;
     int cur = 0;
-    for (char ch : s) {
+    for (C ch : s) {
       int i = ch - MIN_CHARCTER;
       int nx = nodes[p].next[i];
       if (nx == -1 || nodes[nx].sz == 0) break;
@@ -126,7 +126,7 @@ struct Trie{
   }
   int node_index_of(const VC& s) const {
     int p = 0;
-    for (char ch : s) {
+    for (C ch : s) {
       int i = ch - MIN_CHARCTER;
       if (nodes[p].next[i] == -1) return -1;
       p = nodes[p].next[i];

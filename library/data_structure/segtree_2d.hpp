@@ -62,7 +62,7 @@ struct Segtree2D{
       return res;
     }
 
-    S all_prod() { return data[1]; }
+    S all_prod() { return data[id(1,1)]; }
 };
 
 }  // namespace soryuusi
