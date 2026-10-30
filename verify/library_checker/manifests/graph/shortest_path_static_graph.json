@@ -1,0 +1,5 @@
+{
+  "name": "shortest_path_static_graph",
+  "problem": "graph/shortest_path",
+  "source": "verify/library_checker/graph/shortest_path_static_graph.cpp"
+}

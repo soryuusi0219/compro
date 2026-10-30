@@ -68,7 +68,7 @@ struct HLdecomposition_Balanced{
     void add_edge(int u, int v){
       par[u] ^= v, par[v] ^= u, ++deg[u], ++deg[v];
     }
-    void build(int root, const vector<S>& data = {}){
+    void build(int root = 0, const vector<S>& data = {}){
       deg[root] = 0;
       vector<int> nxt(n,-1), mxsz(n,0), bk(n,-1);
       iota(bk.begin(),bk.end(),0);

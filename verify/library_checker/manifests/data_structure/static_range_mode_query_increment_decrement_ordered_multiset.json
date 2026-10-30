@@ -1,0 +1,5 @@
+{
+  "name": "static_range_mode_query_increment_decrement_ordered_multiset",
+  "problem": "data_structure/static_range_mode_query",
+  "source": "verify/library_checker/data_structure/static_range_mode_query_increment_decrement_ordered_multiset.cpp"
+}

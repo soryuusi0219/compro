@@ -222,9 +222,13 @@ struct Dirichlet_Sum{
     else return Dirichlet_Sum([](long long x) -> T{T tx = x; return tx*tx*tx*tx*tx;}, [](long long x) -> T{T tx = x; return tx*tx*(tx+1)*(tx+1)*(2*tx*(tx+1)+1)*(2*tx*(tx+1)+1)/12;}, true);
   }
   inline T getN(){return au[0];}
+  inline T getN() const {return au[0];}
   inline T getNdivi(int i){return au[i-1];}
+  inline T getNdivi(int i) const {return au[i-1];}
   inline vector<T> getupper(){return au;}
+  inline vector<T> getupper() const {return au;}
   inline pair<vector<T>,vector<T>> getAll(){return {al,au};}
+  inline pair<vector<T>,vector<T>> getAll() const {return {al,au};}
 };
 template<class T, int id> long long Dirichlet_Sum<T,id>::N;
 template<class T, int id> long long Dirichlet_Sum<T,id>::K;

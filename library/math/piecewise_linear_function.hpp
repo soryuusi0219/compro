@@ -51,7 +51,7 @@ struct PiecewiseLinearFunction {
     T cur_y = init_y + a * start_x;
     T min_y = cur_y;
     for(auto& seg : segments) {
-      if(has_jmp) min_y = min(min_y, cur_y + (seg.slope + a) * (seg.length - 1)) + seg.jump;
+      if(has_jmp) min_y = min(min_y, cur_y + (seg.slope + a) * (seg.length - 1));
       cur_y += (seg.slope + a) * seg.length + seg.jump;
       min_y = min(min_y, cur_y);
     }
@@ -178,9 +178,9 @@ struct PiecewiseLinearFunction {
   friend PiecewiseLinearFunction operator*(PiecewiseLinearFunction f, T c) {return f *= c;}
   PiecewiseLinearFunction operator-() const {
     auto res = *this;
-    init_y = -init_y;
+    res.init_y = -res.init_y;
     for(auto& seg : res.segments) seg.slope = -seg.slope, seg.jump = -seg.jump;
-    return *res;
+    return res;
   }
 
   void merge_max_straight(T& bk, T len, T f_y0, T g_y0, T f_slope, T g_slope) {

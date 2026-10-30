@@ -1,0 +1,6 @@
+{
+  "name": "bfs_dijkstra_1",
+  "problem": "aizu/ALDS1_11_C",
+  "url": "https://onlinejudge.u-aizu.ac.jp/problems/ALDS1_11_C",
+  "source": "verify/aoj/graph/bfs_dijkstra_1.cpp"
+}

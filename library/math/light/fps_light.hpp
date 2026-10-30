@@ -74,8 +74,9 @@ struct FPS : vector<Mint>{
     return g;
   }
   FPS diff() const {
+    if(size() == 0) return {};
     FPS res(begin()+1, end());
-    rep(i,size()-1) res[i] *= i+1;
+    rep(i,res.size()) res[i] *= i+1;
     return res;
   }
   FPS integral() const {

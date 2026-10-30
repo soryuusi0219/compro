@@ -1,0 +1,5 @@
+{
+  "name": "persistent_unionfind_with_data",
+  "problem": "data_structure/persistent_unionfind",
+  "source": "verify/library_checker/data_structure/persistent_unionfind_with_data.cpp"
+}

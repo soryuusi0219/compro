@@ -32,7 +32,7 @@ struct GF2{
   friend GF2 operator+(GF2 a, GF2 b) { return a.x ^ b.x; }
   friend GF2 operator-(GF2 a, GF2 b) { return a.x ^ b.x; }
   friend GF2 operator*(GF2 a, GF2 b) { return mul(a.x, b.x); }
-  friend GF2 operator/(GF2 a, GF2 b) { return mul(a.x, b.inv()); }
+  friend GF2 operator/(GF2 a, GF2 b) { return mul(a.x, b.inv().x); }
   friend GF2& operator+=(GF2& a, GF2 b) { return a = a.x ^ b.x; }
   friend GF2& operator-=(GF2& a, GF2 b) { return a = a.x ^ b.x; }
   friend GF2& operator*=(GF2& a, GF2 b) { return a = mul(a.x,b.x); }
@@ -40,8 +40,8 @@ struct GF2{
   friend bool operator==(const GF2& a, const GF2& b) { return a.x == b.x; }
   friend bool operator!=(const GF2& a, const GF2& b) { return a.x != b.x; }
   friend bool operator<(const GF2& a, const GF2& b) { return a.x < b.x; }
-  friend bool operator<(const GF2& a, const GF2& b) { return a.x > b.x; }
-  friend bool operator>=(const GF2& a, const GF2& b) { return a.x <= b.x; }
+  friend bool operator>(const GF2& a, const GF2& b) { return a.x > b.x; }
+  friend bool operator<=(const GF2& a, const GF2& b) { return a.x <= b.x; }
   friend bool operator>=(const GF2& a, const GF2& b) { return a.x >= b.x; }
 
   GF2 operator-() const { return (*this); }

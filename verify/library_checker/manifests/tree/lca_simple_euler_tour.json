@@ -1,0 +1,5 @@
+{
+  "name": "lca_simple_euler_tour",
+  "problem": "tree/lca",
+  "source": "verify/library_checker/tree/lca_simple_euler_tour.cpp"
+}

@@ -24,10 +24,12 @@ vector<T> BinomialCoefficientPrfixSum(const vector<pair<int,int>>& v){
   modint_factorials<T> factorials(n);
   for(auto [r,l] : v) mo.add_query(l,r);
   T c = 1;
-  auto AL = [&](int l, int r) {c -= factorials.nCk(r,l);};
-  auto DL = [&](int l, int r) {c += factorials.nCk(r,l);};
-  auto AR = [&](int l, int r) {c += c - factorials.nCk(r,l);};
-  auto DR = [&](int l, int r) {c = (c + factorials.nCk(r,l)) * factorials.mint_inv(2);};
+  int l = 0, r = 0;
+  auto C = [&](int n, int k) {return 0 <= k && k <= n ? factorials.nCk(n,k) : T(0);};
+  auto AL = [&](int i) {c -= C(r,l); l = i;};
+  auto DL = [&](int i) {l = i+1; c += C(r,l);};
+  auto AR = [&](int i) {c += c - C(r,l); r = i+1;};
+  auto DR = [&](int i) {r = i; c = (c + C(r,l)) * factorials.mint_inv(2);};
   auto SOL = [&](int i) {res[i] = c;};
   mo.run(AL,AR,DL,DR,SOL);
   return res;

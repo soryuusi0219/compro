@@ -1,0 +1,5 @@
+{
+  "name": "point_add_range_sum_bit_sparse",
+  "problem": "data_structure/point_add_range_sum",
+  "source": "verify/library_checker/data_structure/point_add_range_sum_bit_sparse.cpp"
+}

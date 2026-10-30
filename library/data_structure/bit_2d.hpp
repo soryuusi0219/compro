@@ -14,13 +14,7 @@ struct BIT2D{
   public:
     BIT2D(int _h, int _w) : h(_h), w(_w), s((h + 1) * (w + 1), 0) {}
     BIT2D(const vector<vector<T>>& v) : h(v.size()), w(v[0].size()), s((h + 1) * (w + 1), 0) {
-      for(int i = 0; i < h; ++i) for(int j = 0; j < w; ++j){
-        s[id(i+1,j+1)] += v[i][j];
-        int i2 = i + (i & -i), j2 = j + (j & -j);
-        if(i2 <= h) s[id(i2,j)] += s[id(i,j)];
-        if(j2 <= w) s[id(i,j2)] += s[id(i,j)];
-        if(i2 <= h && j2 <= w) s[id(i2,j2)] -= s[id(i,j)];
-      }
+      for(int i = 0; i < h; ++i) for(int j = 0; j < w; ++j) add(i,j,v[i][j]);
     }
     void add(int i, int j, T x) {
       for(++i; i <= h; i += i & -i) for(int jj = j+1; jj <= w; jj += jj & -jj) s[id(i,jj)] += x;

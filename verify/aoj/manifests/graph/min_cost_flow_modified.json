@@ -1,0 +1,6 @@
+{
+  "name": "min_cost_flow_modified",
+  "problem": "aizu/GRL_6_B",
+  "url": "https://onlinejudge.u-aizu.ac.jp/problems/GRL_6_B",
+  "source": "verify/aoj/graph/min_cost_flow_modified.cpp"
+}

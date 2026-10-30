@@ -11,13 +11,13 @@ using namespace std;
 struct HLdecomposition{
   private:
     int n;
-    vector<int> par, deg, in, sz, hd, dep;
+    vector<int> par, deg, in, sz, hd, dep, ord;
   public:
-    HLdecomposition(int n_) : n(n_), par(n,0), deg(n,0), in(n), sz(n,1), hd(n,-1), dep(n,0){}
+    HLdecomposition(int n_) : n(n_), par(n,0), deg(n,0), in(n), sz(n,1), hd(n,-1), dep(n,0), ord(n,0) {}
     void add_edge(int u, int v){
       par[u] ^= v, par[v] ^= u, ++deg[u], ++deg[v];
     }
-    void build(int root){
+    void build(int root = 0){
       deg[root] = 0;
       vector<int> nxt(n,-1), mxsz(n,0), bk(n,-1);
       iota(bk.begin(),bk.end(),0);
@@ -38,16 +38,15 @@ struct HLdecomposition{
         u = v;
       }
       for(int i = 0, x = root, h = root; ~x; ++i, x = nxt[x]) {
-        in[x] = i, hd[x] = h;
+        in[x] = i, ord[i] = x, hd[x] = h;
         if(sz[x] == 1) h = nxt[x];
         if(i) dep[x] = dep[par[x]] + 1;
       }
     }
-    inline int inid(int u){return in[u];}
-    inline int outid(int u){return in[u] + sz[u];}
-    inline int depth(int u){return dep[u];}
-
-    int lca(int u, int v){
+    inline int inid(int u) const {return in[u];}
+    inline int outid(int u) const {return in[u] + sz[u];}
+    inline int depth(int u) const {return dep[u];}
+    int lca(int u, int v) const {
       while(hd[u] != hd[v]){
         if(depth(hd[u]) > depth(hd[v])) u = par[hd[u]];
         else v = par[hd[v]];
@@ -55,7 +54,23 @@ struct HLdecomposition{
       return depth(u) < depth(v) ? u : v;
     }
     
-    template<class F> void for_each(int u, int v, F f){
+    int up(int u, int n) const {
+      if(depth(u) < n) return -1;
+      n = depth(u) - n;
+      while(depth(hd[u]) > n) u = par[hd[u]];
+      return ord[inid(u)-(depth(u)-n)];
+    }
+    int dist(int u, int v) const {
+      return depth(u) + depth(v) - 2 * depth(lca(u,v));
+    }
+    int jump(int u, int v, int k) const {
+      int w = lca(u,v);
+      int d = depth(u) + depth(v) - 2 * depth(w);
+      if(k > d) return -1;
+      if(depth(u) - depth(w) >= k) return up(u, k);
+      else return up(v,d-k);
+    }
+    template<class F> void for_each(int u, int v, F f) const {
       while(hd[u] != hd[v]){
         if(depth(hd[u]) < depth(hd[v])) swap(u,v);
         f(inid(hd[u]),inid(u)+1);
@@ -65,7 +80,7 @@ struct HLdecomposition{
       f(inid(v),inid(u)+1);
     }
 
-    template<class F1, class F2> void for_each(int u, int v, F1 f1, F2 f2){
+    template<class F1, class F2> void for_each(int u, int v, F1 f1, F2 f2) const {
       while(hd[u] != hd[v]){
         if(depth(hd[u]) > depth(hd[v])){
           f1(inid(hd[u]),inid(u)+1);
