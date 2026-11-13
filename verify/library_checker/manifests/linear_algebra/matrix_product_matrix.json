@@ -1,0 +1,5 @@
+{
+  "name": "matrix_product_matrix",
+  "problem": "linear_algebra/matrix_product",
+  "source": "verify/library_checker/linear_algebra/matrix_product_matrix.cpp"
+}

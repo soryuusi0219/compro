@@ -1,0 +1,5 @@
+{
+  "name": "inverse_matrix_mod_2_bitmatrix",
+  "problem": "linear_algebra/inverse_matrix_mod_2",
+  "source": "verify/library_checker/linear_algebra/inverse_matrix_mod_2_bitmatrix.cpp"
+}

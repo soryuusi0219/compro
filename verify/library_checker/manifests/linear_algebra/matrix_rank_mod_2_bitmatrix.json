@@ -1,0 +1,5 @@
+{
+  "name": "matrix_rank_mod_2_bitmatrix",
+  "problem": "linear_algebra/matrix_rank_mod_2",
+  "source": "verify/library_checker/linear_algebra/matrix_rank_mod_2_bitmatrix.cpp"
+}

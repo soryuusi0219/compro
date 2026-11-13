@@ -1,0 +1,5 @@
+{
+  "name": "system_of_linear_equations_matrix",
+  "problem": "linear_algebra/system_of_linear_equations",
+  "source": "verify/library_checker/linear_algebra/system_of_linear_equations_matrix.cpp"
+}

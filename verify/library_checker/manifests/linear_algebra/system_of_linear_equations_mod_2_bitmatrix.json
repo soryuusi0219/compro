@@ -1,0 +1,5 @@
+{
+  "name": "system_of_linear_equations_mod_2_bitmatrix",
+  "problem": "linear_algebra/system_of_linear_equations_mod_2",
+  "source": "verify/library_checker/linear_algebra/system_of_linear_equations_mod_2_bitmatrix.cpp"
+}

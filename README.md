@@ -61,6 +61,18 @@ g++ -std=c++20 -O2 -I. -Ithird_party/ac-library source.cpp
 
 ライブラリのファイル名は、小文字の `snake_case` を基本としています。
 
+### ライブラリのreference
+
+全ヘッダーの機能、前提条件、インターフェース、計算量、依存関係、verifyへのリンクを
+[`docs/reference/README.md`](docs/reference/README.md) にまとめています。
+各ページのパスはヘッダーと対応します。例えば `library/math/matrix.hpp` のreferenceは
+[`docs/reference/math/matrix.md`](docs/reference/math/matrix.md) です。
+既存のtxtドキュメントも対応するMarkdownへ統合しています。
+
+開発時の作業規約は [`AGENTS.md`](AGENTS.md)、referenceの読み方・更新方法は
+[reference索引](docs/reference/README.md#読み方) を参照してください。
+`make check` はreferenceの網羅性、必須項目、ローカルリンクも検査します。
+
 ## 解答コードのビルドと展開
 
 ソースは、位置引数、`SRC`、または `FILE` で指定できます。

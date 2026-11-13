@@ -64,3 +64,9 @@ ACLありではACLのincludeを保持し、ACLなしではACLも提出コード�
 CIは変更されたverifyソース、`manifests/<分野>/<target名>.json`、および変更された自作ライブラリまたはAtCoder Libraryへ推移的に依存するオンラインジャッジ・unitターゲットだけを検証します。選ばれたターゲットはmatrix jobへ1件ずつ割り当て、最大8件を並列実行します。verification-helperが取得したシステムケースはターゲットごとにキャッシュします。`tools/`、verify依存パッケージ、CI workflowの変更時、および依存関係を現在のツリーから追跡できない関連ファイルの削除時は全ターゲットを検証します。依存関係チェックと展開は変更内容にかかわらず毎回実行します。
 
 問題・コンテスト固有のスクリプトは `misc/` に置きます。
+## Referenceの検査
+
+ライブラリの説明は [reference索引](../docs/reference/README.md) にあります。
+`python3 tools/check_references.py` は全ヘッダーの対応ページ、必須節、索引登録、
+ローカルリンクを検査します。この検査は `make check` にも含まれます。
+APIの意味・型制約・計算量の正しさは自動判定しないため、実装・verifyと合わせて確認してください。
