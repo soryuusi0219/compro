@@ -1,6 +1,7 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/math/number_of_increasing_sequence.hpp
 #pragma once
 #include <algorithm>
+#include <bit>
 #include <cassert>
 #include <vector>
 
@@ -19,7 +20,7 @@ mint num_inc_seq_under(long long n, long long m, vector<long long> a){
   vector<mint> v(n,0), w(m,0);
   v[0] = 1;
   for(int i = 0; i < n; i++){
-    int k = (1<<__countr_zero(i+1));
+    int k = 1<<std::countr_zero(static_cast<unsigned int>(i+1));
     int x0 = i;
     int x1 = min(i+k,(int)n);
     int y0 = (k > i ? 0 : a[i-k]);

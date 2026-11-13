@@ -230,6 +230,14 @@ void test_nimber() {
       assert((N(a)+N(b)).get() == (a^b));
     }
   }
+  // Exercise multiplication with coefficients throughout the full 64-bit range.
+  for(unsigned long long a : {1ULL<<31,1ULL<<63,~0ULL,0x123456789abcdef0ULL}) {
+    N x(a), y(a^0xfedcba9876543210ULL), z(0xdeadbeefcafebabeULL);
+    assert((x*N(1)).get() == a);
+    assert((x*N(0)).get() == 0);
+    assert((x*(y+z)) == x*y+x*z);
+    assert(((x*y)*z) == x*(y*z));
+  }
 }
 
 long long count_sequences(const std::vector<long long>& bound, int m) {
@@ -251,6 +259,10 @@ void test_number_of_increasing_sequences() {
     assert(result == mint(count_sequences(bound,m)));
   }
   assert(soryuusi::num_inc_seq_under<mint>(0,0,{}) == mint(1));
+  // Cover trailing-zero block sizes on both sides of powers of two.
+  for(int n : {7,8,9,15,16,17,31,32,33}) {
+    assert(soryuusi::num_inc_seq_under<mint>(n,1,std::vector<long long>(n,1)) == mint(1));
+  }
 }
 
 }  // namespace
