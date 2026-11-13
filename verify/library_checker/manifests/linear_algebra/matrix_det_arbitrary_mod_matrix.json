@@ -1,0 +1,5 @@
+{
+  "name": "matrix_det_arbitrary_mod_matrix",
+  "problem": "linear_algebra/matrix_det_arbitrary_mod",
+  "source": "verify/library_checker/linear_algebra/matrix_det_arbitrary_mod_matrix.cpp"
+}

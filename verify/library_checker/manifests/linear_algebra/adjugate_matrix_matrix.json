@@ -1,0 +1,5 @@
+{
+  "name": "adjugate_matrix_matrix",
+  "problem": "linear_algebra/adjugate_matrix",
+  "source": "verify/library_checker/linear_algebra/adjugate_matrix_matrix.cpp"
+}

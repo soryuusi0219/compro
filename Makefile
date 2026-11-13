@@ -67,6 +67,7 @@ library-manager:
 
 check:
 	$(LIBRARY_MANAGER) check $(LIBRARY_ARGS)
+	$(PYTHON) $(ROOT_DIR)/tools/check_references.py
 
 build:
 	$(CXX) $(CXXFLAGS) $(SRC_PATH) -o $(OUT)

@@ -1,0 +1,5 @@
+{
+  "name": "characteristic_polynomial_matrix",
+  "problem": "linear_algebra/characteristic_polynomial",
+  "source": "verify/library_checker/linear_algebra/characteristic_polynomial_matrix.cpp"
+}

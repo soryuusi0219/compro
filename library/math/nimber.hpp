@@ -7,7 +7,6 @@
 #include <cstdint>
 #include <cstring>
 #include <iostream>
-#include <type_traits>
 
 #if defined(__x86_64__) || defined(_M_X64)
 #include <emmintrin.h>
@@ -52,16 +51,15 @@ struct Nimber{
     friend Nimber operator*(Nimber a, Nimber b) {
       u128 r = 0;
 #if defined(__PCLMUL__) || (defined(_MSC_VER) && defined(__AVX__))
-      if (!std::is_constant_evaluated()) {
-        __m128i z = _mm_clmulepi64_si128(_mm_set_epi64x(0, a.x),_mm_set_epi64x(0, b.x),0x00);
-        memcpy(&r,&z,16);
-      }else
-#endif
+      __m128i z = _mm_clmulepi64_si128(_mm_set_epi64x(0, a.x),_mm_set_epi64x(0, b.x),0x00);
+      memcpy(&r,&z,16);
+#else
       {
         u64 t = a.x;
         u128 u = b.x;
         for(; t; t >>= 1, u <<= 1) if(t&1) r ^= u;
       }
+#endif
       u64 h = r >> 64;
       h ^= (h >> 63) ^ (h >> 61) ^ (h >> 60);
       Nimber res;

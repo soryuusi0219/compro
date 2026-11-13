@@ -1,0 +1,5 @@
+{
+  "name": "matrix_rank_matrix",
+  "problem": "linear_algebra/matrix_rank",
+  "source": "verify/library_checker/linear_algebra/matrix_rank_matrix.cpp"
+}

@@ -1,0 +1,5 @@
+{
+  "name": "inverse_matrix_matrix",
+  "problem": "linear_algebra/inverse_matrix",
+  "source": "verify/library_checker/linear_algebra/inverse_matrix_matrix.cpp"
+}
