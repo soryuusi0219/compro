@@ -14,7 +14,6 @@
 #include "library/data_structure/persistent_queue.hpp"
 template<class T> class Persistent_Queue;
 using Root = /* opaque value */;
-using qp = Root;
 Root empty_root() const;
 // origin: 空版の互換定数
 int size(Root root) const;

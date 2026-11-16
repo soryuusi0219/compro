@@ -29,7 +29,7 @@ class Persistent_Vector {
   }
 public:
   using Root = typename internal::NodePool<node>::Root;
-  using np = Root;
+
   Root empty_root() const {return pool.root(nullptr);}
   Root get_root() const {return empty_root();}
   std::size_t allocated_nodes() const {return pool.size();}

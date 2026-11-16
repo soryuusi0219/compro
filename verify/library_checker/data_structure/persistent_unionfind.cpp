@@ -8,8 +8,8 @@ int main() {
 
   int n, q;
   soryuusi::cin >> n >> q;
-  soryuusi::Pdsu dsu;
-  std::vector<soryuusi::Pdsu::Root> versions(q + 1);
+  soryuusi::PersistentDSU dsu;
+  std::vector<soryuusi::PersistentDSU::Root> versions(q + 1);
   versions[0] = dsu.init(n);
 
   for (int i = 0; i < q; ++i) {

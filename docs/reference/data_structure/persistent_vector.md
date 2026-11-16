@@ -14,7 +14,6 @@
 #include "library/data_structure/persistent_vector.hpp"
 template<class T> class Persistent_Vector;
 using Root = /* opaque handle */;
-using np = Root; // 型名だけを残す互換エイリアス
 Root empty_root() const;
 Root get_root() const; // empty_rootの互換名
 Root build(const std::vector<T>& values);

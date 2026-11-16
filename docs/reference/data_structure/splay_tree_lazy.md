@@ -4,67 +4,53 @@
 
 ## 機能・前提条件
 
-列に対する挿入・削除・代入・反転と、順方向・逆方向のモノイド集約。位置は現在の列順の0始まり、区間は半開区間です。opは結合的、eは単位元で、非可換演算にも対応します。ノード型・ルート・回転操作は非公開です。
+0始まりの位置で扱う可変列。挿入・削除・代入、反転、順逆のモノイド集約を提供します。opは結合的、eは単位元です。区間は半開で、非可換演算に対応します。
 
-コピー禁止・move可能。move元とsplitの呼出元は空になります。cloneは独立したプールへの複製です。splitで得た列は同じプールを共有しますが、可変ノードを共有せず、互いの更新は独立です。プールは最後の列ハンドルの破棄時にまとめて解放します。
+管理型の宣言ではarenaと平衡化の作業領域だけを確保します。列はnew_sequence()で作成し、型はManager::Sequenceです。列ハンドルは既定構築・コピー不可、move可能。管理型もコピー不可・move可能です。ハンドルがarenaを共有所有するため、管理型を破棄・moveしても既存の列を使用できます。
 
-concatは相手を消費して末尾へ連結します。同じプールなら木を接続し、別プールなら値を移してから接続します。どちらも消費元は空になり、先に破棄しても連結先は有効です。sizeはその列の長さ、allocated_nodesは共有プール全体の確保数です。printにはTのostream出力演算子が必要です。eraseしたノードはプール内で再利用し、clearでは個別回収しません。
+split(k)は呼出元を空にして先頭k要素と残りを返します。concat(std::move(other))は相手を空にして末尾へ連結。同一arenaではノードを繋ぎ直し、異arenaでは値を移して連結します。結果は連結先のarenaに属します。cloneは同じarenaに独立したノードを作ります。異arenaへの複製は別の管理型のnew_sequence(sequence.to_vector())で行います。clearは個別回収せず、eraseしたノードは同じarena全体で再利用します。
 
-作用mappingは値と順逆の集約に適合する必要があります。composition(f,g)はf∘g。反転と作用は可換である必要があります。長さ依存の作用にはTに長さを含めてください。
-
-互換名は `lazy_splay_tree<...>`。通常版と同時includeするため、旧 `splay_tree<7引数>` は `LazySplayTree` に変更してください。
-
-公開型は共通のSequenceBaseへの型エイリアスです。既存のメソッド・消費操作・引数は維持しています。独自の前方宣言ではなく、このヘッダーをincludeしてください。通常版と遅延版は集約Policyだけが異なり、回転と列操作を共有します。
+遅延版のmappingは値と集約に適合し、反転と可換である必要があります。composition(f,g)はf∘g。長さ依存の作用には値型に長さも含めてください。
 
 ## インターフェース
 
 ```cpp
 #include "library/data_structure/splay_tree_lazy.hpp"
 template<class T, auto op, auto e, class F, auto mapping, auto composition, auto id>
-using LazySplayTree = /* SequenceBase + action policy + SplayBase */;
+using LazySplayTree = /* arena manager */;
 LazySplayTree();
-explicit LazySplayTree(const std::vector<T>& values);
-int size() const;
-bool empty() const;
-void insert_at(int k, T value);
-void erase_at(int k);
-void set(int k, T value);
-T get(int k);
-void flip(int l, int r);
-void flip_all();
-T prod(int l, int r);
-T prodrev(int l, int r);
-T prod_all();
-T prodrev_all();
-void apply(int l, int r, F action);
-std::pair<LazySplayTree,LazySplayTree> split(int k);
-void concat(LazySplayTree&& other);
-LazySplayTree clone();
-std::vector<T> to_vector();
-void clear();
+Sequence new_sequence();
+Sequence new_sequence(const std::vector<T>& values);
 std::size_t allocated_nodes() const;
-void print();
 ```
+
+Sequenceの公開操作：size/empty、insert_at/erase_at/set/get、flip/flip_all、prod/prodrev/prod_all/prodrev_all、split/concat、clone/to_vector/clear/allocated_nodes/print。apply(l,r,f)も使用できます。
+
+get/set/erase_atは0<=i<size()、insert_at/splitは0<=i<=size()。prod/flip/applyは0<=l<=r<=size()。printにはTのostream出力が必要です。moved-fromの列にはsize/empty/clearと再代入・破棄を使用でき、要素を追加する場合は管理型から新しく作ってください。allocated_nodesは共有arena全体の確保数です。
 
 ## 計算量
 
-列長N、相手の列長M。通常操作・split・同一プールのconcatは償却 O(log(N+1))（concatは合計長に対するlog）。異なるプールのconcatは O(M) と木接続の償却 O(log(N+M+1))。構築・clone・to_vectorは O(N)。size/empty/全体集約/flip_all/clearは O(1)。空間は共有プールの確保数Kに対して O(K)。clear・異プール移送後に到達不能になったノードも、プール終了まで保持します。
+列長N、相手長M。通常操作・split・同一arenaのconcatは償却 O(log(N+M+1))、単発最悪 O(N+M)。管理型構築・空列作成・moveは O(1)。vectorからの構築・clone・to_vectorは O(N)。異arenaのconcatは O(M) と結合の対数時間。size/empty/全体集約/flip_all/clearは O(1)。共有arenaの確保数Aに対して O(A) 空間、作業領域を加えます。move代入で古いarenaの最後の所有者を失う場合は、その解放時間も必要です。
 
 ## 依存関係
 
-- [internal/reversible_monoid.hpp](internal/reversible_monoid.md)
 - [internal/sequence_base.hpp](internal/sequence_base.md)
+- [internal/reversible_monoid.hpp](internal/reversible_monoid.md)
 - [internal/splay_base.hpp](internal/splay_base.md)
 
 ## Verify・利用例
 
+- [unit/ordered_trees](../../../verify/unit/ordered_trees.cpp)
 - [unit/balanced_trees](../../../verify/unit/balanced_trees.cpp)
-
 - [unit/pointer_structures](../../../verify/unit/pointer_structures.cpp)
 - [library_checker/dynamic_sequence_range_affine_range_sum_splay_tree](../../../verify/library_checker/data_structure/dynamic_sequence_range_affine_range_sum_splay_tree.cpp)
 
 ```cpp
-auto [left, right] = sequence.split(k); // sequenceは空
-left.concat(std::move(right));         // rightは空
-sequence = std::move(left);
+// S, F, op, e, mapping, composition, idを定義してから使用
+soryuusi::LazySplayTree<S,op,e,F,mapping,composition,id> arena;
+auto left = arena.new_sequence();
+auto right = arena.new_sequence();
+// left/rightへ要素を追加
+left.concat(std::move(right)); // rightは空
+auto [a, b] = left.split(left.size()/2);
 ```

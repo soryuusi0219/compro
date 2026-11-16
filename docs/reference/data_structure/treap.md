@@ -4,38 +4,53 @@
 
 ## 機能・前提条件
 
-ランダムな優先度で平衡化するimplicit treapによる可変列です。SplayTreeと同じSequenceBaseを使い、位置指定の挿入・削除・代入、反転、順逆の区間集約を提供します。LazyTreapSequenceは区間作用も扱います。
+0始まりの位置で扱う可変列。挿入・削除・代入、反転、順逆のモノイド集約を提供します。opは結合的、eは単位元です。区間は半開で、非可換演算に対応します。
 
-opは結合的、eは単位元。非可換演算にも対応します。mappingは集約に適合し、反転と可換である必要があります。composition(f,g)はf∘gです。長さに依存する作用ではTに長さを含めてください。
+管理型の宣言ではarenaと平衡化の作業領域だけを確保します。列はnew_sequence()で作成し、型はManager::Sequenceです。列ハンドルは既定構築・コピー不可、move可能。管理型もコピー不可・move可能です。ハンドルがarenaを共有所有するため、管理型を破棄・moveしても既存の列を使用できます。
 
-コピー禁止・move可能、cloneは独立複製。splitは呼出元を空にし、concatは相手を消費します。同一arena内は木を結合し、異なるarena間は値を移して結合します。サイズ・所有権・区間の規約はsplay版と同じです。優先度の生成は時刻由来のseedを使用します。
+split(k)は呼出元を空にして先頭k要素と残りを返します。concat(std::move(other))は相手を空にして末尾へ連結。同一arenaではノードを繋ぎ直し、異arenaでは値を移して連結します。結果は連結先のarenaに属します。cloneは同じarenaに独立したノードを作ります。異arenaへの複製は別の管理型のnew_sequence(sequence.to_vector())で行います。clearは個別回収せず、eraseしたノードは同じarena全体で再利用します。
+
+遅延版のmappingは値と集約に適合し、反転と可換である必要があります。composition(f,g)はf∘g。長さ依存の作用には値型に長さも含めてください。
 
 ## インターフェース
 
 ```cpp
 #include "library/data_structure/treap.hpp"
 template<class T, auto op, auto e>
-using TreapSequence = /* SequenceBase + TreapBase */;
-template<class T, auto op, auto e, class F, auto mapping, auto composition, auto id>
-using LazyTreapSequence = /* SequenceBase + action policy + TreapBase */;
+using TreapSequence = /* arena manager */;
+TreapSequence();
+Sequence new_sequence();
+Sequence new_sequence(const std::vector<T>& values);
+std::size_t allocated_nodes() const;
 ```
 
-両型にデフォルト構築・vector<T>からの構築、size/empty、insert_at/erase_at/set/get、flip/flip_all、prod/prodrev/prod_all/prodrev_all、split/concat、clone/to_vector/clear/allocated_nodes/printがあります。遅延版のみapply(l,r,f)を提供します。添字は0始まり、区間は半開区間です。
+Sequenceの公開操作：size/empty、insert_at/erase_at/set/get、flip/flip_all、prod/prodrev/prod_all/prodrev_all、split/concat、clone/to_vector/clear/allocated_nodes/print。遅延版はLazyTreapSequence<T,op,e,F,mapping,composition,id>で、apply(l,r,f)も使用できます。
 
-詳細な各操作は [splay_tree](splay_tree.md)、[splay_tree_lazy](splay_tree_lazy.md)、共通Backendの契約は [internal/sequence_base](internal/sequence_base.md) を参照してください。
+get/set/erase_atは0<=i<size()、insert_at/splitは0<=i<=size()。prod/flip/applyは0<=l<=r<=size()。printにはTのostream出力が必要です。moved-fromの列にはsize/empty/clearと再代入・破棄を使用でき、要素を追加する場合は管理型から新しく作ってください。allocated_nodesは共有arena全体の確保数です。
 
 ## 計算量
 
-列長N。通常操作・split・同一arenaのconcatは期待 O(log(N+1))、単発最悪 O(N)。構築・clone・to_vectorは O(N)。異arenaのconcatは相手長Mに対し O(M) と結合の期待 O(log(N+M+1))。size/empty/全体集約/flip_all/clearは O(1)。空間は共有arenaの確保数Aに対し O(A)、構築には O(N) 作業空間。優先度に基づく期待計算量であり、最悪対数時間の保証ではありません。
+列長N、相手長M。通常操作・split・同一arenaのconcatは期待 O(log(N+M+1))、単発最悪 O(N+M)。管理型構築・空列作成・moveは O(1)。vectorからの構築・clone・to_vectorは O(N)。異arenaのconcatは O(M) と結合の対数時間。size/empty/全体集約/flip_all/clearは O(1)。共有arenaの確保数Aに対して O(A) 空間、作業領域を加えます。move代入で古いarenaの最後の所有者を失う場合は、その解放時間も必要です。
 
 ## 依存関係
 
-- [internal/reversible_monoid.hpp](internal/reversible_monoid.md)
 - [internal/sequence_base.hpp](internal/sequence_base.md)
+- [internal/reversible_monoid.hpp](internal/reversible_monoid.md)
 - [internal/treap_base.hpp](internal/treap_base.md)
 
 ## Verify・利用例
 
+- [unit/ordered_trees](../../../verify/unit/ordered_trees.cpp)
 - [unit/balanced_trees](../../../verify/unit/balanced_trees.cpp)
+- [unit/pointer_structures](../../../verify/unit/pointer_structures.cpp)
 - [library_checker/range_reverse_range_sum_treap](../../../verify/library_checker/data_structure/range_reverse_range_sum_treap.cpp)
 - [library_checker/dynamic_sequence_range_affine_range_sum_treap](../../../verify/library_checker/data_structure/dynamic_sequence_range_affine_range_sum_treap.cpp)
+
+```cpp
+soryuusi::TreapSequence<long long, op, e> arena;
+auto left = arena.new_sequence();
+auto right = arena.new_sequence();
+// left/rightへ要素を追加
+left.concat(std::move(right)); // rightは空
+auto [a, b] = left.split(left.size()/2);
+```

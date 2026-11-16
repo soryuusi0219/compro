@@ -13,9 +13,7 @@
 ```cpp
 #include "library/data_structure/persistent_dynamic_segtree.hpp"
 template<class S, auto op, auto e> struct PersistentDynamicSegtree;
-// 別名: Persistent_Dynamic_Segtree<S,op,e>
 using Root = /* opaque handle */;
-using NP = Root;
 PersistentDynamicSegtree(int n);
 Root empty_root() const;
 Root instance() const; // 互換名

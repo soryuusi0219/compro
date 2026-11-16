@@ -108,14 +108,14 @@ trieのmergeは集合和、Li Chao木のmergeは包絡の和で、どちらも�
 
 | 対象 | 型名・移行方法 |
 | --- | --- |
-| 永続動的セグ木 | `PersistentDynamicSegtree<S,op,e>`（別名 `Persistent_Dynamic_Segtree`） |
-| 通常splay | `SplayTree<T,op,e>`（既存の `splay_tree<T,op,e>` も使用可能） |
+| 永続動的セグ木 | `PersistentDynamicSegtree<S,op,e>` |
+| 通常splay | `SplayTree<T,op,e>` |
 | 遅延splay | `LazySplayTree<T,op,e,F,mapping,composition,id>` |
-| 永続DSU | `PersistentDSU`（既存の `Persistent_dsu`・`Pdsu` も使用可能） |
+| 永続DSU | `PersistentDSU` |
 | データ付き永続DSU | `PersistentDSUWithData<S,op>` |
-| 版の型 | 各構造の `Root`。`np`・`NP`・`qp` は構造内の互換名として残す |
+| 版の型 | 各構造の `Root` |
 
-生ノード操作、永続配列の `des_set` / `mutable_get`、名前空間直下の `np` は廃止しました。
+生ノード操作と永続配列の破壊的APIは廃止しました。旧型名の互換エイリアスは提供しません。
 既存の一意な関数名・引数順は互換ラッパーを残し、新APIは原則としてRootを先頭に渡します。
 区間コピーは `copy_range(destination, source, l, r)` とします。
 詳細と計算量は各[reference](docs/reference/README.md)を参照してください。
@@ -130,19 +130,40 @@ splay・treap・LCTは、平衡化、集約・作用、操作、所有権を分�
 | `SplayTree` / `LazySplayTree` | 列操作は償却対数時間 |
 | `TreapSequence` / `LazyTreapSequence` | 同じ列操作を、優先度による期待対数時間で提供 |
 | `linkcuttree` / `lazy_linkcuttree` | splayを補助木に用いる動的森 |
+| `SplayExplicit` / `LazySplayExplicit` | 固定キー順の集合、順位・キー区間演算、meld |
+| `TreapExplicit` / `LazyTreapExplicit` | 同じ明示キー操作をtreapで提供 |
 | `DynamicBitVector` | bit圧縮したブロックを重み付きtreapで管理 |
 | `DynamicWavelet` | 独立したDynamicBitVectorを各段で使用 |
 
-splay・LCTの既存名と呼出し形式は維持しています。現在の公開型は共通実装への型エイリアスです。
+splay・treapの管理型はarenaだけを確保し、列はnew_sequence()で作ります。列の型はManager::Sequenceです。
+列ハンドルはmove-onlyで、既定構築できません。管理型のmove・破棄後も、共有所有するarenaはハンドルが保持します。
+cloneは同じarenaに独立したノードを作り、異arenaへの複製は別管理型のnew_sequence(sequence.to_vector())で行います。
+LCTの呼出し形式は維持しています。
+```cpp
+soryuusi::SplayTree<long long, op, e> arena;
+auto a = arena.new_sequence({1, 2});
+auto b = arena.new_sequence({3, 4});
+a.concat(std::move(b)); // 同じarena内で接続、bは空
+```
+
 新しい列型の使用方法は [treap reference](docs/reference/data_structure/treap.md)、
 bit列の操作は [DynamicBitVector reference](docs/reference/data_structure/dynamic_bit_vector.md) を参照してください。
+
+明示キー版は管理型から `new_set()` で集合を作ります。テンプレート引数Multiでキーの重複可否を選び、
+集約と遅延作用はキーとは別の値へ適用します。`prod(l,r)` / `apply(l,r,f)` は順位区間、
+`prod_key(low,high)` / `apply_key(low,high,f)` はキーの半開区間です。
+`meld(std::move(other))` は相手を消費し、同値キーでは連結先の要素を先に置きます。
+重複不可では連結先の値を残します。別arena間でも移送を伴うmeldを使用できます。
+詳細は [splay_explicit](docs/reference/data_structure/splay_explicit.md) / [treap_explicit](docs/reference/data_structure/treap_explicit.md) を参照してください。
 
 開発時の分担は次のとおりです。
 
 - [BinaryTreeOps](docs/reference/data_structure/internal/binary_tree_ops.md)：非所有の回転・重み付き位置探索。
 - [ReversibleMonoid](docs/reference/data_structure/internal/reversible_monoid.md)：順逆集約、反転、任意の遅延作用、必要なノード状態。
 - [SplayBase](docs/reference/data_structure/internal/splay_base.md) / [TreapBase](docs/reference/data_structure/internal/treap_base.md)：平衡化。ノードの確保・解放は行いません。
-- [SequenceBase](docs/reference/data_structure/internal/sequence_base.md)：列操作とarenaの管理。新しい平衡化方式も同じBackendインターフェースで接続できます。
+- [TreeArena](docs/reference/data_structure/internal/tree_arena.md)：プール、再利用リスト、Backendの作業領域を共有。
+- [SequenceBase / SequenceArena](docs/reference/data_structure/internal/sequence_base.md)：列の生成と操作。新しい平衡化方式も同じBackendインターフェースで接続できます。
+- [ExplicitSet / ExplicitArena](docs/reference/data_structure/internal/explicit_base.md)：固定キーの集合と区間演算・meld。
 - [LinkCutBase](docs/reference/data_structure/internal/link_cut_base.md)：preferred edgeとpath-parentを管理するLCT操作。固定配列を所有します。
 
 追加の平衡化方式には、`prepare`、`access(root&,k)`、`split`、`join`、`build` を実装します。

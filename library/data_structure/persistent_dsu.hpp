@@ -14,7 +14,7 @@ class PersistentDSU {
   int n = -1;
 public:
   using Root = Array::Root;
-  using np = Root;
+
 private:
   Root initial;
 public:
@@ -48,7 +48,5 @@ public:
   }
   [[nodiscard]] Root merge(Root r, int i, int j){return merge(i,j,r).second;}
 };
-using Persistent_dsu = PersistentDSU;
-using Pdsu = PersistentDSU;
 
 }  // namespace soryuusi

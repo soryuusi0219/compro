@@ -13,6 +13,7 @@
 列用にはsize/local_sizeを持つOpsを渡し、次のBackendインターフェースを利用できます。
 
 - prepare(node)：splayでは何もしません。
+- access_node(root&,node)：探索済みのノードをアクセスする高速化用hook。splayではrootを更新し、treapではノードをそのまま返します。
 - access(root&,k)：k番目をsplayし、rootを更新して対象ノードを返します。1ノード1要素を要求します。
 - split(root,k)：先頭k要素と残りの根。両方の親はnull。0<=k<=size(root)。
 - join(left,right)：順序の保たれた2列を連結。入力は独立した木の根である必要があります。

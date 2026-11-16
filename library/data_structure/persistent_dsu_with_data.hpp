@@ -18,7 +18,7 @@ class PersistentDSUWithData {
   int n = -1;
 public:
   using Root = typename Array::Root;
-  using np = Root;
+
 private:
   Root initial;
 public:
@@ -62,7 +62,4 @@ public:
   }
   [[nodiscard]] Root set(int i, S value, Root r){return set(r,i,value);}
 };
-template<class S, auto op>
-using Persistent_dsu_with_data = PersistentDSUWithData<S,op>;
-
 }  // namespace soryuusi

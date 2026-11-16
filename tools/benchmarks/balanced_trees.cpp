@@ -25,11 +25,13 @@ int main(int argc,char** argv){
   const auto start = std::chrono::steady_clock::now();
   if(mode == "splay"){
     std::vector<long long> a(n,1);
-    soryuusi::SplayTree<long long,add,zero> seq(a);
+    soryuusi::SplayTree<long long,add,zero> seq_arena;
+    auto seq = seq_arena.new_sequence(a);
     for(int i=0;i<q;++i){int l=rng()%n,r=rng()%n;if(l>r)std::swap(l,r);++r;if(i&1)checksum+=seq.prod(l,r);else seq.flip(l,r);}
   }else if(mode == "lazy_splay"){
     std::vector<S> a(n,S{1,1});
-    soryuusi::LazySplayTree<S,op,e,long long,mapping,add,zero> seq(a);
+    soryuusi::LazySplayTree<S,op,e,long long,mapping,add,zero> seq_arena;
+    auto seq = seq_arena.new_sequence(a);
     for(int i=0;i<q;++i){int l=rng()%n,r=rng()%n;if(l>r)std::swap(l,r);++r;if(i&1)checksum+=seq.prod(l,r).first;else seq.apply(l,r,1);}
   }else if(mode == "lct"){
     soryuusi::linkcuttree<long long,add,zero> tree(n);

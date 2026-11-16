@@ -6,17 +6,14 @@
 
 union by sizeを使う永続Union-Find。頂点は `[0,n)`。検索では経路圧縮を行いません。`empty_root()` は全頂点が独立した初期版で、要素数0の意味ではありません。initは管理オブジェクトあたり1回だけ呼べます。
 
-`Root` は不透明な借用版ハンドルです。コピーは O(1) でノードを共有しますが、公開済みノードは変更しません。更新は新しい版を返し、検索は入力版を変更せず、ノードも確保しません。管理オブジェクトはコピー禁止・move可能で、版は移動先で引き続き使用できます。管理領域の破棄・move代入による置換後は、その領域の版を使用できません。別の管理領域の版を混ぜる操作は不可で、デバッグ時には所有元を検査します。移動元の管理オブジェクトは破棄または再代入してください。 leader/same/sizeにはrootを最後に渡す従来の引数順も残します。名前空間直下のnpは廃止しました。
+`Root` は不透明な借用版ハンドルです。コピーは O(1) でノードを共有しますが、公開済みノードは変更しません。更新は新しい版を返し、検索は入力版を変更せず、ノードも確保しません。管理オブジェクトはコピー禁止・move可能で、版は移動先で引き続き使用できます。管理領域の破棄・move代入による置換後は、その領域の版を使用できません。別の管理領域の版を混ぜる操作は不可で、デバッグ時には所有元を検査します。移動元の管理オブジェクトは破棄または再代入してください。 leader/same/sizeにはrootを最後に渡す従来の引数順も残します。版の型名はRootに統一し、互換用の型エイリアスは提供しません。
 
 ## インターフェース
 
 ```cpp
 #include "library/data_structure/persistent_dsu.hpp"
 class PersistentDSU;
-using Persistent_dsu = PersistentDSU;
-using Pdsu = PersistentDSU;
 using Root = /* opaque handle */;
-using np = Root;
 PersistentDSU();
 PersistentDSU(int n);
 Root init(int n);

@@ -28,6 +28,7 @@ public:
       Links::rotate(p);
     }
   }
+  Node* access_node(Node*& root, Node* p){splay(p); root = p; return p;}
   Node* access(Node*& root, int k){
     auto [p,offset] = Links::locate(root,k);
     assert(offset == 0); // Sequence interface: one value per node.

@@ -15,7 +15,6 @@
 template<class S, auto op, auto e, class F, auto mapping, auto composition, auto id>
 struct Persistent_Dynamic_LazySegtree;
 using Root = /* opaque handle */;
-using NP = Root;
 Persistent_Dynamic_LazySegtree(int n);
 template<class X> Persistent_Dynamic_LazySegtree(int n, X default_prod);
 Root empty_root() const;

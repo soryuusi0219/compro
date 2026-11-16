@@ -10,7 +10,7 @@ int main() {
   int n, q;
   soryuusi::cin >> n >> q;
   soryuusi::PersistentDSUWithData<int,op> dsu;
-  using Root = decltype(dsu)::np;
+  using Root = decltype(dsu)::Root;
   std::vector<Root> roots(q+1);
   roots[0] = dsu.init(n,1);
   for(int i = 0; i < q; ++i) {

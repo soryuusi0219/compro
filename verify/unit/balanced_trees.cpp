@@ -65,12 +65,14 @@ void bit_vectors(){
   }
 }
 
-template<class Sequence> void sequence_test(){
+template<class Manager> void sequence_test(){
+  Manager arena;
+  using Sequence = typename Manager::Sequence;
   static_assert(!std::is_copy_constructible_v<Sequence> && std::is_move_assignable_v<Sequence>);
   std::mt19937 rng(1459);
   std::vector<S> a(300);
   for(int i = 0; i < (int)a.size(); ++i) a[i] = {i,1};
-  Sequence seq(a);
+  auto seq = arena.new_sequence(a);
   for(int q = 0; q < 6000; ++q){
     int n = a.size(), action = rng()%8;
     int l = rng()%(n+1), r = rng()%(n+1); if(l>r) std::swap(l,r);
@@ -87,16 +89,17 @@ template<class Sequence> void sequence_test(){
   }
   Sequence independent = seq.clone(); independent.insert_at(0,{999,1});
   assert(seq.to_vector() == a && independent.size() == seq.size()+1);
-  Sequence survivor;
-  {Sequence local(a); auto [left,right] = local.split(a.size()/2); left.concat(std::move(right)); survivor = std::move(left);}
+  auto survivor = arena.new_sequence();
+  {Manager local_arena; auto local = local_arena.new_sequence(a); auto [left,right] = local.split(a.size()/2); left.concat(std::move(right)); survivor = std::move(left);}
   assert(survivor.to_vector() == a);
-  {Sequence donor(std::vector<S>{{7,1},{8,1}}); survivor.concat(std::move(donor)); assert(donor.empty());}
+  {Manager donor_arena; auto donor = donor_arena.new_sequence(std::vector<S>{{7,1},{8,1}}); survivor.concat(std::move(donor)); assert(donor.empty());}
   a.push_back({7,1});a.push_back({8,1}); assert(survivor.to_vector() == a);
   survivor.erase_at(a.size()-1);a.pop_back();assert(survivor.to_vector()==a);
 }
 
-template<class Sequence> void noncommutative_sequence(){
-  Sequence sequence(std::vector<std::string>{"a","b","c","d","e"});
+template<class Manager> void noncommutative_sequence(){
+  Manager arena;
+  auto sequence = arena.new_sequence(std::vector<std::string>{"a","b","c","d","e"});
   assert(sequence.prod(1,4)=="bcd" && sequence.prodrev(1,4)=="dcb");
   sequence.flip(1,5); assert(sequence.prod_all()=="aedcb");
   sequence.set(2,"x"); assert(sequence.prod_all()=="aexcb" && sequence.prodrev_all()=="bcxea");

@@ -47,6 +47,7 @@ struct ReversibleMonoid {
     [[no_unique_address]] typename Action::State action;
     [[no_unique_address]] Extra extra;
     explicit Node(const T& x = e()) : value(x), lsum(x), rsum(x){}
+    Node(const T& x, Extra state) : value(x), lsum(x), rsum(x), extra(std::move(state)){}
   };
   static T identity(){return e();}
   static int size(const Node* p) requires Counted {return p ? p->count.size : 0;}

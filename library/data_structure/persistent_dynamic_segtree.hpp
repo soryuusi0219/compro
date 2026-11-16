@@ -94,7 +94,7 @@ struct PersistentDynamicSegtree{
     }
   public:
     using Root = typename internal::NodePool<node>::Root;
-    using NP = Root;
+
     PersistentDynamicSegtree(int n_) : n(n_){assert(n >= 0);}
     Root empty_root() const {return pool.root(nullptr);}
     Root instance() const {return empty_root();}
@@ -107,8 +107,5 @@ struct PersistentDynamicSegtree{
     template<class F> int min_left(Root p, int i, F f) const {assert(0 <= i && i <= n && f(e())); S x = e(); return _min_left(pool.get(p),0,n,i,x,f);}
 
 };
-
-template<class S, auto op, auto e>
-using Persistent_Dynamic_Segtree = PersistentDynamicSegtree<S,op,e>;
 
 }  // namespace soryuusi

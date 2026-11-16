@@ -44,6 +44,7 @@ class TreapBase {
 public:
   explicit TreapBase(std::uint64_t seed = std::chrono::steady_clock::now().time_since_epoch().count()) : state(seed ? seed : 1){}
   void prepare(Node* p){state ^= state << 7; state ^= state >> 9; Ops::priority(p) = std::uint32_t(state >> 16);}
+  Node* access_node(Node*&, Node* p){return p;}
   Node* access(Node*& root, int k){return Links::locate(root,k).first;}
   Node* join(Node* l, Node* r){auto p = merge_nodes(l,r); if(p) p->pp = nullptr; return p;}
   std::pair<Node*,Node*> split(Node* p, int k){assert(0 <= k && k <= Ops::size(p)); return split_nodes(p,k);}

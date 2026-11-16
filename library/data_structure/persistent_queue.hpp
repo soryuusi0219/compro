@@ -29,7 +29,7 @@ public:
     Root() = default;
     friend bool operator==(const Root&, const Root&) = default;
   };
-  using qp = Root;
+
   Root empty_root() const {Root r; r.back = pool.root(nullptr); return r;}
   // An empty value, retained for source compatibility.
   inline static const Root origin{};

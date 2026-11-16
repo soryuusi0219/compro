@@ -110,7 +110,7 @@ struct Persistent_Dynamic_LazySegtree{
     }
   public:
     using Root = typename internal::NodePool<node>::Root;
-    using NP = Root;
+
     Persistent_Dynamic_LazySegtree(int n_) : n(n_), default_prod([](int, int) -> S {return e();}){assert(n >= 0);}
     template<class X> Persistent_Dynamic_LazySegtree(int n_, X init) : n(n_), default_prod(init){assert(n >= 0);}
     Root empty_root() const {return pool.root(nullptr);}

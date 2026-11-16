@@ -12,7 +12,8 @@ int main() {
   soryuusi::cin >> n >> q;
   std::vector<long long> value(n);
   for(auto& x : value) soryuusi::cin >> x;
-  soryuusi::splay_tree<long long,op,identity> sequence(value);
+  soryuusi::SplayTree<long long,op,identity> sequence_arena;
+  auto sequence = sequence_arena.new_sequence(value);
   while(q--) {
     int type, l, r;
     soryuusi::cin >> type >> l >> r;

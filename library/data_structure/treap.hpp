@@ -7,8 +7,8 @@
 namespace soryuusi {
 
 template<class T, auto op, auto e>
-using TreapSequence = internal::SequenceBase<internal::ReversibleMonoid<T,op,e,internal::NoTreeAction,true,false,internal::TreapPriority>,internal::TreapBase>;
+using TreapSequence = internal::SequenceArena<internal::ReversibleMonoid<T,op,e,internal::NoTreeAction,true,false,internal::TreapPriority>,internal::TreapBase>;
 template<class T, auto op, auto e, class F, auto mapping, auto composition, auto id>
-using LazyTreapSequence = internal::SequenceBase<internal::ReversibleMonoid<T,op,e,internal::TreeAction<F,mapping,composition,id>,true,false,internal::TreapPriority>,internal::TreapBase>;
+using LazyTreapSequence = internal::SequenceArena<internal::ReversibleMonoid<T,op,e,internal::TreeAction<F,mapping,composition,id>,true,false,internal::TreapPriority>,internal::TreapBase>;
 
 }  // namespace soryuusi

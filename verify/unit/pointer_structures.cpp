@@ -59,6 +59,10 @@ static_assert(move_only<Seq> && move_only<LazySeq> && move_only<LCT> && move_onl
 static_assert(move_only<PS> && move_only<PersistentLazy> && move_only<Persistent_Vector<int>>);
 static_assert(move_only<PersistentDSU> && move_only<PersistentDSUWithData<long long,add>> && move_only<Persistent_Queue<int>>);
 static_assert(!std::is_pointer_v<PS::Root>);
+template<class T> concept legacy_root_name = requires {typename T::np;} || requires {typename T::NP;} || requires {typename T::qp;};
+static_assert(!legacy_root_name<PS> && !legacy_root_name<PersistentLazy> && !legacy_root_name<Persistent_Vector<int>>);
+static_assert(!legacy_root_name<PersistentDSU> && !legacy_root_name<PersistentDSUWithData<long long,add>> && !legacy_root_name<Persistent_Queue<int>>);
+
 
 void mutable_trees(){
   Seg a(1000000000); a.set(4,3);
@@ -174,7 +178,7 @@ std::string concatenate(std::string a, std::string b){return a+b;}
 std::string empty_string(){return {};}
 void sequences(){
   std::mt19937 rng(42);
-  LazySeq seq; std::vector<long long> values;
+  LazySeq arena; auto seq = arena.new_sequence(); std::vector<long long> values;
   for(int q = 0; q < 2000; ++q){
     int n = values.size(), action = rng()%6;
     if(!n || action == 0){int p = rng()%(n+1), x = rng()%10; seq.insert_at(p,{x,1}); values.insert(values.begin()+p,x);}
@@ -192,18 +196,19 @@ void sequences(){
     auto actual = seq.to_vector(); assert(actual.size() == values.size());
     for(int i = 0; i < (int)values.size(); ++i) assert(actual[i] == S(values[i],1));
   }
-  SplayTree<std::string,concatenate,empty_string> words(std::vector<std::string>{"a","b","c","d"});
+  SplayTree<std::string,concatenate,empty_string> word_arena;
+  auto words = word_arena.new_sequence(std::vector<std::string>{"a","b","c","d"});
   words.flip(1,4); assert(words.prod_all() == "adcb" && words.prodrev_all() == "bcda");
   words.flip_all(); assert(words.prod_all() == "bcda");
-  Seq survivor;
+  Seq scalar_arena; auto survivor = scalar_arena.new_sequence();
   {
-    Seq sequence(std::vector<long long>{1,2,3,4});
+    auto sequence = scalar_arena.new_sequence(std::vector<long long>{1,2,3,4});
     auto [left,right] = sequence.split(2);
     assert(sequence.empty());
     left.concat(std::move(right));
     survivor = std::move(left);
   } // The original object and both split handles have been destroyed.
-  {Seq foreign(std::vector<long long>{5,6}); survivor.concat(std::move(foreign)); assert(foreign.empty());}
+  {Seq foreign_arena; auto foreign = foreign_arena.new_sequence(std::vector<long long>{5,6}); survivor.concat(std::move(foreign)); assert(foreign.empty());}
   survivor.erase_at(4); assert(survivor.to_vector() == std::vector<long long>({1,2,3,4,6}));
   auto copy = survivor.clone(); copy.set(0,100); assert(survivor.get(0) == 1);
   auto [empty, tail] = survivor.split(0); empty.concat(std::move(tail)); assert(empty.size() == 5 && tail.empty());

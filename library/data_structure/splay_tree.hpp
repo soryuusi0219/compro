@@ -7,8 +7,6 @@
 namespace soryuusi {
 
 template<class T, auto op, auto e>
-using SplayTree = internal::SequenceBase<internal::ReversibleMonoid<T,op,e>,internal::SplayBase>;
-template<class T, auto op, auto e>
-using splay_tree = SplayTree<T,op,e>;
+using SplayTree = internal::SequenceArena<internal::ReversibleMonoid<T,op,e>,internal::SplayBase>;
 
 }  // namespace soryuusi

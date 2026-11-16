@@ -10,6 +10,7 @@
 
 `TreapBase<Node,Ops>(uint64_t seed=時刻由来)`。0は1へ正規化します。prepare(node)で疑似乱数の32bit優先度を設定します。TreeAction用のExtraにはTreapPriorityを使用できます。
 
+- access_node(root&,node)：探索済みのノードをアクセスする高速化用hook。splayではrootを更新し、treapではノードをそのまま返します。
 - access(root&,k)：対象ノードを返します。splayと異なりrootを変更しません。
 - split(root,k)：論理位置で分割。kはノード間の境界に限ります。複数要素ブロックの内部を切る操作は呼出側が実装します。
 - join(left,right)：inorder順の2列を結合。返却する根の親はnull。

@@ -5,49 +5,42 @@
 #include <iostream>
 #include <memory>
 #include <utility>
-#include <type_traits>
 #include <vector>
-#include "library/data_structure/internal/node_pool.hpp"
+#include "library/data_structure/internal/tree_arena.hpp"
 
 namespace soryuusi::internal {
 
 // Backend<Node,Ops>: prepare, access(root&,k), split, join, build(n,factory).
 // Nodes have parent/left/right links; one node represents one sequence element.
+template<class Ops, template<class,class> class Backend> class SequenceArena;
+
 template<class Ops, template<class,class> class Backend>
 class SequenceBase {
   using Node = typename Ops::Node;
   using T = typename Ops::value_type;
-  struct Arena {NodePool<Node> pool; std::vector<Node*> free_nodes;};
+  friend class SequenceArena<Ops,Backend>;
+  using Arena = TreeArena<Ops,Backend>;
   std::shared_ptr<Arena> arena;
   Node* root = nullptr;
-  Backend<Node,Ops> engine;
-  Node* make_node(const T& value){
-    if(!arena) arena = std::make_shared<Arena>();
-    Node* p;
-    if(arena->free_nodes.empty()) p = arena->pool.create(value);
-    else{p = arena->free_nodes.back(); arena->free_nodes.pop_back(); *p = Node(value);}
-    engine.prepare(p);
-    return p;
-  }
-  Node* build(const std::vector<T>& v){return engine.build(v.size(),[&](int i){return make_node(v[i]);});}
+  explicit SequenceBase(std::shared_ptr<Arena> owner, Node* p = nullptr) : arena(std::move(owner)), root(p){}
+  Node* make_node(const T& value){assert(arena); return arena->create(value);}
+  Node* build(const std::vector<T>& v){return arena->engine.build(v.size(),[&](int i){return make_node(v[i]);});}
   template<class Function> auto range(int l, int r, Function function){
     assert(0 <= l && l <= r && r <= size());
     if(l == r) return function(nullptr);
-    auto [a,bc] = engine.split(root,l);
-    auto [b,c] = engine.split(bc,r-l);
+    auto [a,bc] = arena->engine.split(root,l);
+    auto [b,c] = arena->engine.split(bc,r-l);
     auto result = function(b);
-    root = engine.join(engine.join(a,b),c);
+    root = arena->engine.join(arena->engine.join(a,b),c);
     return result;
   }
 public:
   using value_type = T;
-  SequenceBase() = default;
-  explicit SequenceBase(const std::vector<T>& v){root = build(v);}
   SequenceBase(const SequenceBase&) = delete;
   SequenceBase& operator=(const SequenceBase&) = delete;
-  SequenceBase(SequenceBase&& other) noexcept(std::is_nothrow_move_constructible_v<Backend<Node,Ops>>) : arena(std::move(other.arena)), root(std::exchange(other.root,nullptr)), engine(std::move(other.engine)){}
-  SequenceBase& operator=(SequenceBase&& other) noexcept(std::is_nothrow_move_assignable_v<Backend<Node,Ops>>) {
-    if(this != &other){arena = std::move(other.arena); root = std::exchange(other.root,nullptr); engine = std::move(other.engine);}
+  SequenceBase(SequenceBase&& other) noexcept : arena(std::move(other.arena)), root(std::exchange(other.root,nullptr)){}
+  SequenceBase& operator=(SequenceBase&& other) noexcept {
+    if(this != &other){arena = std::move(other.arena); root = std::exchange(other.root,nullptr);}
     return *this;
   }
   int size() const {return Ops::size(root);}
@@ -55,20 +48,20 @@ public:
   std::size_t allocated_nodes() const {return arena ? arena->pool.size() : 0;}
   void insert_at(int k, T value){
     assert(0 <= k && k <= size());
-    auto [a,b] = engine.split(root,k);
-    root = engine.join(engine.join(a,make_node(value)),b);
+    auto [a,b] = arena->engine.split(root,k);
+    root = arena->engine.join(arena->engine.join(a,make_node(value)),b);
   }
   void erase_at(int k){
     assert(0 <= k && k < size());
-    auto [a,bc] = engine.split(root,k);
-    auto [b,c] = engine.split(bc,1);
-    arena->free_nodes.push_back(b);
-    root = engine.join(a,c);
+    auto [a,bc] = arena->engine.split(root,k);
+    auto [b,c] = arena->engine.split(bc,1);
+    arena->release(b);
+    root = arena->engine.join(a,c);
   }
-  T get(int k){assert(0 <= k && k < size()); return engine.access(root,k)->value;}
+  T get(int k){assert(0 <= k && k < size()); return arena->engine.access(root,k)->value;}
   void set(int k, T value){
     assert(0 <= k && k < size());
-    Node* p = engine.access(root,k);
+    Node* p = arena->engine.access(root,k);
     p->value = value;
     for(;p;p = p->pp) Ops::pull(p);
   }
@@ -83,19 +76,20 @@ public:
   T prodrev_all() const {return root ? root->rsum : Ops::identity();}
   [[nodiscard]] std::pair<SequenceBase,SequenceBase> split(int k){
     assert(0 <= k && k <= size());
-    SequenceBase a,b;
-    a.arena = b.arena = arena;
-    auto [left,right] = engine.split(root,k);
+    assert(arena);
+    SequenceBase a(arena),b(arena);
+    auto [left,right] = arena->engine.split(root,k);
     a.root = left; b.root = right; root = nullptr;
     return {std::move(a),std::move(b)};
   }
   void concat(SequenceBase&& other){
     assert(this != &other);
     if(!other.root) return;
-    if(!root){arena = other.arena; root = std::exchange(other.root,nullptr); return;}
+    assert(arena && other.arena);
+    if(!root && arena == other.arena){root = std::exchange(other.root,nullptr); return;}
     Node* tail = other.root;
     if(arena != other.arena) tail = build(other.to_vector());
-    root = engine.join(root,tail);
+    root = arena->engine.join(root,tail);
     other.root = nullptr;
   }
   std::vector<T> to_vector(){
@@ -109,9 +103,29 @@ public:
     }
     return result;
   }
-  [[nodiscard]] SequenceBase clone(){return SequenceBase(to_vector());}
+  [[nodiscard]] SequenceBase clone(){assert(arena); SequenceBase copy(arena); copy.root = copy.build(to_vector()); return copy;}
   void clear(){root = nullptr;}
   void print(){for(const auto& value : to_vector()) std::cout << value << ' '; std::cout << '\n';}
+};
+
+// Creates independent move-only sequences in one shared allocation domain.
+template<class Ops, template<class,class> class Backend>
+class SequenceArena {
+  using Storage = TreeArena<Ops,Backend>;
+  std::shared_ptr<Storage> arena = std::make_shared<Storage>();
+  void ensure(){if(!arena) arena = std::make_shared<Storage>();}
+public:
+  using Sequence = SequenceBase<Ops,Backend>;
+  SequenceArena() = default;
+  SequenceArena(const SequenceArena&) = delete;
+  SequenceArena& operator=(const SequenceArena&) = delete;
+  SequenceArena(SequenceArena&&) noexcept = default;
+  SequenceArena& operator=(SequenceArena&&) noexcept = default;
+  [[nodiscard]] Sequence new_sequence(){ensure(); return Sequence(arena);}
+  [[nodiscard]] Sequence new_sequence(const std::vector<typename Ops::value_type>& values){
+    auto seq = new_sequence(); seq.root = seq.build(values); return seq;
+  }
+  std::size_t allocated_nodes() const {return arena ? arena->pool.size() : 0;}
 };
 
 }  // namespace soryuusi::internal

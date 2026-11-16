@@ -36,7 +36,8 @@ int main() {
     soryuusi::cin >> a;
     x = {a,1};
   }
-  Sequence sequence(value);
+  Sequence arena;
+  auto sequence = arena.new_sequence(value);
   while(q--) {
     int type;
     soryuusi::cin >> type;
