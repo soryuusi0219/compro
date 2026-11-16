@@ -73,6 +73,86 @@ g++ -std=c++20 -O2 -I. -Ithird_party/ac-library source.cpp
 [reference索引](docs/reference/README.md#読み方) を参照してください。
 `make check` はreferenceの網羅性、必須項目、ローカルリンクも検査します。
 
+## ポインタ木・永続構造の所有権
+
+可変のポインタ木は原則コピー禁止・move可能です。独立した複製が必要な場合は
+`clone()` を使います。ノード・ルートポインタ・内部配列は公開せず、添字や列の操作で扱います。
+ノードの確保にはアドレスが変わらないプールを使い、個別のdeleteや参照カウントを避けます。
+不要になったノードを管理領域の終了まで保持する実装も許容します。
+
+永続構造は管理オブジェクトと不透明な値型 `Root` を分けます。Rootのコピーは安価で、
+版番号は利用側の `std::vector<Root>` などで管理します。更新は `[[nodiscard]]` な新しいRootを返し、
+検索は入力版を変更せずノードも確保しません。公開済みノードへの破壊的操作は提供しません。
+
+```cpp
+soryuusi::Persistent_Vector<int> array;
+using Root = decltype(array)::Root;
+std::vector<Root> versions{array.empty_root()};
+versions.push_back(array.set(versions[0], 3, 10));
+versions.push_back(array.set(versions[0], 3, 20)); // 初期版から別に分岐
+int x = array.get(versions[1], 3);                // 10
+```
+
+Rootは借用ハンドルです。管理領域の破棄・move代入による置換で無効になります。
+管理オブジェクトをmove構築した場合は移動先で引き続き使用できます。
+同じ型でも別の管理領域の版は混ぜられず、デバッグ時に所有元を検査します。
+永続DSUの `empty_root()` は全頂点が独立した初期版です。DSUのinitは1回だけ呼びます。
+
+splayの `split(k)` は呼出元を空にして2つの列を返し、`concat(std::move(other))` は
+相手を空にして末尾へ連結します。同一プール内の連結は償却対数時間、別プール間は
+相手の値を移してから接続します。split後の列はプールの所有権だけを共有し、可変ノードは共有しません。
+LCTでは複数の木を1つの管理オブジェクト内に置き、頂点番号でlink/cutします。
+trieのmergeは集合和、Li Chao木のmergeは包絡の和で、どちらも相手を消費します。
+
+従来の型名衝突を解消するため、以下の名前を使用します。
+
+| 対象 | 型名・移行方法 |
+| --- | --- |
+| 永続動的セグ木 | `PersistentDynamicSegtree<S,op,e>`（別名 `Persistent_Dynamic_Segtree`） |
+| 通常splay | `SplayTree<T,op,e>`（既存の `splay_tree<T,op,e>` も使用可能） |
+| 遅延splay | `LazySplayTree<T,op,e,F,mapping,composition,id>` |
+| 永続DSU | `PersistentDSU`（既存の `Persistent_dsu`・`Pdsu` も使用可能） |
+| データ付き永続DSU | `PersistentDSUWithData<S,op>` |
+| 版の型 | 各構造の `Root`。`np`・`NP`・`qp` は構造内の互換名として残す |
+
+生ノード操作、永続配列の `des_set` / `mutable_get`、名前空間直下の `np` は廃止しました。
+既存の一意な関数名・引数順は互換ラッパーを残し、新APIは原則としてRootを先頭に渡します。
+区間コピーは `copy_range(destination, source, l, r)` とします。
+詳細と計算量は各[reference](docs/reference/README.md)を参照してください。
+
+## 平衡二分木の共通基盤
+
+splay・treap・LCTは、平衡化、集約・作用、操作、所有権を分離しています。
+公開する列型は同じ操作を持ち、平衡化方式だけを選べます。
+
+| 型 | 平衡化と用途 |
+| --- | --- |
+| `SplayTree` / `LazySplayTree` | 列操作は償却対数時間 |
+| `TreapSequence` / `LazyTreapSequence` | 同じ列操作を、優先度による期待対数時間で提供 |
+| `linkcuttree` / `lazy_linkcuttree` | splayを補助木に用いる動的森 |
+| `DynamicBitVector` | bit圧縮したブロックを重み付きtreapで管理 |
+| `DynamicWavelet` | 独立したDynamicBitVectorを各段で使用 |
+
+splay・LCTの既存名と呼出し形式は維持しています。現在の公開型は共通実装への型エイリアスです。
+新しい列型の使用方法は [treap reference](docs/reference/data_structure/treap.md)、
+bit列の操作は [DynamicBitVector reference](docs/reference/data_structure/dynamic_bit_vector.md) を参照してください。
+
+開発時の分担は次のとおりです。
+
+- [BinaryTreeOps](docs/reference/data_structure/internal/binary_tree_ops.md)：非所有の回転・重み付き位置探索。
+- [ReversibleMonoid](docs/reference/data_structure/internal/reversible_monoid.md)：順逆集約、反転、任意の遅延作用、必要なノード状態。
+- [SplayBase](docs/reference/data_structure/internal/splay_base.md) / [TreapBase](docs/reference/data_structure/internal/treap_base.md)：平衡化。ノードの確保・解放は行いません。
+- [SequenceBase](docs/reference/data_structure/internal/sequence_base.md)：列操作とarenaの管理。新しい平衡化方式も同じBackendインターフェースで接続できます。
+- [LinkCutBase](docs/reference/data_structure/internal/link_cut_base.md)：preferred edgeとpath-parentを管理するLCT操作。固定配列を所有します。
+
+追加の平衡化方式には、`prepare`、`access(root&,k)`、`split`、`join`、`build` を実装します。
+ノードの追加情報はPolicyのExtraに保持でき、既存の列操作を複製する必要はありません。
+LCTの補助木にはpath-parentを維持するsplay相当の契約が必要です。
+
+通常版には遅延タグを、LCTには不要な列サイズを持たせません。bit列では1ノードが複数bitを持つため、
+ノード数と論理要素数を区別します。共通コアは静的なテンプレート呼出しを使い、virtual関数や型消去を使いません。
+Cartesian treeの線形構築も、整数ID用とtreap用で共有しています。
+
 ## 解答コードのビルドと展開
 
 ソースは、位置引数、`SRC`、または `FILE` で指定できます。

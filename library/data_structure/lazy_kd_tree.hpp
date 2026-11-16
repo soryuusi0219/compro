@@ -41,7 +41,6 @@ struct LazyKDTree{
     int n, b;
     vector<Point> pts;
     vector<int> ref;
-    node* root;
 
     template<bool xy>
     void _build_rec(int l, int r, int idx, const vector<S>& v, vector<int>& ids){

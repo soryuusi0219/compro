@@ -35,7 +35,6 @@ struct KDTree{
     int b;
     vector<Point> pts;
     vector<int> ref;
-    node* root;
 
     template<bool xy>
     void _build_rec(int l, int r, int id, const vector<S>& v, vector<int>& ids){

@@ -4,44 +4,29 @@
 
 ## 機能・前提条件
 
-挿入・削除・反転と順逆の区間集約を扱う列splay木。添字は現在の列順。
+列に対する挿入・削除・代入・反転と、順方向・逆方向のモノイド集約。位置は現在の列順の0始まり、区間は半開区間です。opは結合的、eは単位元で、非可換演算にも対応します。ノード型・ルート・回転操作は非公開です。
+
+コピー禁止・move可能。move元とsplitの呼出元は空になります。cloneは独立したプールへの複製です。splitで得た列は同じプールを共有しますが、可変ノードを共有せず、互いの更新は独立です。プールは最後の列ハンドルの破棄時にまとめて解放します。
+
+concatは相手を消費して末尾へ連結します。同じプールなら木を接続し、別プールなら値を移してから接続します。どちらも消費元は空になり、先に破棄しても連結先は有効です。sizeはその列の長さ、allocated_nodesは共有プール全体の確保数です。printにはTのostream出力演算子が必要です。eraseしたノードはプール内で再利用し、clearでは個別回収しません。
+
+互換名 `splay_tree<T,op,e>` も使用できます。
+
+公開型は共通のSequenceBaseへの型エイリアスです。既存のメソッド・消費操作・引数は維持しています。独自の前方宣言ではなく、このヘッダーをincludeしてください。通常版と遅延版は集約Policyだけが異なり、回転と列操作を共有します。
 
 ## インターフェース
 
 ```cpp
 #include "library/data_structure/splay_tree.hpp"
-```
-
-主要な宣言（補助型・補助関数を含む抜粋）:
-
-```cpp
 template<class T, auto op, auto e>
-struct splay_tree;
-struct node;
-node(int i, T v);
-void cul();
-void rotr();
-void rotl();
-void toggle();
-void push();
-void splay();
-using pnode = unique_ptr<node>;
-node* most_left(node* c);
-node* most_right(node* c);
-node* kth_node(node* c, int k);
-node* next(node* c);
-node* prev(node* c);
-pair<node*, node*> split_right(node* c);
-pair<node*, node*> split_left(node* c);
-node* merge(node* c, node* d);
-node* make_node(T v);
-void delete_node(node* c);
-node* insert_right(node* c, T v);
-node* insert_left(node* c, T v);
-node* erase(node* c);
-int size();
-void insert_at(int k, T v);
+using SplayTree = /* SequenceBase + ReversibleMonoid + SplayBase */;
+SplayTree();
+explicit SplayTree(const std::vector<T>& values);
+int size() const;
+bool empty() const;
+void insert_at(int k, T value);
 void erase_at(int k);
+void set(int k, T value);
 T get(int k);
 void flip(int l, int r);
 void flip_all();
@@ -49,19 +34,34 @@ T prod(int l, int r);
 T prodrev(int l, int r);
 T prod_all();
 T prodrev_all();
-splay_tree();
-splay_tree(vector<T>& v);
+std::pair<SplayTree,SplayTree> split(int k);
+void concat(SplayTree&& other);
+SplayTree clone();
+std::vector<T> to_vector();
+void clear();
+std::size_t allocated_nodes() const;
 void print();
 ```
 
 ## 計算量
 
-通常操作は償却 O(log N)、構築 O(N)、空間 O(N)。
+列長N、相手の列長M。通常操作・split・同一プールのconcatは償却 O(log(N+1))（concatは合計長に対するlog）。異なるプールのconcatは O(M) と木接続の償却 O(log(N+M+1))。構築・clone・to_vectorは O(N)。size/empty/全体集約/flip_all/clearは O(1)。空間は共有プールの確保数Kに対して O(K)。clear・異プール移送後に到達不能になったノードも、プール終了まで保持します。
 
 ## 依存関係
 
-標準ライブラリのみ。
+- [internal/reversible_monoid.hpp](internal/reversible_monoid.md)
+- [internal/sequence_base.hpp](internal/sequence_base.md)
+- [internal/splay_base.hpp](internal/splay_base.md)
 
 ## Verify・利用例
 
-- [`library_checker/range_reverse_range_sum_splay_tree`](../../../verify/library_checker/data_structure/range_reverse_range_sum_splay_tree.cpp)
+- [unit/balanced_trees](../../../verify/unit/balanced_trees.cpp)
+
+- [unit/pointer_structures](../../../verify/unit/pointer_structures.cpp)
+- [library_checker/range_reverse_range_sum_splay_tree](../../../verify/library_checker/data_structure/range_reverse_range_sum_splay_tree.cpp)
+
+```cpp
+auto [left, right] = sequence.split(k); // sequenceは空
+left.concat(std::move(right));         // rightは空
+sequence = std::move(left);
+```

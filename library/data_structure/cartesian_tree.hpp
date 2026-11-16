@@ -2,6 +2,7 @@
 #pragma once
 #include <tuple>
 #include <vector>
+#include "library/data_structure/internal/cartesian_tree_base.hpp"
 
 namespace soryuusi {
 
@@ -13,21 +14,12 @@ tuple<vector<int>,vector<int>,vector<int>,int> cartesian_tree(const vector<T>& v
   vector<int> p(n,-1);
   vector<int> l(n,-1);
   vector<int> r(n,-1);
-  int top = 0;
-  for(int i = 1; i < n; i++){
-    p[i] = i-1;
-    r[i-1] = i;
-    while(p[i] >= 0 && ((v[i] > v[p[i]]) == b)){
-      int j = p[i];
-      p[i] = p[p[i]];
-      if(p[i] >= 0) r[p[i]] = i;
-      r[j] = l[i];
-      if(r[j] >= 0) p[r[j]] = j;
-      p[j] = i;
-      l[i] = j;
-    }
-    if(p[i] == -1) top = i;
-  }
+  int top = internal::build_cartesian<int>(n,-1,[](int i){return i;},
+    [&](int i, int j){return (v[i] > v[j]) == b;},
+    [&](int i, int j){l[i] = j; if(j >= 0) p[j] = i;},
+    [&](int i, int j){r[i] = j; if(j >= 0) p[j] = i;},
+    [](int){});
+  if(n == 0) top = 0; // Preserve the existing empty-input convention.
   return {p,l,r,top};
 }
 

@@ -4,38 +4,37 @@
 
 ## 機能・前提条件
 
-非負 B bit 整数の多重集合。挿入・削除・k番目・全体XORを扱う。削除する値は存在する必要がある。
+非負B bit整数の**集合**。同じ値へのinsertは冪等で、eraseはその値を削除します（多重集合ではありません）。全体xor、昇順k番目、最小値・最大値を扱います。BはTの利用可能なbit幅以下にしてください。
+
+コピー禁止、move可能。移動元の木は空になり、再利用できます。`clone()` はノードを共有しない独立複製です。ノードはオブジェクトのプールが所有し、個別に解放しません。 mergeは集合和で、otherを空にします。両方の遅延xorを反映した値を統合し、ノードの所有権は混在させません。
 
 ## インターフェース
 
 ```cpp
 #include "library/data_structure/binary_trie.hpp"
-```
-
-主要な宣言（補助型・補助関数を含む抜粋）:
-
-```cpp
-template<class T, int B = 60>
-struct Binary_Trie;
+template<class T, int B = 60> struct Binary_Trie;
 Binary_Trie();
-~Binary_Trie();
-int size();
+int size() const;
 void insert(T x);
 void erase(T x);
 void operate_xor(T x);
-T kth(int k);
-T min_element();
-T max_element();
+T kth(int k); // 0始まり、範囲外はT(-1)
+T min_element(); // 空ならT(-1)
+T max_element(); // 空ならT(-1)
+void merge(Binary_Trie&& other);
+Binary_Trie clone() const;
+std::size_t allocated_nodes() const;
 ```
 
 ## 計算量
 
-通常操作 O(B)、全体XOR O(1)、最大 O(NB) ノード。
+insert/erase/kth/min/maxは O(B)、sizeと全体xorは O(1)。確保済みノード数Kに対して空間 O(K)、cloneは O(K)。消費元ノード数M・要素数Lに対してmergeは O(M+LB)、最大 O(LB) ノード追加。削除済みノードもプールに保持します。
 
 ## 依存関係
 
-標準ライブラリのみ。
+- [internal/node_pool.hpp](internal/node_pool.md)
 
 ## Verify・利用例
 
-- [`library_checker/set_xor_min`](../../../verify/library_checker/data_structure/set_xor_min.cpp)
+- [unit/pointer_structures](../../../verify/unit/pointer_structures.cpp)
+- [library_checker/set_xor_min](../../../verify/library_checker/data_structure/set_xor_min.cpp)

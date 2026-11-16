@@ -9,7 +9,7 @@ int main() {
   int n, q;
   soryuusi::cin >> n >> q;
   soryuusi::Pdsu dsu;
-  std::vector<soryuusi::np> versions(q + 1);
+  std::vector<soryuusi::Pdsu::Root> versions(q + 1);
   versions[0] = dsu.init(n);
 
   for (int i = 0; i < q; ++i) {

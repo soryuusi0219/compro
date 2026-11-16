@@ -1,47 +1,52 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/persistent_vector.hpp
 #pragma once
-#include <cstring>
+#include <cassert>
+#include <cstddef>
+#include <vector>
+
+#include "library/data_structure/internal/node_pool.hpp"
 
 namespace soryuusi {
 
-using namespace std;
-
-template<typename T>
-struct Persistent_Vector{
-  struct node;
-  using np=node*;
-  np root = nullptr;
-  struct node{
-    T data;
-    np c[20]={};
+template<class T>
+class Persistent_Vector {
+  struct node {
+    T data{};
+    node* c[20] = {};
   };
-  Persistent_Vector(){}
-  np get_root(){return root;}
-  void des_set(int id, T val, np& t){
-    if(!t) t = new node();
-    if(id == 0) t->data = val;
-    else des_set(id/20,val,t->c[id%20]);
+  internal::NodePool<node> pool;
+  node* update(node* p, int i, const T& x){
+    auto q = p ? pool.create(*p) : pool.create();
+    if(i == 0) q->data = x;
+    else q->c[i%20] = update(q->c[i%20],i/20,x);
+    return q;
   }
-  np set(int id, T val, np& t){
-    np res = new node();
-    if(t){
-      memcpy(res->c,t->c,sizeof(t->c));
-      res->data = t->data;
-    }
-    if(id == 0) res->data = val;
-    else res->c[id%20]=set(id/20,val,res->c[id%20]);
-    return res;
+  // Only used before publishing the result of build().
+  void build_set(node*& p, int i, const T& x){
+    if(!p) p = pool.create();
+    if(i == 0) p->data = x;
+    else build_set(p->c[i%20],i/20,x);
   }
-  np mutable_get(int id, np t){
-    if(id == 0) return t;
-    else return mutable_get(id/20,t->c[id%20]);
+public:
+  using Root = typename internal::NodePool<node>::Root;
+  using np = Root;
+  Root empty_root() const {return pool.root(nullptr);}
+  Root get_root() const {return empty_root();}
+  std::size_t allocated_nodes() const {return pool.size();}
+  [[nodiscard]] Root build(const std::vector<T>& a){
+    node* p = nullptr;
+    for(int i = 0; i < (int)a.size(); ++i) build_set(p,i,a[i]);
+    return pool.root(p);
   }
-  T get(int id, np t){
-    if(!t) return T{};
-    if(id == 0) return t->data;
-    else return get(id/20,t->c[id%20]);
+  [[nodiscard]] Root set(Root r, int i, const T& x){assert(i >= 0); return pool.root(update(pool.get(r),i,x));}
+  [[nodiscard]] Root set(int i, const T& x, Root r){return set(r,i,x);}
+  T get(Root r, int i) const {
+    assert(i >= 0);
+    auto p = pool.get(r);
+    while(p && i){p = p->c[i%20]; i /= 20;}
+    return p ? p->data : T{};
   }
+  T get(int i, Root r) const {return get(r,i);}
 };
-//using np = Persistent_Vector<long long>::np;
 
 }  // namespace soryuusi

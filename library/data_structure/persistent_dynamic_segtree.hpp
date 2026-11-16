@@ -1,14 +1,18 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/persistent_dynamic_segtree.hpp
 #pragma once
+#include <cassert>
+#include <cstddef>
 #include <type_traits>
 #include <utility>
+
+#include "library/data_structure/internal/node_pool.hpp"
 
 namespace soryuusi {
 
 using namespace std;
 
 template<class S, auto op, auto e>
-struct Dynamic_Segtree{
+struct PersistentDynamicSegtree{
   static_assert(is_invocable_r_v<S, decltype(op), S, S>, "op must be callable with (S, S) and return a value convertible to S");
   static_assert(is_invocable_r_v<S, decltype(e)>, "e must be callable with no arguments and return a value convertible to S");
 
@@ -22,9 +26,10 @@ struct Dynamic_Segtree{
       void calc(){sum = op(lp ? lp->sum : e(), op(val, rp ? rp->sum : e()));}
     };
     int n;
+    internal::NodePool<node> pool;
     node* _set(node* p, int l, int r, int i, S x){
-      if(!p) return new node(i, x);
-      node* res = new node(*p);
+      if(!p) return pool.create(i, x);
+      node* res = pool.create(*p);
       if(res->pos == i) {
         res->val = x;
         res->calc();
@@ -88,15 +93,22 @@ struct Dynamic_Segtree{
       return _min_left(p->lp, l, m, res, x, f);
     }
   public:
-    using NP = node*;
-    Dynamic_Segtree(int n_) : n(n_){}
-    NP instance() const {return nullptr;}
-    NP set(NP p, int i, S x){return _set(p,0,n,i,x);}
-    S get(NP p, int i) const {return _get(p,0,n,i);}
-    S prod(NP p, int l, int r) const {return _prod(p,0,n,l,r);}
-    S all_prod(NP p) const {return (p ? p->sum : e());}
-    template<class F> S max_right(NP p, int i, F f) const {S x = e(); return _max_right(p, 0, n, i, x, f);}
-    template<class F> S min_left(NP p, int i, F f) const {S x = e(); return _min_left(p, 0, n, i, x, f);}
+    using Root = typename internal::NodePool<node>::Root;
+    using NP = Root;
+    PersistentDynamicSegtree(int n_) : n(n_){assert(n >= 0);}
+    Root empty_root() const {return pool.root(nullptr);}
+    Root instance() const {return empty_root();}
+    std::size_t allocated_nodes() const {return pool.size();}
+    [[nodiscard]] Root set(Root p, int i, S x){assert(0 <= i && i < n); return pool.root(_set(pool.get(p),0,n,i,x));}
+    S get(Root p, int i) const {assert(0 <= i && i < n); return _get(pool.get(p),0,n,i);}
+    S prod(Root p, int l, int r) const {assert(0 <= l && l <= r && r <= n); return _prod(pool.get(p),0,n,l,r);}
+    S all_prod(Root p) const {auto q = pool.get(p); return q ? q->sum : e();}
+    template<class F> int max_right(Root p, int i, F f) const {assert(0 <= i && i <= n && f(e())); S x = e(); return _max_right(pool.get(p),0,n,i,x,f);}
+    template<class F> int min_left(Root p, int i, F f) const {assert(0 <= i && i <= n && f(e())); S x = e(); return _min_left(pool.get(p),0,n,i,x,f);}
+
 };
+
+template<class S, auto op, auto e>
+using Persistent_Dynamic_Segtree = PersistentDynamicSegtree<S,op,e>;
 
 }  // namespace soryuusi

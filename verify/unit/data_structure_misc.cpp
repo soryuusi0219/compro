@@ -106,7 +106,7 @@ void test_mo_rollback() {
 }
 
 void test_persistent_dsu() {
-  soryuusi::Persistent_dsu<long long,add> dsu;
+  soryuusi::PersistentDSUWithData<long long,add> dsu;
   auto root0 = dsu.init(4,1);
   auto root1 = dsu.merge(0,1,root0).second;
   auto root2 = dsu.merge(1,2,root1).second;
@@ -119,7 +119,7 @@ void test_persistent_dsu() {
 }
 
 void test_persistent_dynamic_segtree() {
-  soryuusi::Dynamic_Segtree<long long,add,zero> seg(16);
+  soryuusi::PersistentDynamicSegtree<long long,add,zero> seg(16);
   auto root0 = seg.instance();
   auto root1 = seg.set(root0,3,5);
   auto root2 = seg.set(root1,10,7);

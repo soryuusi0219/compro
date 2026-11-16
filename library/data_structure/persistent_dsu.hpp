@@ -1,72 +1,54 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/persistent_dsu.hpp
 #pragma once
-#include <algorithm>
 #include <cassert>
+#include <cstddef>
 #include <utility>
-
+#include <vector>
 #include "library/data_structure/persistent_vector.hpp"
 
 namespace soryuusi {
 
-using namespace std;
-
-struct Persistent_dsu{
-  using PV=Persistent_Vector<pair<int, int>>;
-  using np = PV::np;
-  PV data;
-  int n;
-  Persistent_dsu(){}
-  np init(int m){
+class PersistentDSU {
+  using Array = Persistent_Vector<std::pair<int,int>>;
+  Array data;
+  int n = -1;
+public:
+  using Root = Array::Root;
+  using np = Root;
+private:
+  Root initial;
+public:
+  PersistentDSU() = default;
+  explicit PersistentDSU(int m){initial = init(m);}
+  [[nodiscard]] Root init(int m){
+    assert(n == -1 && m >= 0);
     n = m;
-    np res = data.get_root();
-    for(int i = 0; i < n; i++) data.des_set(i,{-1,1},res);
-    return res;
+    initial = data.build(std::vector<std::pair<int,int>>(n,{-1,1}));
+    return initial;
   }
-  int leader(int i,np& t){
-    assert(t);
-    assert(0 <= i && i < n);
-    if(data.get(i,t).first < 0) return i;
-    else{
-      auto [l,sz] = data.get(i,t);
-      int res = leader(l,t);
-      if(l != res) t = data.set(i,{res,sz},t);
-      return res;
-    }
+  Root empty_root() const {assert(n >= 0); return initial;}
+  std::size_t allocated_nodes() const {return data.allocated_nodes();}
+  int leader(Root r, int i) const {
+    assert(0 <= i && i < n && r != Root{});
+    for(;;){auto p = data.get(r,i); if(p.first < 0) return i; i = p.first;}
   }
-  bool same(int i,int j,np& t){
-    assert(t);
-    assert(0 <= i && i < n);
-    assert(0 <= j && j < n);
-    return leader(i,t) == leader(j,t);
+  int leader(int i, Root r) const {return leader(r,i);}
+  bool same(Root r, int i, int j) const {return leader(r,i) == leader(r,j);}
+  bool same(int i, int j, Root r) const {return same(r,i,j);}
+  int size(Root r, int i) const {return data.get(r,leader(r,i)).second;}
+  int size(int i, Root r) const {return size(r,i);}
+  [[nodiscard]] std::pair<int,Root> merge(int i, int j, Root r){
+    int x = leader(r,i), y = leader(r,j);
+    if(x == y) return {x,r};
+    int sx = size(r,x), sy = size(r,y);
+    if(sx < sy) std::swap(x,y);
+    auto next = data.set(r,x,{-1,sx+sy});
+    next = data.set(next,y,{x,0});
+    return {x,next};
   }
-  pair<int, np> merge(int i,int j,np& t){
-    assert(t);
-    assert(0 <= i && i < n);
-    assert(0 <= j && j < n);
-    int x = leader(i,t); 
-    int y = leader(j,t);
-    if(x == y) return {x,t};
-    int szx = data.get(x,t).second;
-    int szy = data.get(y,t).second;
-    if(szx < szy){
-      np res = data.set(y,{-1,szx+szy},t);
-      res = data.set(x,{y,szx+szy},res);
-      return {x,res};
-    }
-    else{
-      np res = data.set(x,{-1,szx+szy},t);
-      res = data.set(y,{x,szx+szy},res);
-      return {x,res};
-    }
-  }
-  int size(int i, np& t){
-    assert(t);
-    assert(0 <= i && i < n);
-    int x = leader(i,t);
-    return data.get(x,t).second;
-  }
+  [[nodiscard]] Root merge(Root r, int i, int j){return merge(i,j,r).second;}
 };
-using Pdsu = Persistent_dsu;
-using np = Pdsu::np;
+using Persistent_dsu = PersistentDSU;
+using Pdsu = PersistentDSU;
 
 }  // namespace soryuusi

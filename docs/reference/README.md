@@ -23,7 +23,7 @@
 | --- | --- |
 | [Segtree_dual.hpp](data_structure/Segtree_dual.md) | 区間への作用と一点取得を行う双対セグメント木。 |
 | [area_union_rectangle.hpp](data_structure/area_union_rectangle.md) | 軸平行長方形の和集合面積。 |
-| [binary_trie.hpp](data_structure/binary_trie.md) | 非負 B bit 整数の多重集合。 |
+| [binary_trie.hpp](data_structure/binary_trie.md) | 非負 B bit 整数の集合。 |
 | [bit.hpp](data_structure/bit.md) | 加法群上のFenwick tree。 |
 | [bit_2d.hpp](data_structure/bit_2d.md) | 二次元Fenwick tree。 |
 | [bit_sparse.hpp](data_structure/bit_sparse.md) | 更新座標を先に登録する疎Fenwick tree。 |
@@ -32,6 +32,7 @@
 | [dsu.hpp](data_structure/dsu.md) | 連結成分の併合・代表元・サイズ。 |
 | [dsu_undo.hpp](data_structure/dsu_undo.md) | 巻き戻し可能なUnion-Find。 |
 | [dsu_undo_with_data.hpp](data_structure/dsu_undo_with_data.md) | 成分データ付き巻き戻しUnion-Find。 |
+| [dynamic_bit_vector.hpp](data_structure/dynamic_bit_vector.md) | 挿入・削除・rankを扱うbit圧縮した可変bit列。 |
 | [dynamic_dsu.hpp](data_structure/dynamic_dsu.md) | 疎な頂点IDをハッシュ表で管理するUnion-Find。 |
 | [dynamic_lazy_segtree.hpp](data_structure/dynamic_lazy_segtree.md) | 巨大な整数添字区間の動的遅延セグメント木。 |
 | [dynamic_segtree.hpp](data_structure/dynamic_segtree.md) | 必要なノードだけ生成する一点更新・区間集約木。 |
@@ -39,6 +40,14 @@
 | [dynamic_wavelet.hpp](data_structure/dynamic_wavelet.md) | 挿入・削除できるwavelet matrix。 |
 | [hash_table.hpp](data_structure/hash_table.md) | 固定容量の開番地ハッシュ表。 |
 | [increment_decrement_ordered_multi_set.hpp](data_structure/increment_decrement_ordered_multi_set.md) | 各要素を±1して順位順を保つ有界整数多重集合。 |
+| [internal/node_pool.hpp](data_structure/internal/node_pool.md) | 安定アドレスのノードプールと不透明な版ハンドル。 |
+| [internal/binary_tree_ops.hpp](data_structure/internal/binary_tree_ops.md) | 所有権を持たない回転と重み付き位置探索。 |
+| [internal/cartesian_tree_base.hpp](data_structure/internal/cartesian_tree_base.md) | 整数ID・ポインタに共通のCartesian tree線形構築。 |
+| [internal/reversible_monoid.hpp](data_structure/internal/reversible_monoid.md) | 順逆集約・反転・遅延作用のPolicyとノード状態。 |
+| [internal/splay_base.hpp](data_structure/internal/splay_base.md) | 補助木のsplayと列Backend。 |
+| [internal/treap_base.hpp](data_structure/internal/treap_base.md) | 親付きimplicit treapの平衡化Backend。 |
+| [internal/sequence_base.hpp](data_structure/internal/sequence_base.md) | 平衡化方式から独立した可変列と所有権管理。 |
+| [internal/link_cut_base.hpp](data_structure/internal/link_cut_base.md) | 反転可能な補助木コアを使うLCT共通実装。 |
 | [interval_heap.hpp](data_structure/interval_heap.md) | 最小・最大の双方を取り出せるヒープ。 |
 | [kd_tree.hpp](data_structure/kd_tree.md) | 固定した二次元点集合の一点更新・長方形集約。 |
 | [lazy_kd_tree.hpp](data_structure/lazy_kd_tree.md) | 固定点集合に長方形作用と集約を行うKD木。 |
@@ -81,6 +90,7 @@
 | [static_rectangle_sum.hpp](data_structure/static_rectangle_sum.md) | 重み付き点と長方形質問を登録するオフライン二次元範囲和。 |
 | [swag.hpp](data_structure/swag.md) | 結合的演算の列キュー集約。 |
 | [swag_deque.hpp](data_structure/swag_deque.md) | 両端の追加削除に対応するSWAG。 |
+| [treap.hpp](data_structure/treap.md) | splayと列操作を共有する通常・遅延implicit treap。 |
 | [wavelet.hpp](data_structure/wavelet.md) | 非負 B bit 値の静的wavelet matrix。 |
 | [wavelet_bit.hpp](data_structure/wavelet_bit.md) | キー固定のwavelet matrixとFenwick tree。 |
 | [wavelet_segtree.hpp](data_structure/wavelet_segtree.md) | キー固定のwavelet matrixとセグメント木。 |
