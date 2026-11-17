@@ -68,6 +68,7 @@ ACLありではACLのincludeを保持し、ACLなしではACLも提出コード�
 
 CIはmainへのpush、PR、手動実行で起動します。全ターゲットの入力を照合し、成功記録のないものだけを
 matrixへ1件ずつ割り当て、最大8件を並列実行します。PRではcheckoutされたmerge結果を検証します。
+コンテナの後続shellからもGitを使えるよう、checkout先だけを`safe.directory`へ登録します。
 同じPR・refの古いworkflowはキャンセルします。依存関係・reference・ツールのテストは毎回実行します。
 
 ## 成功記録と再実行

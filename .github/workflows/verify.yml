@@ -32,6 +32,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install verification environment
         run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           sh tools/setup_verify_env.sh
           echo '/opt/verify/bin' >> "$GITHUB_PATH"
       - name: Check dependencies, references, tools, and expansion
@@ -72,6 +73,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install verification environment
         run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           sh tools/setup_verify_env.sh
           echo '/opt/verify/bin' >> "$GITHUB_PATH"
       - uses: actions/cache@v4
