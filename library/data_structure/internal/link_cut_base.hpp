@@ -5,7 +5,7 @@
 #include <utility>
 #include <type_traits>
 #include <vector>
-#include "library/data_structure/internal/splay_base.hpp"
+#include "splay_base.hpp"
 
 namespace soryuusi::internal {
 

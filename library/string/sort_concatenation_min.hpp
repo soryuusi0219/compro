@@ -9,7 +9,7 @@
 #include <utility>
 #include <vector>
 
-#include "library/string/z_algorithm.hpp"
+#include "z_algorithm.hpp"
 
 namespace soryuusi {
 

@@ -9,7 +9,7 @@
 #include <type_traits>
 #include <vector>
 
-#include "library/data_structure/internal/node_pool.hpp"
+#include "internal/node_pool.hpp"
 
 namespace soryuusi {
 

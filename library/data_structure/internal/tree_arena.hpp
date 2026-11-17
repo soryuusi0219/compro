@@ -2,7 +2,7 @@
 #pragma once
 #include <utility>
 #include <vector>
-#include "library/data_structure/internal/node_pool.hpp"
+#include "node_pool.hpp"
 
 namespace soryuusi::internal {
 

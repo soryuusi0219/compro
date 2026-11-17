@@ -5,7 +5,7 @@
 #include <type_traits>
 #include <utility>
 
-#include "library/data_structure/internal/node_pool.hpp"
+#include "internal/node_pool.hpp"
 
 namespace soryuusi {
 

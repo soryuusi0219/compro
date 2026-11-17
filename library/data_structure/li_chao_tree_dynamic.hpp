@@ -9,9 +9,9 @@
 #include <type_traits>
 #include <vector>
 
-#include "library/data_structure/li_chao_tree_line.hpp"
+#include "li_chao_tree_line.hpp"
 
-#include "library/data_structure/internal/node_pool.hpp"
+#include "internal/node_pool.hpp"
 
 namespace soryuusi {
 

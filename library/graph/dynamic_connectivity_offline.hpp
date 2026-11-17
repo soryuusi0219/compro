@@ -9,8 +9,8 @@
 #include <utility>
 #include <vector>
 
-#include "library/data_structure/dsu_undo.hpp"
-#include "library/graph/static_graph.hpp"
+#include "../data_structure/dsu_undo.hpp"
+#include "static_graph.hpp"
 
 namespace soryuusi {
 

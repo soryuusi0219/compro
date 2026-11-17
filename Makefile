@@ -41,7 +41,7 @@ TESTER_TEMPLATE :=
 .DEFAULT_GOAL := help
 
 .PHONY: help build local run expand expand-library library-manager check
-.PHONY: expand-verify report all affected verify verify-list contest create-contest
+.PHONY: expand-verify report all affected verify verify-list verify-plan verify-sync contest create-contest
 .PHONY: $(GOAL_CPP)
 
 help:
@@ -57,6 +57,8 @@ help:
 	@echo "  make affected [BASE=origin/main] [HEAD=HEAD] [FORMAT=names|github]"
 	@echo "  make verify [TARGETS='target ...'] [VERIFY_ARGS='...']"
 	@echo "  make verify-list"
+	@echo "  make verify-plan [TARGETS=...] [VERIFY_ARGS=--expanded]"
+	@echo "  make verify-sync [VERIFY_ARGS='--sync push']"
 	@echo "  make contest NAME=abc123 [PROBLEM_COUNT=6] [ACL=true|false]"
 	@echo "               [TEMPLATE=templates/custom.cpp] [PROBLEMS=ABCDEF]"
 	@echo "  make create-contest CONTEST_ARGS='directory [options]'"
@@ -68,6 +70,7 @@ library-manager:
 check:
 	$(LIBRARY_MANAGER) check $(LIBRARY_ARGS)
 	$(PYTHON) $(ROOT_DIR)/tools/check_references.py
+	$(PYTHON) -m unittest discover -s $(ROOT_DIR)/tools -p 'test_*.py'
 
 build:
 	$(CXX) $(CXXFLAGS) $(SRC_PATH) -o $(OUT)
@@ -99,6 +102,12 @@ affected:
 
 verify:
 	$(VERIFY_TOOL) $(TARGETS) $(VERIFY_ARGS)
+
+verify-plan:
+	$(VERIFY_TOOL) --plan $(TARGETS) $(VERIFY_ARGS)
+
+verify-sync:
+	$(VERIFY_TOOL) $(or $(VERIFY_ARGS),--sync pull)
 
 verify-list:
 	$(VERIFY_TOOL) --list

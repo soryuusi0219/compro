@@ -7,7 +7,7 @@
 #include <utility>
 #include <vector>
 
-#include "library/math/internal_math.hpp"
+#include "internal_math.hpp"
 
 namespace soryuusi {
 

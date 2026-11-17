@@ -1,7 +1,7 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/lazy_link_cut.hpp
 #pragma once
-#include "library/data_structure/internal/link_cut_base.hpp"
-#include "library/data_structure/internal/reversible_monoid.hpp"
+#include "internal/link_cut_base.hpp"
+#include "internal/reversible_monoid.hpp"
 
 namespace soryuusi {
 

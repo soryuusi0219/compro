@@ -2,8 +2,8 @@
 #pragma once
 #include <vector>
 
-#include "library/math/convolution.hpp"
-#include "library/math/modint_traits.hpp"
+#include "convolution.hpp"
+#include "modint_traits.hpp"
 
 namespace soryuusi {
 

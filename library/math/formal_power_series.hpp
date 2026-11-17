@@ -12,12 +12,12 @@
 #include <utility>
 #include <vector>
 
-#include "library/math/convolution.hpp"
-#include "library/math/modint_traits.hpp"
-#include "library/math/modint_factorials.hpp"
-#include "library/math/convolution_mod.hpp"
-#include "library/math/convolution_semi_online.hpp"
-#include "library/math/convolution_online.hpp"
+#include "convolution.hpp"
+#include "modint_traits.hpp"
+#include "modint_factorials.hpp"
+#include "convolution_mod.hpp"
+#include "convolution_semi_online.hpp"
+#include "convolution_online.hpp"
 
 namespace soryuusi {
 

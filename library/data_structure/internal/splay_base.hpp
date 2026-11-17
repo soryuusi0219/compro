@@ -3,7 +3,7 @@
 #include <cassert>
 #include <utility>
 #include <vector>
-#include "library/data_structure/internal/binary_tree_ops.hpp"
+#include "binary_tree_ops.hpp"
 
 namespace soryuusi::internal {
 

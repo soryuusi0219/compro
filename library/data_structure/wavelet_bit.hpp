@@ -5,8 +5,8 @@
 #include <utility>
 #include <vector>
 
-#include "library/data_structure/bit.hpp"
-#include "library/data_structure/static_bit_vector.hpp"
+#include "bit.hpp"
+#include "static_bit_vector.hpp"
 
 namespace soryuusi {
 

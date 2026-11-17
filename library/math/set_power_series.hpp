@@ -9,9 +9,9 @@
 #include <utility>
 #include <vector>
 
-#include "library/math/modint_traits.hpp"
+#include "modint_traits.hpp"
 
-#include "library/math/modint_factorials.hpp"
+#include "modint_factorials.hpp"
 
 namespace soryuusi {
 

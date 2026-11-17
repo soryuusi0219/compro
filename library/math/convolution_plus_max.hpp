@@ -5,7 +5,7 @@
 #include <utility>
 #include <vector>
 
-#include "library/math/convolution.hpp"
+#include "convolution.hpp"
 
 namespace soryuusi {
 

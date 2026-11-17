@@ -5,9 +5,9 @@
 #include <cassert>
 #include <vector>
 
-#include "library/math/convolution.hpp"
+#include "convolution.hpp"
 
-#include "library/math/modint_factorials.hpp"
+#include "modint_factorials.hpp"
 
 namespace soryuusi {
 

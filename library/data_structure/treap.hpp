@@ -1,8 +1,8 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/treap.hpp
 #pragma once
-#include "library/data_structure/internal/reversible_monoid.hpp"
-#include "library/data_structure/internal/sequence_base.hpp"
-#include "library/data_structure/internal/treap_base.hpp"
+#include "internal/reversible_monoid.hpp"
+#include "internal/sequence_base.hpp"
+#include "internal/treap_base.hpp"
 
 namespace soryuusi {
 

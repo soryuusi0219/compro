@@ -4,8 +4,8 @@
 #include <chrono>
 #include <cstdint>
 #include <utility>
-#include "library/data_structure/internal/binary_tree_ops.hpp"
-#include "library/data_structure/internal/cartesian_tree_base.hpp"
+#include "binary_tree_ops.hpp"
+#include "cartesian_tree_base.hpp"
 
 namespace soryuusi::internal {
 

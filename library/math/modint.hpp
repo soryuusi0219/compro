@@ -9,7 +9,7 @@
 #include <cstdint>
 #include <type_traits>
 
-#include "library/math/internal_math.hpp"
+#include "internal_math.hpp"
 
 namespace soryuusi {
 

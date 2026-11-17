@@ -18,8 +18,8 @@
 #define SORYUUSI_NTT_AVX512 0
 #endif
 
-#include "library/math/internal_math.hpp"
-#include "library/math/modint_traits.hpp"
+#include "internal_math.hpp"
+#include "modint_traits.hpp"
 
 namespace soryuusi {
 

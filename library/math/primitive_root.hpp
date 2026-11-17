@@ -1,7 +1,7 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/math/primitive_root.hpp
 #pragma once
 
-#include "library/math/prime_factorization.hpp"
+#include "prime_factorization.hpp"
 
 
 namespace soryuusi {

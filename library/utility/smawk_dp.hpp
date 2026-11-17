@@ -5,7 +5,7 @@
 #include <utility>
 #include <vector>
 
-#include "library/utility/smawk.hpp"
+#include "smawk.hpp"
 
 namespace soryuusi {
 

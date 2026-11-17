@@ -6,7 +6,7 @@
 #include <numeric>
 #include <vector>
 
-#include "library/data_structure/wavelet.hpp"
+#include "wavelet.hpp"
 
 namespace soryuusi {
 

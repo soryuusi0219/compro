@@ -3,8 +3,8 @@
 #include <algorithm>
 #include <vector>
 
-#include "library/math/internal_bit.hpp"
-#include "library/data_structure/dsu.hpp"
+#include "../math/internal_bit.hpp"
+#include "dsu.hpp"
 
 namespace soryuusi {
 

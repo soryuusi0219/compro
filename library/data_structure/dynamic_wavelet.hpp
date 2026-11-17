@@ -3,7 +3,7 @@
 #include <cassert>
 #include <utility>
 #include <vector>
-#include "library/data_structure/dynamic_bit_vector.hpp"
+#include "dynamic_bit_vector.hpp"
 
 namespace soryuusi {
 

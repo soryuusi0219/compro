@@ -36,7 +36,7 @@ def check() -> list[str]:
     for page in sorted(REFERENCE.rglob("*.md")):
         if page != index and page not in expected:
             errors.append(f"orphan reference {page.relative_to(ROOT)}")
-    documents = list(REFERENCE.rglob("*.md")) + [ROOT / "README.md", ROOT / "AGENTS.md", ROOT / "library/readme.md", ROOT / "tools/README.md"]
+    documents = list(REFERENCE.rglob("*.md")) + [ROOT / "README.md", ROOT / "architecture.md", ROOT / "AGENTS.md", ROOT / "library/readme.md", ROOT / "tools/README.md"]
     for page in documents:
         if not page.exists():
             continue

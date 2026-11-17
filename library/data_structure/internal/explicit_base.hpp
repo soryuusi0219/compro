@@ -9,8 +9,8 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-#include "library/data_structure/internal/reversible_monoid.hpp"
-#include "library/data_structure/internal/tree_arena.hpp"
+#include "reversible_monoid.hpp"
+#include "tree_arena.hpp"
 
 namespace soryuusi::internal {
 

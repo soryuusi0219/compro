@@ -1,8 +1,8 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/splay_tree.hpp
 #pragma once
-#include "library/data_structure/internal/reversible_monoid.hpp"
-#include "library/data_structure/internal/sequence_base.hpp"
-#include "library/data_structure/internal/splay_base.hpp"
+#include "internal/reversible_monoid.hpp"
+#include "internal/sequence_base.hpp"
+#include "internal/splay_base.hpp"
 
 namespace soryuusi {
 

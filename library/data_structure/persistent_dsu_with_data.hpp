@@ -5,7 +5,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-#include "library/data_structure/persistent_vector.hpp"
+#include "persistent_vector.hpp"
 
 namespace soryuusi {
 

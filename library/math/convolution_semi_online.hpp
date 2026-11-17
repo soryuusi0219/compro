@@ -7,9 +7,9 @@
 #include <utility>
 #include <vector>
 
-#include "library/math/convolution_mod.hpp"
-#include "library/math/modint_traits.hpp"
-#include "library/math/ntt.hpp"
+#include "convolution_mod.hpp"
+#include "modint_traits.hpp"
+#include "ntt.hpp"
 
 namespace soryuusi {
 

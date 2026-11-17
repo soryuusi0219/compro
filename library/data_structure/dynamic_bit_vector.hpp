@@ -7,9 +7,9 @@
 #include <cstdint>
 #include <utility>
 #include <vector>
-#include "library/data_structure/internal/binary_tree_ops.hpp"
-#include "library/data_structure/internal/node_pool.hpp"
-#include "library/data_structure/internal/treap_base.hpp"
+#include "internal/binary_tree_ops.hpp"
+#include "internal/node_pool.hpp"
+#include "internal/treap_base.hpp"
 
 namespace soryuusi {
 

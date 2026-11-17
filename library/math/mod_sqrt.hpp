@@ -4,8 +4,8 @@
 #include <cassert>
 #include <cstdint>
 
-#include "library/math/internal_math.hpp"
-#include "library/math/modint_traits.hpp"
+#include "internal_math.hpp"
+#include "modint_traits.hpp"
 
 namespace soryuusi {
 namespace internal {

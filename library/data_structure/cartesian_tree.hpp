@@ -2,7 +2,7 @@
 #pragma once
 #include <tuple>
 #include <vector>
-#include "library/data_structure/internal/cartesian_tree_base.hpp"
+#include "internal/cartesian_tree_base.hpp"
 
 namespace soryuusi {
 

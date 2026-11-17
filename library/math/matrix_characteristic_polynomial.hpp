@@ -3,7 +3,7 @@
 #include <cassert>
 #include <vector>
 
-#include "library/math/matrix.hpp"
+#include "matrix.hpp"
 
 namespace soryuusi {
 

@@ -4,7 +4,7 @@
 #include <utility>
 #include <vector>
 
-#include "library/data_structure/static_bit_vector.hpp"
+#include "static_bit_vector.hpp"
 
 namespace soryuusi {
 

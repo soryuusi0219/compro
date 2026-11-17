@@ -9,6 +9,7 @@
 - C++20 の競技プログラミング用ライブラリです。
 - `library/`: 分野別のヘッダーオンリーライブラリ
 - `docs/reference/`: 全ヘッダーに対応するMarkdown reference（機能・API・計算量・verify）
+- [architecture.md](architecture.md): 内部設計、拡張方針、開発・検証手順
 - `verify/library_checker/`: Library Checker 用の接続コードと `manifests/`
 - `verify/unit/`: 公式問題がない機能、細かなAPI、ランダム比較のテスト
 - `templates/`: 解答コードとtesterのテンプレート
@@ -39,6 +40,10 @@
 
 - 続けて `#pragma once` を置き、必要な標準ヘッダーと直接依存する自作ヘッダーを明示的に
   includeしてください。推移的includeには依存しません。
+- ライブラリ間のincludeは読み込む側のヘッダーからの相対パスにします。
+  同じディレクトリは `"modint.hpp"`、別分野は `"../math/modint.hpp"` の形式です。
+  ヘッダー内で `"library/..."` や絶対パスを使わないでください。解答・verifyの公開ヘッダーの
+  読み込みとreferenceの利用例は、従来どおり `"library/..."` を使えます。
 - 自作ライブラリは原則 `namespace soryuusi` 内に置きます。既存ファイルでは
   `using namespace std;`、空白、括弧、命名など、そのファイルのスタイルに合わせてください。
 - ファイル名は小文字の `snake_case` を基本とします。既存の型名や歴史的な綴りは、明示的な
@@ -139,11 +144,21 @@
   make verify TARGETS=unit/<name>
   ```
 
+- verifyは内容・実行条件が一致する成功記録を再利用します。`make verify-plan`で実行予定と理由を
+  確認できます。必ず再実行したい場合は`VERIFY_ARGS=--force`、ケース再取得も行う場合は
+  `VERIFY_ARGS=--refresh-cases`を指定します。`--expanded`は対象を自動で再展開します。
+- 実行時に読むファイルはmanifestの`dependencies`へ登録してください。通常のincludeは
+  compilerの依存解析で追跡します。検証方法・オプション・ケースの版は成功記録のキーに反映し、
+  Git SHAやmtimeだけで成功と判定しないでください。失敗・中断・部分実行を成功記録へ変換しません。
+- `make verify-sync`で共有結果を取得できます。共有ブランチへの公開は
+  `make verify-sync VERIFY_ARGS='--sync push'`で明示的に行い、通常のverifyはリモートへ書き込みません。
+  設計と運用の詳細は[architecture.md](architecture.md#検証結果の管理)を参照してください。
 - 現行 `tools/verify.py` は `--offline` / `--no-generate` に対応していません。
   利用可能な引数は `python3 tools/verify.py --help` で確認してください。
 
 - 変更後は少なくとも `make check` と `git diff --check` を実行してください。
-  `make check` は先頭URL、依存切れ、循環依存に加えreferenceの網羅性・必須節・リンクを検査します。
+  `make check` は先頭URL、依存切れ、循環依存に加えreferenceの網羅性・必須節・リンクを検査し、
+  ツールの回帰テストも実行します。
 - include展開や依存関係への影響が大きい変更では、必要に応じて以下も実行します。
 
   ```sh
@@ -158,6 +173,8 @@
 
 ## ドキュメントと互換性
 
+- README.mdは利用者向けの使い方・導入・APIの案内に限定します。内部設計や開発手順は
+  [architecture.md](architecture.md)、作業規約はこのファイルへ記載してください。
 - 公開テンプレート引数、戻り値、単位元、構築手順が変わる場合は、対応する
   `docs/reference/**/*.md`、`README.md`、サンプルも更新してください。
 - 新規ヘッダーには同じ相対パスのMarkdown referenceを追加し、

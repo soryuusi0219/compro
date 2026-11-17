@@ -1,8 +1,8 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/graph/chromatic_polynomial.hpp
 #include <vector>
 
-#include "library/math/formal_power_series.hpp"
-#include "library/math/set_power_series.hpp"
+#include "../math/formal_power_series.hpp"
+#include "../math/set_power_series.hpp"
 
 namespace soryuusi {
 

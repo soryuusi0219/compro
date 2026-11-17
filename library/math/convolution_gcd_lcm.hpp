@@ -5,7 +5,7 @@
 #include <utility>
 #include <vector>
 
-#include "library/math/prime_table.hpp"
+#include "prime_table.hpp"
 
 namespace soryuusi {
 

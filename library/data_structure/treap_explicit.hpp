@@ -1,8 +1,8 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/treap_explicit.hpp
 #pragma once
 #include <functional>
-#include "library/data_structure/internal/explicit_base.hpp"
-#include "library/data_structure/internal/treap_base.hpp"
+#include "internal/explicit_base.hpp"
+#include "internal/treap_base.hpp"
 
 namespace soryuusi {
 

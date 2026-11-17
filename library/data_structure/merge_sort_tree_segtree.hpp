@@ -8,7 +8,7 @@
 #include <utility>
 #include <vector>
 
-#include "library/data_structure/segtree.hpp"
+#include "segtree.hpp"
 
 namespace soryuusi {
 
