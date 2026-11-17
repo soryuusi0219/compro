@@ -15,6 +15,19 @@ import subprocess
 from verify_cache import ROOT, CacheError, atomic_json, case_policy, digest, file_digest, now
 
 
+def increase_stack_limit():
+    # Generation also runs recursive reference solutions and generators. Match
+    # verification-helper's stack policy before launching any of those children.
+    try:
+        import resource
+        _, hard = resource.getrlimit(resource.RLIMIT_STACK)
+        resource.setrlimit(resource.RLIMIT_STACK, (hard, hard))
+    except (ImportError, OSError, ValueError) as error:
+        logging.warning('Could not increase stack limit before case generation: %s', error)
+        return False
+    return True
+
+
 def checker_repository():
     revision = case_policy()['library_checker_revision']
     override = os.environ.get('VERIFY_LIBRARY_CHECKER_REPOSITORY')
@@ -109,6 +122,7 @@ def main():
     import onlinejudge_verify.config
     import onlinejudge_verify.verify
     onlinejudge_verify.config.set_config_path(ROOT / 'build/verify/oj/config.toml')
+    increase_stack_limit()
     directory, evidence = prepare_cases(request['url'], request['suite'], refresh=request['refresh'])
     marker = CompletionMarker()
     source = ROOT / request['source']

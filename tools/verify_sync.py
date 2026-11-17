@@ -16,7 +16,11 @@ def synchronize(store, *, remote='origin', branch='verify-results', push=False):
         raise CacheError('use a dedicated results branch')
     source = subprocess.run(['git', 'remote', 'get-url', '--', remote], cwd=ROOT, text=True, capture_output=True)
     if source.returncode:
-        raise CacheError(f'unknown remote: {remote}')
+        if 'detected dubious ownership' in source.stderr:
+            raise CacheError('Git rejected repository ownership; configure safe.directory for the trusted workspace')
+        if 'No such remote' in source.stderr:
+            raise CacheError(f'unknown remote: {remote}')
+        raise CacheError(f'cannot read remote {remote}: git remote get-url failed (exit {source.returncode})')
     url = source.stdout.strip()
     # Reuse checkout's auth configuration without writing credentials to the
     # temporary repository or exposing them in command-line/log output.

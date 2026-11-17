@@ -238,6 +238,41 @@ class VerificationCacheTest(unittest.TestCase):
         files = self.git('--git-dir', str(remote), 'ls-tree', '--name-only', 'verify-results')
         self.assertEqual(files, 'records')
 
+    def test_sync_reports_missing_remote(self):
+        self.git('init', '-q')
+        with self.assertRaisesRegex(cache.CacheError, 'unknown remote: origin'):
+            verify_sync.synchronize(self.store)
+
+    def test_sync_reports_ownership_error_instead_of_missing_remote(self):
+        self.git('init', '-q')
+        self.git('remote', 'add', 'origin', str(self.root / 'remote.git'))
+        with patch.dict(os.environ, {
+            'GIT_TEST_ASSUME_DIFFERENT_OWNER': '1',
+            'GIT_CONFIG_GLOBAL': str(self.root / 'isolated.gitconfig'),
+            'GIT_CONFIG_SYSTEM': '/dev/null', 'GIT_CONFIG_COUNT': '0',
+            'LC_ALL': 'C',
+        }):
+            with self.assertRaisesRegex(cache.CacheError, 'ownership.*safe.directory'):
+                verify_sync.synchronize(self.store)
+
+    def test_workflow_safe_directory_restores_access_after_checkout(self):
+        self.git('init', '-q')
+        url = str(self.root / 'remote.git')
+        self.git('remote', 'add', 'origin', url)
+        with patch.dict(os.environ, {
+            'GIT_TEST_ASSUME_DIFFERENT_OWNER': '1',
+            'GIT_CONFIG_GLOBAL': str(self.root / 'isolated.gitconfig'),
+            'GIT_CONFIG_SYSTEM': '/dev/null', 'GIT_CONFIG_COUNT': '0',
+            'GITHUB_WORKSPACE': str(self.root), 'LC_ALL': 'C',
+        }):
+            before = subprocess.run(['git', 'remote', 'get-url', 'origin'],
+                                    cwd=self.root, capture_output=True, text=True)
+            self.assertIn('detected dubious ownership', before.stderr)
+            subprocess.run(['sh', '-ec', 'git config --global --add safe.directory "$GITHUB_WORKSPACE"'],
+                           cwd=self.root, check=True)
+            self.assertEqual(self.git('remote', 'get-url', 'origin'), url)
+            self.assertEqual(self.git('config', '--global', '--get-all', 'safe.directory'), str(self.root))
+
     def test_concurrent_publish_refetches_and_preserves_both_writers(self):
         remote = self.root / 'remote.git'
         self.git('init', '--bare', '-q', str(remote))
