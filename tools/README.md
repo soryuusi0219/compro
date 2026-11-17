@@ -139,6 +139,8 @@ AOJは更新版番号が得られないためepochを手動更新できるよう
 Library Checkerにも同じ有効期間を適用します。ケースとcheckerは固定版から再確認します。
 取得ケースのダイジェストを照合し、破損・版違い・期限切れなら再取得します。
 生成したケースの内容と完了状況を成功記録のevidenceへ保存します。
+POSIX環境ではケース生成前にスタックのsoft limitをhard limitまで引き上げます。
+公式の生成器・正解プログラム・checker・検証対象にも同じ上限を継承させます。
 
 `build/library_status.*`のdirect/indirect/unverifiedは接続コードの有無による網羅状況です。
 実際の成功・失敗の実績とは区別してください。実行要否と成功記録は`make verify-plan`で確認します。

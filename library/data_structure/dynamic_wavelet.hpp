@@ -34,7 +34,8 @@ struct DynamicWavelet{
         vl.clear();
         vr.clear();
         for(int i = 0; i < n; i++){
-          if(b[i] = !((v[i] >> k) & 1)) vl.push_back(v[i]);
+          b[i] = !((v[i] >> k) & 1);
+          if(b[i]) vl.push_back(v[i]);
           else vr.push_back(v[i]);
         }
         data[k].build(b);
