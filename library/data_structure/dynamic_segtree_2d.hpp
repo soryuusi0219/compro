@@ -1,7 +1,11 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/dynamic_segtree_2d.hpp
 #pragma once
-#include <type_traits>
+#include <cstddef>
+#include <cassert>
 #include <utility>
+#include <type_traits>
+
+#include "internal/node_pool.hpp"
 
 namespace soryuusi {
 
@@ -24,7 +28,7 @@ struct Dynamic_Segtree2D{
     };
     void _add1D(node1D*& p, int l, int r, int i, S x){
       if(!p) {
-        p = new node1D(i, x);
+        p = pool1.create(i, x);
         return;
       }
       p->sum = op(p->sum, x);
@@ -45,7 +49,7 @@ struct Dynamic_Segtree2D{
 
     void _set1D(node1D*& p, int l, int r, int i, S x){
       if(!p) {
-        p = new node1D(i, x);
+        p = pool1.create(i, x);
         return;
       }
       if(p->pos == i) {
@@ -88,6 +92,8 @@ struct Dynamic_Segtree2D{
       node2D* rp;
       node2D() : tree(nullptr), lp(nullptr), rp(nullptr) {}
     };
+    internal::NodePool<node1D> pool1;
+    internal::NodePool<node2D> pool2;
     node2D* root;
     void calc(node2D* p, int j){
       if(!p) return;
@@ -97,7 +103,7 @@ struct Dynamic_Segtree2D{
       ));
     }
     void _add2D(node2D*& p, int l, int r, int i, int j, S x){
-      if(!p) p = new node2D();
+      if(!p) p = pool2.create();
       _add1D(p->tree,0,w,j,x);
       if(r - l == 1) return;
       int m = (l+r) >> 1;
@@ -106,7 +112,7 @@ struct Dynamic_Segtree2D{
     }
 
     void _set2D(node2D*& p, int l, int r, int i, int j, S x){
-      if(!p) p = new node2D();
+      if(!p) p = pool2.create();
       if(r - l == 1) {
         _set1D(p->tree, 0, w, j, x);
         return;
@@ -131,11 +137,42 @@ struct Dynamic_Segtree2D{
       return op(_prod2D(p->lp, l, m, hi, hj, wi, wj), _prod2D(p->rp, m, r, hi, hj, wi, wj));
     }
   public:
-    Dynamic_Segtree2D(int h_, int w_) : h(h_), w(w_), root(nullptr){}
-    void set(int i, int j, S x){_set2D(root,0,h,i,j,x);}
-    void add(int i, int j, S x){_add2D(root,0,h,i,j,x);}
-    S get(int i, int j){return _get2D(root,0,h,i,j);}
-    S prod(int hl, int hr, int wl, int wr){return _prod2D(root,0,h,hl,hr,wl,wr);}
+    Dynamic_Segtree2D(const Dynamic_Segtree2D&) = delete;
+    Dynamic_Segtree2D& operator=(const Dynamic_Segtree2D&) = delete;
+    Dynamic_Segtree2D(Dynamic_Segtree2D&& other) : Dynamic_Segtree2D(0,0) {*this = std::move(other);}
+    Dynamic_Segtree2D& operator=(Dynamic_Segtree2D&& other) {
+      if(this == &other) return *this;
+      h = std::move(other.h);
+      w = std::move(other.w);
+      pool1 = std::move(other.pool1);
+      pool2 = std::move(other.pool2);
+      root = std::exchange(other.root, nullptr);
+      return *this;
+    }
+    [[nodiscard]] Dynamic_Segtree2D clone() const {
+      Dynamic_Segtree2D result(h,w);
+      auto copy1 = [&](auto&& self, node1D* p) -> node1D* {
+        if(!p) return nullptr;
+        auto q = result.pool1.create(*p);
+        q->lp = self(self,p->lp); q->rp = self(self,p->rp);
+        return q;
+      };
+      auto copy2 = [&](auto&& self, node2D* p) -> node2D* {
+        if(!p) return nullptr;
+        auto q = result.pool2.create();
+        q->tree = copy1(copy1,p->tree);
+        q->lp = self(self,p->lp); q->rp = self(self,p->rp);
+        return q;
+      };
+      result.root = copy2(copy2,root);
+      return result;
+    }
+    std::size_t allocated_nodes() const {return pool1.size() + pool2.size();}
+    Dynamic_Segtree2D(int h_, int w_) : h(h_), w(w_), root(nullptr){assert(h >= 0 && w >= 0);}
+    void set(int i, int j, S x){assert(0 <= i && i < h && 0 <= j && j < w); _set2D(root,0,h,i,j,x);}
+    void add(int i, int j, S x){assert(0 <= i && i < h && 0 <= j && j < w); _add2D(root,0,h,i,j,x);}
+    S get(int i, int j){assert(0 <= i && i < h && 0 <= j && j < w); return _get2D(root,0,h,i,j);}
+    S prod(int hl, int hr, int wl, int wr){assert(0 <= hl && hl <= hr && hr <= h && 0 <= wl && wl <= wr && wr <= w); return _prod2D(root,0,h,hl,hr,wl,wr);}
     S all_prod(){return (root && root->tree ? root->tree->sum : e());}
 };
 

@@ -5,7 +5,7 @@
 #include <cstddef>
 #include <vector>
 
-#include "library/math/math.hpp"
+#include "math.hpp"
 
 namespace soryuusi {
 

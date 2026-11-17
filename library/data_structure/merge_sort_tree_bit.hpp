@@ -7,7 +7,7 @@
 #include <utility>
 #include <vector>
 
-#include "library/data_structure/bit.hpp"
+#include "bit.hpp"
 
 namespace soryuusi {
 

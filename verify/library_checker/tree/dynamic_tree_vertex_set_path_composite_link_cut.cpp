@@ -7,7 +7,7 @@
 using mint = soryuusi::modint998244353;
 struct S{mint a, b;};
 S op(S x, S y) { return {x.a*y.a,y.a*x.b+y.b}; }
-S identity() { return {0,0}; }
+S identity() { return {1,0}; }
 
 int main() {
   int n, q;

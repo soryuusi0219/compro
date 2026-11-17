@@ -5,7 +5,7 @@
 #include <utility>
 #include <vector>
 
-#include "library/data_structure/dsu_undo.hpp"
+#include "../data_structure/dsu_undo.hpp"
 
 namespace soryuusi {
 

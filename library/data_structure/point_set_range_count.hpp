@@ -1,11 +1,15 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/point_set_range_count.hpp
 #pragma once
+#include <cstddef>
+#include <utility>
 #include <algorithm>
+#include <cassert>
 #include <chrono>
 #include <cstdint>
 #include <type_traits>
-#include <utility>
 #include <vector>
+
+#include "internal/node_pool.hpp"
 
 namespace soryuusi {
 
@@ -63,8 +67,9 @@ struct PointSetRangeCount{
       node(int pos_, bool val_) : pos(pos_), sum(val_), lp(nullptr), rp(nullptr) {}
       inline bool val() const {return sum - (lp ? lp->sum : 0) - (rp ? rp->sum : 0);}
     };
+    internal::NodePool<node> pool;
     void _add(node*& p, int i){
-      if(!p) p = new node(i,1);
+      if(!p) p = pool.create(i,1);
       else __add(p, i);
     }
     void __add(node* p, int i){
@@ -77,7 +82,7 @@ struct PointSetRangeCount{
             if(!(p->val())) break;
           }
           ++(p->sum), r = m;
-          if(!p->lp) p->lp = new node(i,0);
+          if(!p->lp) p->lp = pool.create(i,0);
           p = p->lp;
         }else{
           if(i < p->pos) {
@@ -85,7 +90,7 @@ struct PointSetRangeCount{
             if(!(p->val())) break;
           }
           ++(p->sum), l = m;
-          if(!p->rp) p->rp = new node(i,0);
+          if(!p->rp) p->rp = pool.create(i,0);
           p = p->rp;
         }
       }
@@ -121,15 +126,49 @@ struct PointSetRangeCount{
     vector<int> v;
     vector<node*> inst;
   public:
+    PointSetRangeCount(const PointSetRangeCount&) = delete;
+    PointSetRangeCount& operator=(const PointSetRangeCount&) = delete;
+    PointSetRangeCount(PointSetRangeCount&& other) : PointSetRangeCount(0,0) {*this = std::move(other);}
+    PointSetRangeCount& operator=(PointSetRangeCount&& other) {
+      if(this == &other) return *this;
+      compressor = std::move(other.compressor);
+      n = std::move(other.n);
+      v = std::move(other.v);
+      inst = std::move(other.inst);
+      pool = std::move(other.pool);
+      other.n = 0;
+      other.v.clear();
+      other.inst.clear();
+      return *this;
+    }
+    [[nodiscard]] PointSetRangeCount clone() const {
+      PointSetRangeCount result(n,inst.size());
+      result.compressor = compressor;
+      result.v = v;
+      auto dfs = [&](auto&& self, node* p) -> node* {
+        if(!p) return nullptr;
+        auto q = result.pool.create(*p);
+        q->lp = self(self,p->lp); q->rp = self(self,p->rp);
+        return q;
+      };
+      for(int i = 0; i < (int)inst.size(); ++i) result.inst[i] = dfs(dfs,inst[i]);
+      return result;
+    }
+    std::size_t allocated_nodes() const {return pool.size();}
     PointSetRangeCount(int n_, int m) : compressor(m), n(n_), v(n,-1), inst(m, nullptr) {}
     PointSetRangeCount(const vector<T>& a, int m) : compressor(m), n(a.size()), v(n), inst(m, nullptr) {
       for(int i = 0; i < n; ++i) _add(inst[v[i]=compressor.add(a[i])],i);
     }
     void set(int i, const T& k){
+      assert(0 <= i && i < n);
       if(~v[i]) _del(inst[v[i]],i);
-      _add(inst[v[i]=compressor.add(k)],i);
+      int value = compressor.add(k);
+      assert(value < (int)inst.size());
+      _add(inst[v[i]=value],i);
     }
     int count(int l, int r, const T& k) const {
+      assert(0 <= l && l <= r && r <= n);
+      if(n == 0) return 0;
       int id = compressor.get(k);
       if(!~id) return 0;
       return _count(inst[id],l,r);

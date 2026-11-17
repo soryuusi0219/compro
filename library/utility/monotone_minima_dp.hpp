@@ -5,7 +5,7 @@
 #include <utility>
 #include <vector>
 
-#include "library/utility/monotone_minima.hpp"
+#include "monotone_minima.hpp"
 
 namespace soryuusi {
 

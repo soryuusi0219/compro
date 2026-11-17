@@ -26,7 +26,7 @@ Affine composition(Affine f, Affine g) {
 Affine action_identity() { return {1,0}; }
 
 int main() {
-  using Sequence = soryuusi::splay_tree<
+  using Sequence = soryuusi::LazySplayTree<
       Node,op,identity,Affine,mapping,composition,action_identity>;
   int n, q;
   soryuusi::cin >> n >> q;
@@ -36,7 +36,8 @@ int main() {
     soryuusi::cin >> a;
     x = {a,1};
   }
-  Sequence sequence(value);
+  Sequence arena;
+  auto sequence = arena.new_sequence(value);
   while(q--) {
     int type;
     soryuusi::cin >> type;

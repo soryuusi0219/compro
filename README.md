@@ -38,11 +38,9 @@ make help
 よく使うコマンドは次のとおりです。
 
 ```sh
-make check
 make verify-list
 make verify TARGETS=library_checker/convolution_mod
 make expand path/to/main.cpp
-make all
 ```
 
 ### ライブラリを読み込む
@@ -59,7 +57,8 @@ make all
 g++ -std=c++20 -O2 -I. -Ithird_party/ac-library source.cpp
 ```
 
-ライブラリのファイル名は、小文字の `snake_case` を基本としています。
+ライブラリ間の依存はヘッダーからの相対パスで読み込むため、`library/` を別の場所へ
+コピーして利用することもできます。ライブラリのファイル名は、小文字の `snake_case` を基本としています。
 
 ### ライブラリのreference
 
@@ -67,11 +66,47 @@ g++ -std=c++20 -O2 -I. -Ithird_party/ac-library source.cpp
 [`docs/reference/README.md`](docs/reference/README.md) にまとめています。
 各ページのパスはヘッダーと対応します。例えば `library/math/matrix.hpp` のreferenceは
 [`docs/reference/math/matrix.md`](docs/reference/math/matrix.md) です。
-既存のtxtドキュメントも対応するMarkdownへ統合しています。
 
-開発時の作業規約は [`AGENTS.md`](AGENTS.md)、referenceの読み方・更新方法は
-[reference索引](docs/reference/README.md#読み方) を参照してください。
-`make check` はreferenceの網羅性、必須項目、ローカルリンクも検査します。
+## 木構造・永続構造の使い方
+
+可変の木構造は原則コピー禁止・move可能です。独立した複製には `clone()` を使います。
+splay・treapでは、管理型を宣言してから `new_sequence()` で列を作ります。
+
+```cpp
+soryuusi::SplayTree<long long, op, e> arena;
+auto a = arena.new_sequence({1, 2});
+auto b = arena.new_sequence({3, 4});
+a.concat(std::move(b)); // aは{1,2,3,4}、bは空
+```
+
+列の型は `Manager::Sequence` で、既定構築・コピーはできません。
+`split(k)` は呼出元を空にして2つの列を返します。列ハンドルは管理型の破棄後も使えます。
+通常版・遅延版の操作は [splay](docs/reference/data_structure/splay_tree.md) /
+[treap](docs/reference/data_structure/treap.md) を参照してください。
+
+キー付きの集合は `SplayExplicit` / `TreapExplicit` の `new_set()` で作ります。
+テンプレート引数Multiで重複可否を選べます。`prod(l,r)` / `apply(l,r,f)` は順位区間、
+`prod_key(low,high)` / `apply_key(low,high,f)` はキーの半開区間を扱い、作用は値だけに適用します。
+`meld(std::move(other))` は相手を空にし、同値キーでは連結先の要素を先に置きます。
+重複不可の場合は連結先の値を残します。詳細は
+[splay_explicit](docs/reference/data_structure/splay_explicit.md) /
+[treap_explicit](docs/reference/data_structure/treap_explicit.md) を参照してください。
+
+永続構造では更新が返す `Root` を保存して版を管理します。
+
+```cpp
+soryuusi::Persistent_Vector<int> array;
+using Root = decltype(array)::Root;
+std::vector<Root> versions{array.empty_root()};
+versions.push_back(array.set(versions[0], 3, 10));
+versions.push_back(array.set(versions[0], 3, 20)); // 初期版から分岐
+int x = array.get(versions[1], 3);                // 10
+```
+
+Rootは作成した管理オブジェクトの有効期間内で使い、異なる管理領域のRootを混ぜないでください。
+管理オブジェクトのmove構築後は移動先で使えますが、move代入で置換された領域のRootは無効です。
+永続DSUのinitは1回だけ呼び、`empty_root()` を全頂点が独立した初期版として使います。
+詳細は [永続配列](docs/reference/data_structure/persistent_vector.md) など各referenceを参照してください。
 
 ## 解答コードのビルドと展開
 
@@ -140,37 +175,6 @@ make run A.cpp
 make expand A.cpp
 ```
 
-## ライブラリの依存関係と生成物
-
-自作ライブラリ間の依存切れ、循環依存、AtCoder Library への依存を検査します。
-
-```sh
-make check
-```
-
-依存を展開したライブラリ、提出用の verify コード、検証状況レポートをまとめて生成します。
-
-```sh
-make all
-```
-
-個別に生成することもできます。
-
-```sh
-make expand-library
-make expand-library HEADERS=library/data_structure/bit.hpp
-make expand-verify
-make expand-verify TARGETS=library_checker/convolution_mod_1000000007
-make report
-```
-
-生成先は次のとおりです。
-
-- 展開済みライブラリ: `build/expanded/library/`
-- 展開済み verify コード: `build/expanded/verify/library_checker/`、
-  `build/expanded/verify/aoj/`、`build/expanded/verify/unit/`
-- 検証状況レポート: `build/library_status.md`、`build/library_status.json`
-
 ## 検証
 
 登録済みライブラリは `online-judge-tools/verification-helper` の `oj-verify` を使った
@@ -188,15 +192,30 @@ make verify
 make verify TARGETS=library_checker/convolution_mod
 make verify TARGETS=aoj/range_min_segtree_template
 make verify TARGETS=unit/rolling_hash
-make verify VERIFY_ARGS=--expanded
 ```
 
 ターゲット名はそれぞれ `library_checker/<name>`、`aoj/<name>`、`unit/<name>` です。
+同じソース・依存関係・実行条件で成功済みのターゲットは省略します。
+展開した提出コードの検証、実行予定の確認、強制再実行は次のように指定できます。
 
-対象の追加方法や設定の詳細は
-[`verify/library_checker/README.md`](verify/library_checker/README.md) と
-[`verify/aoj/README.md`](verify/aoj/README.md) を参照してください。
+```sh
+make verify VERIFY_ARGS=--expanded
+make verify-plan
+make verify TARGETS=unit/rolling_hash VERIFY_ARGS=--force
+```
+
+CIなどと成功記録を共有する場合は、検証前に取得し、検証後に公開します。
+CIの結果を再利用する場合は、同じ環境で`--expanded`を指定します。
+
+```sh
+make verify-sync
+make verify TARGETS=unit/rolling_hash VERIFY_ARGS=--expanded
+make verify-sync VERIFY_ARGS='--sync push'
+```
+
 ツールごとの詳しい引数は [`tools/README.md`](tools/README.md) にまとめています。
+
+内部構成・開発手順は [architecture.md](architecture.md) にまとめています。
 
 ## ライセンス
 

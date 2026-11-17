@@ -4,7 +4,7 @@
 #include <utility>
 #include <vector>
 
-#include "library/data_structure/dsu.hpp"
+#include "../data_structure/dsu.hpp"
 
 namespace soryuusi {
 

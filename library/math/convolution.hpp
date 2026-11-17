@@ -7,8 +7,8 @@
 #include <type_traits>
 #include <vector>
 
-#include "library/math/ntt.hpp"
-#include "library/math/modint_traits.hpp"
+#include "ntt.hpp"
+#include "modint_traits.hpp"
 
 namespace soryuusi {
 

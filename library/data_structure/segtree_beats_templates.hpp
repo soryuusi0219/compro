@@ -6,7 +6,7 @@
 #include <type_traits>
 #include <vector>
 
-#include "library/data_structure/segtree_beats.hpp"
+#include "segtree_beats.hpp"
 
 namespace soryuusi {
 

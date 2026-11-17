@@ -1,12 +1,12 @@
 # Library Checker verification
 
 [`online-judge-tools/verification-helper`](https://github.com/online-judge-tools/verification-helper)
-の `oj-verify` を使い、Library Checker のシステムケースで
+の実行エンジンと`oj`を使い、Library Checker のシステムケースで
 自作ライブラリを検証します。
 
 ## Requirements
 
-- Python 3.8 以上
+- Python 3.10 以上
 - `g++` または `CXX` で指定した C++ コンパイラ
 - `requirements-verify.txt` に記載した Python パッケージ
 
@@ -50,9 +50,15 @@ make verify-list
 ```
 
 `tools/verify.py` はmanifestから `build/verify/oj/sources/` に `.test.cpp` を生成し、
-`oj-verify run` へ渡します。取得したシステムケースはverification-helperにより
-`.verify-helper/cache/` へキャッシュされます。並列数、全体のタイムアウト、各ケースの
-制限時間はそれぞれ `-j`、`--timeout`、`--tle` で指定できます。
+`tools/verify_online.py`からverification-helperの実行エンジンへ渡します。
+取得したシステムケースは`.verify-helper/cache/`へキャッシュします。
+ケースの固定版は[../cases.json](../cases.json)で管理し、helperの時刻ではなく入力内容と
+実際のテスト完了に基づいて成功記録を作ります。並列数、ターゲット全体のタイムアウト、
+各ケースの制限時間はそれぞれ`-j`、`--timeout`、`--tle`で指定できます。
+
+成功記録が一致すれば再実行しません。確認は`make verify-plan`、強制再実行は`--force`、
+ケースの再取得も行う場合は`--refresh-cases`を指定します。
+共有結果の取得・公開は[ツールの説明](../../tools/README.md#ローカルとciの結果を同期する)を参照してください。
 
 ## Add a target
 

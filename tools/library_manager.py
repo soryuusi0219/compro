@@ -27,8 +27,8 @@ DEFAULT_EXPANDED_DIR = ROOT / "build/expanded"
 DEFAULT_REPORT_PREFIX = ROOT / "build/library_status"
 GITHUB_LIBRARY_BASE = "https://github.com/soryuusi0219/compro/blob/main/"
 
-LIBRARY_INCLUDE = re.compile(
-    r'^\s*#\s*include\s+"(library/[^"\n]+)"\s*(?://.*)?$'
+QUOTED_INCLUDE = re.compile(
+    r'^\s*#\s*include\s+"([^"\n]+)"\s*(?://.*)?$'
 )
 ATCODER_INCLUDE = re.compile(
     r'^\s*#\s*include\s*[<"](atcoder/[^>"\n]+)[>"]\s*(?://.*)?$'
@@ -54,11 +54,30 @@ def atcoder_headers() -> list[Path]:
     )
 
 
+def library_dependency(line: str, path: Path) -> str | None:
+    match = QUOTED_INCLUDE.match(line)
+    if not match:
+        return None
+    name = match.group(1)
+    candidates = [path.parent / name, ROOT / name]
+    resolved = next((p for p in candidates if p.is_file()), None)
+    if resolved is None:
+        # Keep missing dependencies in the graph so validation reports them.
+        resolved = candidates[1] if name.startswith("library/") else candidates[0]
+    resolved = resolved.resolve()
+    if resolved.is_relative_to(LIBRARY_DIR):
+        return relative(resolved)
+    return None
+
+
 def dependency_includes(path: Path) -> list[str]:
     dependencies: list[str] = []
     for line in path.read_text(encoding="utf-8").splitlines():
-        match = LIBRARY_INCLUDE.match(line) or ATCODER_INCLUDE.match(line)
-        if match:
+        dependency = library_dependency(line, path)
+        match = ATCODER_INCLUDE.match(line)
+        if dependency:
+            dependencies.append(dependency)
+        elif match:
             dependencies.append(match.group(1))
     return dependencies
 
@@ -100,6 +119,11 @@ def validate_graph(graph: dict[str, list[str]]) -> None:
                 errors.append(
                     f"{header}: first line must be {expected_url!r}"
                 )
+            for line in lines:
+                match = QUOTED_INCLUDE.match(line)
+                if match and (match.group(1).startswith("library/")
+                              or Path(match.group(1)).is_absolute()):
+                    errors.append(f"{header}: use header-relative includes: {line.strip()}")
         for dependency in dependencies:
             if dependency not in graph:
                 errors.append(f"{header}: missing dependency {dependency}")
@@ -268,9 +292,8 @@ def expand_source(source_name: str, graph: dict[str, list[str]], *, header: bool
         for line in source.splitlines():
             if line.strip() == "#pragma once":
                 continue
-            library_dependency = LIBRARY_INCLUDE.match(line)
-            if library_dependency:
-                dependency_name = library_dependency.group(1)
+            dependency_name = library_dependency(line, dependency_path(current))
+            if dependency_name:
                 if dependency_name not in graph:
                     raise LibraryError(
                         f"{current}: missing dependency {dependency_name}"
@@ -507,15 +530,28 @@ def write_report(data: dict[str, object], prefix: Path) -> tuple[Path, Path]:
 
 
 def changed_paths(base: str, head: str) -> list[tuple[str, str]]:
-    if not base or set(base) == {"0"}:
-        return [("F", "")]
+    def available(revision: str) -> bool:
+        return bool(revision) and set(revision) != {"0"} and subprocess.run(
+            ["git", "rev-parse", "--verify", revision + "^{commit}"], cwd=ROOT,
+            capture_output=True, check=False,
+        ).returncode == 0
+
+    if not available(base):
+        # New branch pushes have no usable `before`; use a common ancestor.
+        for reference in ("refs/remotes/origin/HEAD", "refs/remotes/origin/main", "refs/heads/main"):
+            common = subprocess.run(["git", "merge-base", reference, head], cwd=ROOT,
+                                    capture_output=True, text=True, check=False)
+            if common.returncode == 0:
+                base = common.stdout.strip()
+                break
+        else:
+            return [("F", "")]
     result = subprocess.run(
         ["git", "diff", "--name-status", "--find-renames", base, head],
-        cwd=ROOT,
-        check=True,
-        capture_output=True,
-        text=True,
+        cwd=ROOT, check=False, capture_output=True, text=True,
     )
+    if result.returncode:
+        return [("F", "")]
     changes: list[tuple[str, str]] = []
     for line in result.stdout.splitlines():
         fields = line.split("\t")
@@ -547,9 +583,9 @@ def affected_verify_targets(
             force_all = True
             continue
         if path in {
-            ".github/workflows/verify.yml",
-            "requirements-verify.txt",
-        } or path.startswith("tools/"):
+            "requirements-verify.txt", "verify/cases.json",
+            "tools/verify.py", "tools/verify_cache.py", "tools/verify_online.py",
+        }:
             force_all = True
             continue
         if status == "D" and (
@@ -558,6 +594,9 @@ def affected_verify_targets(
             or path.startswith("third_party/ac-library/atcoder/")
         ):
             force_all = True
+            continue
+        if path.startswith("templates/"):
+            selected.update(name for name in all_names if name == "unit/templates")
             continue
         if path in by_source:
             selected.add(by_source[path])

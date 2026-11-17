@@ -4,7 +4,7 @@
 
 ## 機能・前提条件
 
-数列からCartesian treeを構築する。親配列・左右の子配列・根の tuple を返す。b は大小の向きを切り替える。
+数列からCartesian treeを構築する。親配列・左右の子配列・根の tuple を返す。b=falseは最小値を根にする木（同値なら右側を優先）、b=trueは最大値を根にする木（同値なら左側を優先）です。空入力では各配列は空、根は互換性のため0を返します。内部の線形構築をtreapと共有しています。
 
 ## インターフェース
 
@@ -25,8 +25,10 @@ O(N) 時間・空間。
 
 ## 依存関係
 
-標準ライブラリのみ。
+- [internal/cartesian_tree_base.hpp](internal/cartesian_tree_base.md)
 
 ## Verify・利用例
+
+- [unit/balanced_trees](../../../verify/unit/balanced_trees.cpp)
 
 - [`library_checker/cartesian_tree`](../../../verify/library_checker/tree/cartesian_tree.cpp)

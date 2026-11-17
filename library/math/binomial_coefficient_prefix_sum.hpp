@@ -7,8 +7,8 @@
 #include <utility>
 #include <vector>
 
-#include "library/math/modint_factorials.hpp"
-#include "library/data_structure/mo.hpp"
+#include "modint_factorials.hpp"
+#include "../data_structure/mo.hpp"
 
 namespace soryuusi {
 

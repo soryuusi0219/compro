@@ -5,7 +5,7 @@
 #include <utility>
 #include <vector>
 
-#include "library/graph/static_graph.hpp"
+#include "static_graph.hpp"
 
 namespace soryuusi{
 

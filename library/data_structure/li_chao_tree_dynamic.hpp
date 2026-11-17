@@ -1,13 +1,17 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/li_chao_tree_dynamic.hpp
 #pragma once
+#include <cstddef>
+#include <utility>
 #include <algorithm>
+#include <cassert>
 #include <functional>
 #include <iostream>
 #include <type_traits>
-#include <utility>
 #include <vector>
 
-#include "library/data_structure/li_chao_tree_line.hpp"
+#include "li_chao_tree_line.hpp"
+
+#include "internal/node_pool.hpp"
 
 namespace soryuusi {
 
@@ -24,8 +28,8 @@ struct Dynamic_LiChaoTree{
       node* rp;
       node(Line L_) : L(L_), lp(nullptr), rp(nullptr) {}
     };
+    internal::NodePool<node> pool;
     node* root;
-    vector<Line> seg;
     void _add_Segment(node*& p, X l, X r, Line L, X ql, X qr){
       if(!CompareX()(l,qr) || !CompareX()(ql,r)) return;
       if(!CompareX()(l,ql) && !CompareX()(qr,r)) {
@@ -34,14 +38,14 @@ struct Dynamic_LiChaoTree{
       }
       if(r-l > EPS){
         X m = (l+r) / 2;
-        if(!p) p = new node(INF());
+        if(!p) p = pool.create(INF());
         _add_Segment(p->lp, l, m, L, ql, qr);
         _add_Segment(p->rp, m, r, L, ql, qr);
       }
     }
     void _add_Line(node*& p, X l, X r, Line L){
       if(!p) {
-        p = new node(L);
+        p = pool.create(L);
         return;
       }
       Y yl = p->L.get(l);
@@ -71,7 +75,42 @@ struct Dynamic_LiChaoTree{
       else return min(res, _get_min(p->rp,m,r,x),CompareY());
     }
   public:
+    Dynamic_LiChaoTree(const Dynamic_LiChaoTree&) = delete;
+    Dynamic_LiChaoTree& operator=(const Dynamic_LiChaoTree&) = delete;
+    Dynamic_LiChaoTree(Dynamic_LiChaoTree&& other) : Dynamic_LiChaoTree() {*this = std::move(other);}
+    Dynamic_LiChaoTree& operator=(Dynamic_LiChaoTree&& other) {
+      if(this == &other) return *this;
+      pool = std::move(other.pool);
+      root = std::exchange(other.root, nullptr);
+      return *this;
+    }
+    [[nodiscard]] Dynamic_LiChaoTree clone() const {
+      Dynamic_LiChaoTree result;
+      auto dfs = [&](auto&& self, node* p) -> node* {
+        if(!p) return nullptr;
+        node* q = result.pool.create(*p);
+        q->lp = self(self,p->lp); q->rp = self(self,p->rp);
+        return q;
+      };
+      result.root = dfs(dfs,root);
+      return result;
+    }
+    std::size_t allocated_nodes() const {return pool.size();}
     Dynamic_LiChaoTree() : root(nullptr){}
+    void add_line(Line L){add_Line(L);}
+    void add_segment(Line L, X l, X r){add_Segment(L,l,r);}
+    void merge(Dynamic_LiChaoTree&& other){
+      assert(this != &other);
+      auto dfs = [&](auto&& self, node* p, X l, X r) -> void {
+        if(!p) return;
+        add_Segment(p->L,l,r);
+        X m = (l+r)/2;
+        if(p->lp) self(self,p->lp,l,m);
+        if(p->rp) self(self,p->rp,m,r);
+      };
+      dfs(dfs,other.root,XMIN,XMAX);
+      other.root = nullptr;
+    }
     void add_Line(Line L){_add_Line(root, XMIN, XMAX, L);}
     void add_Segment(Line L, X l, X r){_add_Segment(root, XMIN, XMAX, L, l, r);}
     Y get_min(X x){return _get_min(root, XMIN, XMAX, x);}

@@ -4,44 +4,36 @@
 
 ## 機能・前提条件
 
-版ごとのpush/popを行う永続キュー。qp が版を表し、新しい版を戻り値から保存する。
+任意の過去版からpush/popできる永続キュー。Rootは末尾のハンドルと要素数を持つ小さな値型で、空版も通常の値として扱います。front/popは非空版に限ります。
+
+`Root` は不透明な借用版ハンドルです。コピーは O(1) でノードを共有しますが、公開済みノードは変更しません。更新は新しい版を返し、検索は入力版を変更せず、ノードも確保しません。管理オブジェクトはコピー禁止・move可能で、版は移動先で引き続き使用できます。管理領域の破棄・move代入による置換後は、その領域の版を使用できません。別の管理領域の版を混ぜる操作は不可で、デバッグ時には所有元を検査します。移動元の管理オブジェクトは破棄または再代入してください。 popはノードを追加しません。frontが返すconst参照はノード管理領域の存続中有効です。
 
 ## インターフェース
 
 ```cpp
 #include "library/data_structure/persistent_queue.hpp"
-```
-
-主要な宣言（補助型・補助関数を含む抜粋）:
-
-```cpp
-template<class T>
-struct Persistent_Queue;
-struct node;
-using np=node*;
-struct que;
-using qp=que*;
-struct node;
-struct que;
-Persistent_Queue();
-np get_root();
-np get_node(np t, int n);
-int size(qp q);
-T front(qp q);
-bool empty(qp q);
-np push_node(const T& x, np t);
-qp push(const T& x,qp& t);
-qp pop(qp& t);
+template<class T> class Persistent_Queue;
+using Root = /* opaque value */;
+Root empty_root() const;
+// origin: 空版の互換定数
+int size(Root root) const;
+bool empty(Root root) const;
+const T& front(Root root) const;
+Root push(Root root, const T& value);
+Root push(const T& value, Root root); // 旧引数順
+Root pop(Root root) const;
+std::size_t allocated_nodes() const;
 ```
 
 ## 計算量
 
-push/pop/祖先取得は O(log Q) を上界とする。Q 更新に O(Q log Q) 空間。
+総push数Q。push/frontは最悪 O(log(Q+1))、pushは1ノードと O(log(Q+1)) の祖先表を追加。pop/size/empty/版コピーは O(1)。全体空間 O(Q log(Q+1))。版オブジェクト自体のヒープ確保はありません。
 
 ## 依存関係
 
-標準ライブラリのみ。
+- [internal/node_pool.hpp](internal/node_pool.md)
 
 ## Verify・利用例
 
-- [`library_checker/persistent_queue`](../../../verify/library_checker/data_structure/persistent_queue.cpp)
+- [unit/pointer_structures](../../../verify/unit/pointer_structures.cpp)
+- [library_checker/persistent_queue](../../../verify/library_checker/data_structure/persistent_queue.cpp)

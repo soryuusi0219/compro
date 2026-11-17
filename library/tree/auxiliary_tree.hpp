@@ -5,7 +5,7 @@
 #include <utility>
 #include <vector>
 
-#include "library/tree/simple_euler_tour.hpp"
+#include "simple_euler_tour.hpp"
 
 namespace soryuusi {
 

@@ -5,8 +5,8 @@
 #include <utility>
 #include <vector>
 
-#include "library/data_structure/lazy_segtree.hpp"
-#include "library/graph/static_graph.hpp"
+#include "../data_structure/lazy_segtree.hpp"
+#include "../graph/static_graph.hpp"
 
 namespace soryuusi {
 

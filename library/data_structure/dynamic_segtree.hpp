@@ -1,7 +1,11 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/dynamic_segtree.hpp
 #pragma once
-#include <type_traits>
+#include <cstddef>
+#include <cassert>
 #include <utility>
+#include <type_traits>
+
+#include "internal/node_pool.hpp"
 
 namespace soryuusi {
 
@@ -22,10 +26,11 @@ struct Dynamic_Segtree{
       void calc(){sum = op(lp ? lp->sum : e(), op(val, rp ? rp->sum : e()));}
     };
     int n;
+    internal::NodePool<node> pool;
     node* root;
     void _set(node*& p, int l, int r, int i, S x){
       if(!p) {
-        p = new node(i, x);
+        p = pool.create(i, x);
         return;
       }
       if(p->pos == i) {
@@ -90,13 +95,35 @@ struct Dynamic_Segtree{
       return _min_left(p->lp, l, m, res, x, f);
     }
   public:
-    Dynamic_Segtree(int n_) : n(n_), root(nullptr){}
-    void set(int i, S x){_set(root,0,n,i,x);}
-    S get(int i){return _get(root,0,n,i);}
-    S prod(int l, int r){return _prod(root,0,n,l,r);}
+    Dynamic_Segtree(const Dynamic_Segtree&) = delete;
+    Dynamic_Segtree& operator=(const Dynamic_Segtree&) = delete;
+    Dynamic_Segtree(Dynamic_Segtree&& other) : Dynamic_Segtree(0) {*this = std::move(other);}
+    Dynamic_Segtree& operator=(Dynamic_Segtree&& other) {
+      if(this == &other) return *this;
+      n = std::move(other.n);
+      pool = std::move(other.pool);
+      root = std::exchange(other.root, nullptr);
+      return *this;
+    }
+    [[nodiscard]] Dynamic_Segtree clone() const {
+      Dynamic_Segtree result(n);
+      auto dfs = [&](auto&& self, node* p) -> node* {
+        if(!p) return nullptr;
+        node* q = result.pool.create(*p);
+        q->lp = self(self,p->lp); q->rp = self(self,p->rp);
+        return q;
+      };
+      result.root = dfs(dfs,root);
+      return result;
+    }
+    std::size_t allocated_nodes() const {return pool.size();}
+    Dynamic_Segtree(int n_) : n(n_), root(nullptr){assert(n >= 0);}
+    void set(int i, S x){assert(0 <= i && i < n); _set(root,0,n,i,x);}
+    S get(int i){assert(0 <= i && i < n); return _get(root,0,n,i);}
+    S prod(int l, int r){assert(0 <= l && l <= r && r <= n); return _prod(root,0,n,l,r);}
     S all_prod(){return (root ? root->sum : e());}
-    template<class F> S max_right(int i, F f){S x = e(); return _max_right(root, 0, n, i, x, f);}
-    template<class F> S min_left(int i, F f){S x = e(); return _min_left(root, 0, n, i, x, f);}
+    template<class F> int max_right(int i, F f){assert(0 <= i && i <= n && f(e())); S x = e(); return _max_right(root, 0, n, i, x, f);}
+    template<class F> int min_left(int i, F f){assert(0 <= i && i <= n && f(e())); S x = e(); return _min_left(root, 0, n, i, x, f);}
 };
 
 }  // namespace soryuusi

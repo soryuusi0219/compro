@@ -5,8 +5,8 @@
 #include <utility>
 #include <vector>
 
-#include "library/data_structure/segtree.hpp"
-#include "library/data_structure/static_bit_vector.hpp"
+#include "segtree.hpp"
+#include "static_bit_vector.hpp"
 
 namespace soryuusi {
 

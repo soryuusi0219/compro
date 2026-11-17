@@ -8,7 +8,7 @@ int main() {
   int q;
   soryuusi::cin >> q;
   soryuusi::Persistent_Queue<int> queue;
-  using QueuePointer = soryuusi::Persistent_Queue<int>::qp;
+  using QueuePointer = soryuusi::Persistent_Queue<int>::Root;
   std::vector<QueuePointer> versions(q+1);
   versions[0] = queue.origin;
   for(int i = 0; i < q; ++i) {

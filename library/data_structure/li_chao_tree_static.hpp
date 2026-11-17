@@ -8,7 +8,7 @@
 #include <utility>
 #include <vector>
 
-#include "library/data_structure/li_chao_tree_line.hpp"
+#include "li_chao_tree_line.hpp"
 
 namespace soryuusi {
 

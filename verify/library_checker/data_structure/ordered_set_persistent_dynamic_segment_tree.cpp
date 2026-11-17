@@ -9,7 +9,7 @@ int main() {
   constexpr int max_value = 1000000001;
   int n, q;
   soryuusi::cin >> n >> q;
-  soryuusi::Dynamic_Segtree<int,op,identity> seg(max_value);
+  soryuusi::PersistentDynamicSegtree<int,op,identity> seg(max_value);
   auto root = seg.instance();
   while(n--) {
     int x;

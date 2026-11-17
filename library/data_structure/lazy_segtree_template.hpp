@@ -7,7 +7,7 @@
 #include <utility>
 #include <vector>
 
-#include "library/data_structure/lazy_segtree.hpp"
+#include "lazy_segtree.hpp"
 
 namespace soryuusi {
 

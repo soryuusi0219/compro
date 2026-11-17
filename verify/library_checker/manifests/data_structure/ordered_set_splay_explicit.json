@@ -1,0 +1,5 @@
+{
+  "name": "ordered_set_splay_explicit",
+  "problem": "data_structure/ordered_set",
+  "source": "verify/library_checker/data_structure/ordered_set_splay_explicit.cpp"
+}

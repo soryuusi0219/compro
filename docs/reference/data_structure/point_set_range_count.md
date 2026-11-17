@@ -4,35 +4,33 @@
 
 ## 機能・前提条件
 
-一点の値を変更し、区間内で指定した値の個数を数える。値の種類数の容量とhashを指定する。
+長さNの列の一点更新と、半開区間内で値がkに等しい要素数の取得。容量mは利用期間中に現れる異なる値の総数以上にします。hashは値からuint64_tへの関数です。要素未設定のコンストラクタでは未設定位置を数えません。
+
+コピー禁止、move可能。移動元の木は空になり、再利用できます。`clone()` はノードを共有しない独立複製です。ノードはオブジェクトのプールが所有し、個別に解放しません。 値圧縮情報・現在値の配列・木を一体で複製するので、clone後の更新は独立です。
 
 ## インターフェース
 
 ```cpp
 #include "library/data_structure/point_set_range_count.hpp"
-```
-
-主要な宣言（補助型・補助関数を含む抜粋）:
-
-```cpp
-template<class T, auto hash>
-struct PointSetRangeCount;
-PointSetRangeCount(int n_, int m);
-PointSetRangeCount(const vector<T>& a, int m);
-void set(int i, const T& k);
-int count(int l, int r, const T& k) const;
-template<class T>
-uint64_t hash_int(T x);
+template<class T, auto hash> struct PointSetRangeCount;
+PointSetRangeCount(int n, int m);
+PointSetRangeCount(const std::vector<T>& values, int m);
+void set(int i, const T& value);
+int count(int l, int r, const T& value) const;
+PointSetRangeCount clone() const;
+std::size_t allocated_nodes() const;
+template<class T> uint64_t hash_int(T x);
 ```
 
 ## 計算量
 
-hashの期待 O(1) を仮定して更新・個数 O(log N)、空間 O(N+容量)。
+値圧縮のハッシュ探索を期待 O(1) として、set/countは O(log N)。確保済みノード数Kに対して空間 O(N+m+K)。削除した値の木も保持するためKは現在の要素数だけでは抑えられず、Q更新に対して保守的には O((N+Q) log N)。cloneは O(N+m+K) 時間・追加空間。
 
 ## 依存関係
 
-標準ライブラリのみ。
+- [internal/node_pool.hpp](internal/node_pool.md)
 
 ## Verify・利用例
 
-- [`library_checker/majority_voting`](../../../verify/library_checker/data_structure/majority_voting.cpp)
+- [unit/pointer_structures](../../../verify/unit/pointer_structures.cpp)
+- [library_checker/majority_voting](../../../verify/library_checker/data_structure/majority_voting.cpp)

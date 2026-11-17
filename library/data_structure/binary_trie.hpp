@@ -1,8 +1,12 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/binary_trie.hpp
 #pragma once
+#include <cstddef>
+#include <cassert>
 #include <memory>
 #include <utility>
 #include <vector>
+
+#include "internal/node_pool.hpp"
 
 namespace soryuusi {
 
@@ -35,11 +39,8 @@ struct Binary_Trie{
       }
     };
     node* root;
-    vector<unique_ptr<node>> pool;
-    node* make_node(){
-      pool.push_back(make_unique<node>(node()));
-      return pool.back().get();
-    }
+    internal::NodePool<node> pool;
+    node* make_node(){return pool.create();}
     void _insert(node*& p, T x, int h){
       if(!p) p = make_node();
       if(!h) {
@@ -87,16 +88,47 @@ struct Binary_Trie{
     T _max_element(node*& p, int h){
       if(!h) return 0;
       p->push(h--);
-      if(p->rp && p->rp->sz) return _min_element(p->rp,h) | (((T)1) << h);
-      return _min_element(p->lp,h);
+      if(p->rp && p->rp->sz) return _max_element(p->rp,h) | (((T)1) << h);
+      return _max_element(p->lp,h);
     }
   public:
     Binary_Trie(){root = make_node();}
-    ~Binary_Trie(){pool.clear();}
-    int size(){return root->sz;}
+    Binary_Trie(const Binary_Trie&) = delete;
+    Binary_Trie& operator=(const Binary_Trie&) = delete;
+    Binary_Trie(Binary_Trie&& other) noexcept : root(std::exchange(other.root,nullptr)), pool(std::move(other.pool)){}
+    Binary_Trie& operator=(Binary_Trie&& other) noexcept {
+      if(this != &other){pool = std::move(other.pool); root = std::exchange(other.root,nullptr);}
+      return *this;
+    }
+    [[nodiscard]] Binary_Trie clone() const {
+      Binary_Trie result;
+      auto dfs = [&](auto&& self, node* p) -> node* {
+        if(!p) return nullptr;
+        auto q = result.pool.create(*p);
+        q->lp = self(self,p->lp); q->rp = self(self,p->rp);
+        return q;
+      };
+      result.root = dfs(dfs,root);
+      return result;
+    }
+    // Union of sets (insert is idempotent, as in the original API).
+    void merge(Binary_Trie&& other){
+      assert(this != &other);
+      auto dfs = [&](auto&& self, node* p, int h, T x) -> void {
+        if(!p || !p->sz) return;
+        if(h == 0){insert(x); return;}
+        p->push(h);
+        self(self,p->lp,h-1,x);
+        self(self,p->rp,h-1,x | (T(1) << (h-1)));
+      };
+      dfs(dfs,other.root,B,T(0));
+      other.root = nullptr;
+    }
+    std::size_t allocated_nodes() const {return pool.size();}
+    int size() const {return root ? root->sz : 0;}
     void insert(T x){_insert(root, x, B);}
     void erase(T x){_erase(root, x, B);}
-    void operate_xor(T x){return root->act(x,B);}
+    void operate_xor(T x){if(root) root->act(x,B);}
     T kth(int k){if(k < 0 || k >= size()) return -1; return _kth(root,k,B);}
     T min_element(){if(!size()) return -1; return _min_element(root,B);}
     T max_element(){if(!size()) return -1; return _max_element(root,B);}

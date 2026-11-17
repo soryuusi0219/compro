@@ -2,72 +2,124 @@ name: Verify library
 
 on:
   push:
+    branches: [main]
   pull_request:
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Re-run all targets even if successful receipts exist
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   prepare:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    container: ubuntu:24.04
+    timeout-minutes: 20
     outputs:
-      count: ${{ steps.affected.outputs.count }}
-      matrix: ${{ steps.affected.outputs.matrix }}
-
+      count: ${{ steps.plan.outputs.count }}
+      matrix: ${{ steps.plan.outputs.matrix }}
     steps:
+      - name: Install Git for checkout
+        run: apt-get update -qq && apt-get install -y --no-install-recommends git ca-certificates
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Select affected verify targets
-        id: affected
+      - name: Install verification environment
+        run: |
+          sh tools/setup_verify_env.sh
+          echo '/opt/verify/bin' >> "$GITHUB_PATH"
+      - name: Check dependencies, references, tools, and expansion
+        run: |
+          make check
+          python tools/library_manager.py all
+      - name: Fetch successful receipts
+        run: python tools/verify.py --sync pull
+      - name: Plan missing verification results
+        id: plan
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
-        run: python3 tools/library_manager.py affected --base "$BASE_SHA" --format github >> "$GITHUB_OUTPUT"
-
-      - name: Check library dependencies and expansion
-        run: python3 tools/library_manager.py all
-
-      - name: No affected verify targets
-        if: steps.affected.outputs.count == '0'
-        run: echo "No verify targets are affected by this change."
+          FORCE: ${{ inputs.force || false }}
+        run: |
+          if [ "$FORCE" = true ]; then
+            python tools/verify.py --expanded --plan --format github --force >> "$GITHUB_OUTPUT"
+          else
+            python tools/verify.py --expanded --plan --format github >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: known-verification-receipts
+          path: build/verify/results/records/*.json
+          if-no-files-found: ignore
 
   verify:
     needs: prepare
     if: needs.prepare.outputs.count != '0'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    container: ubuntu:24.04
     timeout-minutes: 30
     strategy:
       fail-fast: false
       max-parallel: 8
       matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
-
     steps:
+      - name: Install Git for checkout
+        run: apt-get update -qq && apt-get install -y --no-install-recommends git ca-certificates
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: pip
-          cache-dependency-path: requirements-verify.txt
-
-      - name: Install verification helper
-        run: python3 -m pip install -r requirements-verify.txt
-
+      - name: Install verification environment
+        run: |
+          sh tools/setup_verify_env.sh
+          echo '/opt/verify/bin' >> "$GITHUB_PATH"
       - uses: actions/cache@v4
         with:
-          path: ~/.cache/online-judge-tools/library-checker-problems
-          key: library-checker-problems-${{ hashFiles('requirements-verify.txt') }}
-
+          path: build/verify/library-checker
+          key: library-checker-v2-${{ hashFiles('verify/cases.json') }}
       - uses: actions/cache@v4
         with:
           path: .verify-helper/cache
-          key: oj-verify-${{ hashFiles('requirements-verify.txt') }}-${{ matrix.target }}
-
-      - name: Expand ${{ matrix.target }}
-        run: python3 tools/library_manager.py expand-verify "${{ matrix.target }}"
-
+          key: system-cases-v2-${{ matrix.target }}-${{ hashFiles('verify/cases.json') }}-${{ github.run_id }}
+          restore-keys: system-cases-v2-${{ matrix.target }}-${{ hashFiles('verify/cases.json') }}-
       - name: Verify ${{ matrix.target }}
-        run: python3 tools/verify.py --expanded "${{ matrix.target }}"
+        run: python tools/verify.py --expanded --force "${{ matrix.target }}"
+      - name: Name result artifact
+        if: always()
+        id: artifact
+        env:
+          TARGET: ${{ matrix.target }}
+        run: echo "name=receipts-$(printf '%s' "$TARGET" | tr / -)" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ${{ steps.artifact.outputs.name }}
+          path: build/verify/results/records/*.json
+          if-no-files-found: ignore
+
+  publish:
+    needs: [prepare, verify]
+    # Fork PRs can read known results but cannot publish trusted receipts.
+    if: >-
+      always() && !cancelled() && needs.prepare.result == 'success' &&
+      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: '*verification-receipts'
+          path: build/imported-results
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: receipts-*
+          path: build/imported-results
+      - name: Merge and publish successful targets, including partial run results
+        run: python tools/verify.py --import-results build/imported-results --sync push

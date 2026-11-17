@@ -5,7 +5,7 @@
 #include <type_traits>
 #include <vector>
 
-#include "library/math/modint_traits.hpp"
+#include "modint_traits.hpp"
 
 namespace soryuusi {
 

@@ -6,7 +6,7 @@
 #include <type_traits>
 #include <vector>
 
-#include "library/data_structure/hash_table.hpp"
+#include "../data_structure/hash_table.hpp"
 
 namespace soryuusi {
 

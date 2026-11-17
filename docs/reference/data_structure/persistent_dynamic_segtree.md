@@ -4,39 +4,37 @@
 
 ## 機能・前提条件
 
-一点更新型の永続動的セグメント木。型名は Dynamic_Segtree で通常版と衝突する。rootを明示的に管理する。
+添字 `[0,n)` の永続一点代入・区間モノイド集約。`op` は結合的、`e()` は単位元。区間は半開区間で、境界探索の述語は単調かつ `f(e()) == true`。通常版のDynamic_Segtreeと同時includeできます。
+
+`Root` は不透明な借用版ハンドルです。コピーは O(1) でノードを共有しますが、公開済みノードは変更しません。更新は新しい版を返し、検索は入力版を変更せず、ノードも確保しません。管理オブジェクトはコピー禁止・move可能で、版は移動先で引き続き使用できます。管理領域の破棄・move代入による置換後は、その領域の版を使用できません。別の管理領域の版を混ぜる操作は不可で、デバッグ時には所有元を検査します。移動元の管理オブジェクトは破棄または再代入してください。
 
 ## インターフェース
 
 ```cpp
 #include "library/data_structure/persistent_dynamic_segtree.hpp"
-```
-
-主要な宣言（補助型・補助関数を含む抜粋）:
-
-```cpp
-template<class S, auto op, auto e>
-struct Dynamic_Segtree;
-using NP = node*;
-Dynamic_Segtree(int n_);
-NP instance() const;
-NP set(NP p, int i, S x);
-S get(NP p, int i) const;
-S prod(NP p, int l, int r) const;
-S all_prod(NP p) const;
-template<class F> S max_right(NP p, int i, F f) const;
-template<class F> S min_left(NP p, int i, F f) const;
+template<class S, auto op, auto e> struct PersistentDynamicSegtree;
+using Root = /* opaque handle */;
+PersistentDynamicSegtree(int n);
+Root empty_root() const;
+Root instance() const; // 互換名
+Root set(Root root, int i, S x);
+S get(Root root, int i) const;
+S prod(Root root, int l, int r) const;
+S all_prod(Root root) const;
+template<class F> int max_right(Root root, int l, F f) const;
+template<class F> int min_left(Root root, int r, F f) const;
+std::size_t allocated_nodes() const;
 ```
 
 ## 計算量
 
-更新・取得・集約 O(log U)、更新ごと O(log U) ノード追加。
+領域幅U。set/get/prod/境界探索は最悪 O(log U)、setは O(log U)ノード追加。全体集約・版コピーは O(1)。Q更新の空間は O(Q log U)。
 
 ## 依存関係
 
-標準ライブラリのみ。
+- [internal/node_pool.hpp](internal/node_pool.md)
 
 ## Verify・利用例
 
-- [`library_checker/ordered_set_persistent_dynamic_segment_tree`](../../../verify/library_checker/data_structure/ordered_set_persistent_dynamic_segment_tree.cpp)
-- [`unit/data_structure_misc`](../../../verify/unit/data_structure_misc.cpp)
+- [unit/pointer_structures](../../../verify/unit/pointer_structures.cpp)
+- [library_checker/ordered_set_persistent_dynamic_segment_tree](../../../verify/library_checker/data_structure/ordered_set_persistent_dynamic_segment_tree.cpp)

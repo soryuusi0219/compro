@@ -1,7 +1,8 @@
 # AOJ verification
 
 [`online-judge-tools/verification-helper`](https://github.com/online-judge-tools/verification-helper)
-の `oj-verify` を使い、AOJ の公開テストケースで自作ライブラリを検証します。
+の実行エンジンと`oj`を使い、AOJの公開テストケースで自作ライブラリを検証します。
+ケースのepochと成功記録の有効期間は[../cases.json](../cases.json)で管理します。
 
 ## Add a target
 
