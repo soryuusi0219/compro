@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "bc46efc496165d38c7e98695cac673c022f00caddc3e8f42fda4da217e056d5c",
-    "downloaded_at": "2026-11-17T05:04:46.758174+00:00",
+    "downloaded_at": "2026-11-17T05:14:36.770602+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "20c15282aa0f439cc1165e45aeb0e497a19e0b2c9c5484ede1b3e6ff93428020",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/persistent_unionfind_with_data"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T05:04:50.614855+00:00"
+  "verified_at": "2026-11-17T05:14:40.436913+00:00"
 }

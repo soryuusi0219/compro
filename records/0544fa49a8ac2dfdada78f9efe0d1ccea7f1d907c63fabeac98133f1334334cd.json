@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "0836d59c349f6d1fd3c9ca4d049cf0b5445094fd763f1bb63b76d0a0e146e06d",
-    "downloaded_at": "2026-11-17T05:18:31.538402+00:00",
+    "downloaded_at": "2026-11-17T05:28:49.214465+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "0544fa49a8ac2dfdada78f9efe0d1ccea7f1d907c63fabeac98133f1334334cd",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/two_edge_connected_components"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T05:18:33.733450+00:00"
+  "verified_at": "2026-11-17T05:28:52.482855+00:00"
 }

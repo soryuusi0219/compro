@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "7f495a1c673c357e919b18f1d7835d7f9637ad05bd9456bb703251d56150e4ed",
-    "downloaded_at": "2026-11-17T05:10:16.345749+00:00",
+    "downloaded_at": "2026-11-17T05:19:53.801508+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "88ea692fc062989c0e3fd277ab9d9d69342ccd6cc41a35194bb9b5f1b39179b8",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/range_affine_point_get_dual_segtree"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T05:10:18.835064+00:00"
+  "verified_at": "2026-11-17T05:19:56.098171+00:00"
 }

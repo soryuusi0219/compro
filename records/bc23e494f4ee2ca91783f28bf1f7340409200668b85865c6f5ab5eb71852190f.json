@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "1645ebd3061bde115e79d354cd64a820b10e8a3c74d78cc732a653188ab371d9",
-    "downloaded_at": "2026-11-17T04:46:19.302342+00:00",
+    "downloaded_at": "2026-11-17T04:56:33.181240+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "bc23e494f4ee2ca91783f28bf1f7340409200668b85865c6f5ab5eb71852190f",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/biconnected_components"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T04:46:24.702457+00:00"
+  "verified_at": "2026-11-17T04:56:38.016023+00:00"
 }

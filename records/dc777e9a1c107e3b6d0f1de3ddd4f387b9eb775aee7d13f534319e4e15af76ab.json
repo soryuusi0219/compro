@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "7ed9b618a8d18698830edf6598f5727afa923c5935d7fde9e93bee4e2daea11c",
-    "downloaded_at": "2026-11-17T03:45:28.814461+00:00",
+    "downloaded_at": "2026-11-17T04:55:37.747861+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "dc777e9a1c107e3b6d0f1de3ddd4f387b9eb775aee7d13f534319e4e15af76ab",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/aho_corasick"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T04:46:47.835278+00:00"
+  "verified_at": "2026-11-17T04:55:53.614919+00:00"
 }

@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "12e8323c5fadd0bc04cd84481186a7594c06602ccc5875dc9bf9e840461a848f",
-    "downloaded_at": "2026-11-17T04:54:13.267659+00:00",
+    "downloaded_at": "2026-11-17T05:04:14.815922+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "698065329847c5b51027ac96bc3e4ac1c248aeef9a4ab0a6452751733ec3aae9",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/enumerate_primes"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T04:54:20.537210+00:00"
+  "verified_at": "2026-11-17T05:04:22.082342+00:00"
 }

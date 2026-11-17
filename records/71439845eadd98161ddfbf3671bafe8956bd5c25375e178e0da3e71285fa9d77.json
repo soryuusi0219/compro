@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "27fb8540419b9dd5928ff46067b014db42647827b7749ffa250d381b0345ea8e",
-    "downloaded_at": "2026-11-17T04:51:50.728754+00:00",
+    "downloaded_at": "2026-11-17T05:01:54.430283+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "71439845eadd98161ddfbf3671bafe8956bd5c25375e178e0da3e71285fa9d77",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/dynamic_graph_vertex_add_component_sum"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T04:51:54.232724+00:00"
+  "verified_at": "2026-11-17T05:01:58.909712+00:00"
 }

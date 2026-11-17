@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "c81688fb87b811d4b0c5f23d2bee05050e2facb3566d3543312d87ee2ee8ca69",
-    "downloaded_at": "2026-11-17T05:20:05.159284+00:00",
+    "downloaded_at": "2026-11-17T05:30:13.025950+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "d3c8920070e6e1ce5d529cdbf37d6ba1f55035ce57e2e7bd19f27dcbca38e876",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/vertex_set_path_composite"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T05:20:09.058473+00:00"
+  "verified_at": "2026-11-17T05:30:17.318310+00:00"
 }

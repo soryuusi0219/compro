@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "f0ec1917e074d84c07ca5f53da881716c1fe9373242010444ef1dc5602582da3",
-    "downloaded_at": "2026-11-17T04:58:15.941505+00:00",
+    "downloaded_at": "2026-11-17T05:08:27.653856+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "1f72e5284896a64a3a67c34e73d0a94df67442b7b157fa06f7c1fb5412609b0a",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/log_of_formal_power_series_light"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T04:58:21.234904+00:00"
+  "verified_at": "2026-11-17T05:08:32.932927+00:00"
 }

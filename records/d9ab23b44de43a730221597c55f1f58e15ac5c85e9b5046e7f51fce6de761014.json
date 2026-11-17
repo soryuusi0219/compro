@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "638ec196021b964787ad25b51c938b18cc7bebdf4d60108df086975d18d45be7",
-    "downloaded_at": "2026-11-17T03:47:53.244001+00:00",
+    "downloaded_at": "2026-11-17T04:58:13.169110+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "d9ab23b44de43a730221597c55f1f58e15ac5c85e9b5046e7f51fce6de761014",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/chromatic_polynomial"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T04:48:52.190935+00:00"
+  "verified_at": "2026-11-17T04:58:26.100257+00:00"
 }

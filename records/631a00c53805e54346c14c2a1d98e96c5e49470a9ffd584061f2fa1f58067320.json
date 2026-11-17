@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "c2f1433be7127615f572bfe57f6dd3fe04470bb57f41bbee5190b3e3553b43f7",
-    "downloaded_at": "2026-11-17T05:19:50.270962+00:00",
+    "downloaded_at": "2026-11-17T05:29:54.669015+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "631a00c53805e54346c14c2a1d98e96c5e49470a9ffd584061f2fa1f58067320",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/vertex_add_subtree_sum_euler_tour"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T05:19:53.661685+00:00"
+  "verified_at": "2026-11-17T05:29:58.118527+00:00"
 }

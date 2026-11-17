@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "24156f24dc76d87c623ea09750b790e947595f21ecf897078aa015b1d7417972",
-    "downloaded_at": "2026-11-17T04:57:10.379102+00:00",
+    "downloaded_at": "2026-11-17T05:07:28.164853+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "60f1208a7bdc8ab8820a9a2ed743d1326f20ed154fa2a649bf3c433d2f82821e",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/lca_simple_euler_tour"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T04:57:17.263808+00:00"
+  "verified_at": "2026-11-17T05:07:33.725160+00:00"
 }

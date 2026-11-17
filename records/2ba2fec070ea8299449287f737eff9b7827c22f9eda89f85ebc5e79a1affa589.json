@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "4ae35fddb23f2ee52fb5dbe731104fa63a809be98bd5c0e119b6ac618c1568d0",
-    "downloaded_at": "2026-11-17T04:55:21.342758+00:00",
+    "downloaded_at": "2026-11-17T05:05:27.811357+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "2ba2fec070ea8299449287f737eff9b7827c22f9eda89f85ebc5e79a1affa589",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/gcd_convolution"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T04:55:26.422057+00:00"
+  "verified_at": "2026-11-17T05:05:31.531017+00:00"
 }

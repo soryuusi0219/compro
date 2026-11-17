@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "417ec71e658d6f6b8b7e48c71effdf4ed899e44bcf8022d36e2a4e3069b20cf3",
-    "downloaded_at": "2026-11-17T05:14:42.104578+00:00",
+    "downloaded_at": "2026-11-17T05:24:40.011184+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "4cb87adf82949544e34fe9224f6b2f20244def1249b65caa4323ad2c388e6020",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/sparse_matrix_det"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T05:14:44.906264+00:00"
+  "verified_at": "2026-11-17T05:24:43.847712+00:00"
 }

@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "5beb1c0d36b8011f05173d0946fccb10e881b05b7872935fd890be73013b7bd6",
-    "downloaded_at": "2026-11-17T03:44:08.392494+00:00",
+    "downloaded_at": "2026-11-17T04:54:37.645293+00:00",
     "suite": {
       "epoch": 1,
       "kind": "aoj",
@@ -10,7 +10,7 @@
     }
   },
   "key": "8e2020cb5c532b0f37da71145141d1388ad9fb2b70f62dc026aea23d72d3d2f3",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "aoj/bfs_dijkstra_1"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T04:44:37.885160+00:00"
+  "verified_at": "2026-11-17T04:54:38.773330+00:00"
 }

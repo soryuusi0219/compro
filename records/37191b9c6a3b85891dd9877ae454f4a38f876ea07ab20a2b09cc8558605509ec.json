@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "29a363921b924aa193460a16b204e9a0f4e2066c180403a7944735b421c76d02",
-    "downloaded_at": "2026-11-17T04:57:09.892377+00:00",
+    "downloaded_at": "2026-11-17T05:06:49.605978+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "37191b9c6a3b85891dd9877ae454f4a38f876ea07ab20a2b09cc8558605509ec",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/jump_on_tree_heavy_light_decomposition"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T04:57:16.202646+00:00"
+  "verified_at": "2026-11-17T05:06:54.873416+00:00"
 }

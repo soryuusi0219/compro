@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "6737e5a0d299584d16a3117633a68c9533632fa5b054f86a6897d00b3844ed31",
-    "downloaded_at": "2026-11-17T03:48:34.535159+00:00",
+    "downloaded_at": "2026-11-17T04:58:50.654105+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "a4f321c0ff982a8d54acdc7468b1bfb50168cc157de75ed5d7e007e300bc6fce",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/connected_components_of_complement_graph"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T04:49:19.511896+00:00"
+  "verified_at": "2026-11-17T04:58:53.664684+00:00"
 }

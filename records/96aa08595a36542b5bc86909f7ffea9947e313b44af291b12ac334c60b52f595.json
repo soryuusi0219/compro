@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "35241aa70a6605dd2055706f5b8fabc0dc18cd94df82169be2ea064aa23f964a",
-    "downloaded_at": "2026-11-17T05:11:23.344449+00:00",
+    "downloaded_at": "2026-11-17T05:21:29.678380+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "96aa08595a36542b5bc86909f7ffea9947e313b44af291b12ac334c60b52f595",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/range_parallel_unionfind"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T05:11:30.734253+00:00"
+  "verified_at": "2026-11-17T05:21:42.695861+00:00"
 }

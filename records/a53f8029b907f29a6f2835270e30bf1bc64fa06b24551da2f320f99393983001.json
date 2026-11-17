@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "64555d2f746bd53fd594fa2f41df61b541a3707827616750012754e8f47bd53e",
-    "downloaded_at": "2026-11-17T04:58:25.588857+00:00",
+    "downloaded_at": "2026-11-17T05:08:38.275963+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "a53f8029b907f29a6f2835270e30bf1bc64fa06b24551da2f320f99393983001",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/log_of_formal_power_series_sparse"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T04:58:30.201496+00:00"
+  "verified_at": "2026-11-17T05:08:41.990407+00:00"
 }

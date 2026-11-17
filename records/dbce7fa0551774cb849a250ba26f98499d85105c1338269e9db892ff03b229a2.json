@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "7221274cf7eb4fa0066b96cecfbf9f49d40f3f20a221d38b4dded0be33c5e8b8",
-    "downloaded_at": "2026-11-17T05:08:38.189503+00:00",
+    "downloaded_at": "2026-11-17T05:18:16.214058+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "dbce7fa0551774cb849a250ba26f98499d85105c1338269e9db892ff03b229a2",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/power_projection_of_set_power_series"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T05:08:46.341926+00:00"
+  "verified_at": "2026-11-17T05:18:23.441780+00:00"
 }

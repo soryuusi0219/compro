@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "70310dfb3f38a1e1c8163c94ff4ef14f986b13072a5790ee6a97672751f99f54",
-    "downloaded_at": "2026-11-17T04:52:41.763204+00:00",
+    "downloaded_at": "2026-11-17T05:02:17.386629+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "074f9402fa364becd6999da2983337c2ea267fb436a86645a52d7ac05aeaea5e",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/dynamic_point_set_rectangle_affine_rectangle_sum"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T04:53:14.123096+00:00"
+  "verified_at": "2026-11-17T05:02:50.084505+00:00"
 }

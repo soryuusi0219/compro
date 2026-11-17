@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "d822afd060322c372ad6d96d8d3da5346d94284c8099b72bd9beb15139cd9c68",
-    "downloaded_at": "2026-11-17T04:44:52.577625+00:00",
+    "downloaded_at": "2026-11-17T04:54:38.360620+00:00",
     "suite": {
       "epoch": 1,
       "kind": "aoj",
@@ -10,7 +10,7 @@
     }
   },
   "key": "8f03b7aae2c47e69cdf90d65616008cf155fb36bd37240ee3b8ff2c2468b0306",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "aoj/dictionary_trie"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T04:44:54.178791+00:00"
+  "verified_at": "2026-11-17T04:54:40.292834+00:00"
 }

@@ -1,12 +1,12 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "configurations": [
       null
     ]
   },
   "key": "62563d41f8c1bce41274232d9f1221436f72ed8e9c1972621b1cac848b0587e9",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "timeout": null
@@ -403,5 +403,5 @@
     "target": "unit/pointer_structures"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T05:20:39.781747+00:00"
+  "verified_at": "2026-11-17T05:30:43.329329+00:00"
 }

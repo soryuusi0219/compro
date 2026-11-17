@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "e5187dfa9a780818ecd7018cb364b1c69958618f3a238e82130d639f81bef1cb",
-    "downloaded_at": "2026-11-17T03:47:07.552655+00:00",
+    "downloaded_at": "2026-11-17T04:57:30.976943+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "553c61081e0ed916fc2f3ffb26e97fca81b6f9d77e3e0d973b8d0c483c42f542",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/bitwise_xor_convolution_general"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T04:47:33.407682+00:00"
+  "verified_at": "2026-11-17T04:57:37.863703+00:00"
 }

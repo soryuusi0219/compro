@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "658aefe57f57a6bd354b781fbaf3f9a92446d1f1f06750824494411d79d11a36",
-    "downloaded_at": "2026-11-17T05:07:44.375947+00:00",
+    "downloaded_at": "2026-11-17T05:17:24.047475+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "c0910747dc365b794b89642178584e0223ba00b67fbef21ade6ddf0698efba90",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/polynomial_taylor_shift"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T05:07:48.591147+00:00"
+  "verified_at": "2026-11-17T05:17:27.483520+00:00"
 }

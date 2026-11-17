@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "e6de48d12932bbfe3ce7ada248183511a6271e25861d9e0d1de0118c938faeff",
-    "downloaded_at": "2026-11-17T05:01:30.608087+00:00",
+    "downloaded_at": "2026-11-17T05:11:20.409682+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "31f6d76fccdf2eefa2c8b747ce2df5bcbda5620cad1d0c300707f4b3d912fe4c",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/min_plus_convolution_convex_arbitrary_smawk"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T05:01:36.787382+00:00"
+  "verified_at": "2026-11-17T05:11:25.579555+00:00"
 }

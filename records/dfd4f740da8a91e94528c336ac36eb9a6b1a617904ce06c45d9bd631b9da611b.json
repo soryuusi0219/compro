@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "80beb1c438779119f2bb3ca852fa965fb5f64cfcc8b366266e8fa402094da75f",
-    "downloaded_at": "2026-11-17T04:45:28.127485+00:00",
+    "downloaded_at": "2026-11-17T04:55:29.782042+00:00",
     "suite": {
       "epoch": 1,
       "kind": "aoj",
@@ -10,7 +10,7 @@
     }
   },
   "key": "dfd4f740da8a91e94528c336ac36eb9a6b1a617904ce06c45d9bd631b9da611b",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "aoj/range_sum_bit_2d"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T04:45:29.290759+00:00"
+  "verified_at": "2026-11-17T04:55:30.728064+00:00"
 }

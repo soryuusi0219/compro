@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "8e000c9a5d2c65762a1176c3b02f3d1e7ca172547ff8631f8c9754054776c131",
-    "downloaded_at": "2026-11-17T03:48:37.608475+00:00",
+    "downloaded_at": "2026-11-17T04:58:31.094910+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "cd3f24c35a01873fab4615f9b15669168ad93129901716f01e52b206c0d1aae7",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/composition_of_formal_power_series"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T04:48:51.386617+00:00"
+  "verified_at": "2026-11-17T04:58:33.720198+00:00"
 }

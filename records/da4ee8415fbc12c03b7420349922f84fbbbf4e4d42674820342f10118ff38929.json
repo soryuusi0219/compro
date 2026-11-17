@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "253bbc665924a4a1bd35840a2353f4f9cfdfe8cbb0e0a8cfe12d8b92c9f3ed3c",
-    "downloaded_at": "2026-11-17T05:05:27.081251+00:00",
+    "downloaded_at": "2026-11-17T05:15:25.827934+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "da4ee8415fbc12c03b7420349922f84fbbbf4e4d42674820342f10118ff38929",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/point_add_rectangle_sum_kd_tree"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T05:05:37.891647+00:00"
+  "verified_at": "2026-11-17T05:15:37.112625+00:00"
 }

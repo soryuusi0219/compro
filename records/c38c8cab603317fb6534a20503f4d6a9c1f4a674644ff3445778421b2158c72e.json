@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "15c5cd0dad27ed2bdea07fd8cc4156730b81350eca73d1315cdca0958d365f10",
-    "downloaded_at": "2026-11-17T04:51:24.102638+00:00",
+    "downloaded_at": "2026-11-17T05:01:35.926164+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "c38c8cab603317fb6534a20503f4d6a9c1f4a674644ff3445778421b2158c72e",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/division_of_polynomials"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T04:51:31.562730+00:00"
+  "verified_at": "2026-11-17T05:01:42.222979+00:00"
 }

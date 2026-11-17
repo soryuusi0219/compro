@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "bf5e7fa32559484c4eab1e66087e74e7c51fba1b9e146c02763602ecf928eb08",
-    "downloaded_at": "2026-11-17T05:10:39.270267+00:00",
+    "downloaded_at": "2026-11-17T05:20:19.073804+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "ee065a6f044559f6231c94c6ce06e154818d06460e9c924ebb8f2e21d1943b15",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/range_affine_range_sum_lazy_segtree_template"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T05:10:42.753598+00:00"
+  "verified_at": "2026-11-17T05:20:22.493894+00:00"
 }

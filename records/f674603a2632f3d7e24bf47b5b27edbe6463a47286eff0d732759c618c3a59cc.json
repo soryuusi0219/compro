@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "f8abc62c705bd5e2d557f1ef3b1a89a4cca3271d6200fcca569297f6a305f1fe",
-    "downloaded_at": "2026-11-17T05:06:59.765524+00:00",
+    "downloaded_at": "2026-11-17T05:16:58.402757+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "f674603a2632f3d7e24bf47b5b27edbe6463a47286eff0d732759c618c3a59cc",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/point_set_tree_path_composite_sum"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T05:07:12.058602+00:00"
+  "verified_at": "2026-11-17T05:17:15.427157+00:00"
 }

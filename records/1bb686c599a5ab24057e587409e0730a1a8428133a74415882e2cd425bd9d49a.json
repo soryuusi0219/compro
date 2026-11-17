@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "6a081c6765a4623b3ea74daa3bd048b22530ca5514390c3e91ad14846d8d0b05",
-    "downloaded_at": "2026-11-17T04:53:03.699101+00:00",
+    "downloaded_at": "2026-11-17T05:02:59.147390+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "1bb686c599a5ab24057e587409e0730a1a8428133a74415882e2cd425bd9d49a",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/dynamic_tree_vertex_add_path_sum_link_cut"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T04:53:07.460722+00:00"
+  "verified_at": "2026-11-17T05:03:02.865140+00:00"
 }

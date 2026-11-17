@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "6457f0a6a94674238b44b51e6ac12b785733e4ecf458a238b1bcc600d80786b2",
-    "downloaded_at": "2026-11-17T05:07:28.693896+00:00",
+    "downloaded_at": "2026-11-17T05:17:08.352569+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "dc71df3f08bca83457811c9ed0151fa8914669a6ea6cc60100e3c0d7d1432752",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/polynomial_root_finding"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T05:07:42.464773+00:00"
+  "verified_at": "2026-11-17T05:17:18.338634+00:00"
 }

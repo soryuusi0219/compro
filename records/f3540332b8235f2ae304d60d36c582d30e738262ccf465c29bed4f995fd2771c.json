@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "6514b4ca4c5940655a5e6dcd6c1ae023845ded3d86c22c8a4aa29181949019d7",
-    "downloaded_at": "2026-11-17T05:04:53.433273+00:00",
+    "downloaded_at": "2026-11-17T05:14:44.620753+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "f3540332b8235f2ae304d60d36c582d30e738262ccf465c29bed4f995fd2771c",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/point_add_range_sum_bit_sparse"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T05:04:57.054675+00:00"
+  "verified_at": "2026-11-17T05:14:47.378286+00:00"
 }

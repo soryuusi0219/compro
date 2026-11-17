@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "0e2dc3d4c83c8fbcb3cc135f981c9787fcb2553af2a4795cfe7528b3b631246b",
-    "downloaded_at": "2026-11-17T03:47:28.135916+00:00",
+    "downloaded_at": "2026-11-17T04:57:37.023665+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "eb724418769b219ae14b6670d710eaa8cdf1ba8180a134fc7fb5653721083f8c",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/cartesian_tree"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T04:47:35.118091+00:00"
+  "verified_at": "2026-11-17T04:57:39.667892+00:00"
 }

@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "c2f1433be7127615f572bfe57f6dd3fe04470bb57f41bbee5190b3e3553b43f7",
-    "downloaded_at": "2026-11-17T05:19:44.655375+00:00",
+    "downloaded_at": "2026-11-17T05:29:41.843514+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "a208253bfa2f91f2817b141f0ca9539a3c325b42081b703c941fcb11e730c771",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/vertex_add_subtree_sum"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T05:19:47.536093+00:00"
+  "verified_at": "2026-11-17T05:29:44.589109+00:00"
 }

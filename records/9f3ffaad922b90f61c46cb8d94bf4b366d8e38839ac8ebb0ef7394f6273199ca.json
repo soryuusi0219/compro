@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "2ef1406df9e5a2e0fdecbf7862e86f86e4144545fb979c829b5a87b82fef8c6d",
-    "downloaded_at": "2026-11-17T04:54:24.017540+00:00",
+    "downloaded_at": "2026-11-17T05:04:32.171462+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "9f3ffaad922b90f61c46cb8d94bf4b366d8e38839ac8ebb0ef7394f6273199ca",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/enumerate_triangles"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T04:54:25.203451+00:00"
+  "verified_at": "2026-11-17T05:04:33.358793+00:00"
 }

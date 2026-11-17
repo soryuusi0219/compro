@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "d008d840522cdd6c1e0d1b0900d6d56ae259d36a1306a45c94b3ae804bbbb6b0",
-    "downloaded_at": "2026-11-17T05:12:36.003053+00:00",
+    "downloaded_at": "2026-11-17T05:22:38.174242+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "5ffb9a5c0fe6adff304d1e7f61232710fc8e793a409e5cd125d57dc5d74930e2",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/rectangle_sum_wavelet_segtree"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T05:12:42.631126+00:00"
+  "verified_at": "2026-11-17T05:22:45.842737+00:00"
 }

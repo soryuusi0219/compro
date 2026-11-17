@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "7d609c20e043353743dbfb2551a67eca2fd84fedaf1f79660455ba876d400c0d",
-    "downloaded_at": "2026-11-17T05:15:49.136715+00:00",
+    "downloaded_at": "2026-11-17T05:26:06.475060+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "bacffde66712b93fce16beecc67ed02ffbc22da82112b5e3096ee5f9e7447566",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/static_range_inversions"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T05:15:54.120601+00:00"
+  "verified_at": "2026-11-17T05:26:10.937719+00:00"
 }

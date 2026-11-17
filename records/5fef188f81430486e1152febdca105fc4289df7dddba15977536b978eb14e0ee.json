@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "0cd26d1a942de31ee03714fce3136a382eda33e62b68ec4395baf4c9c6acd26c",
-    "downloaded_at": "2026-11-17T05:07:19.602214+00:00",
+    "downloaded_at": "2026-11-17T05:16:51.499707+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "5fef188f81430486e1152febdca105fc4289df7dddba15977536b978eb14e0ee",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/polynomial_interpolation_on_geometric_sequence"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T05:07:26.244893+00:00"
+  "verified_at": "2026-11-17T05:16:55.969225+00:00"
 }

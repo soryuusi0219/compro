@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "4d918b92220e5b2349552267a7111a5527486d0b673fc6f83bb63f93ecfe364d",
-    "downloaded_at": "2026-11-17T05:09:05.086849+00:00",
+    "downloaded_at": "2026-11-17T05:18:49.146659+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "8fadbc29e933f7fc61a7c31f6482629a04272bebb7159f26ca2b43244ccfbdfe",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/primality_test_internal_math"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T05:09:06.692930+00:00"
+  "verified_at": "2026-11-17T05:18:50.750695+00:00"
 }

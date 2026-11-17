@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "7c70ae9c1f90e6abe6a4a4a6ca4418b337e1d5450175e09f94ea88fc71b307c3",
-    "downloaded_at": "2026-11-17T04:44:52.534556+00:00",
+    "downloaded_at": "2026-11-17T04:54:39.227671+00:00",
     "suite": {
       "epoch": 1,
       "kind": "aoj",
@@ -10,7 +10,7 @@
     }
   },
   "key": "a9ee82298fe9558b2b18a56b29e34cede6ead8baa18d965ab4427e8b0fd0118b",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "aoj/min_cost_flow_modified"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T04:44:54.051016+00:00"
+  "verified_at": "2026-11-17T04:54:40.430496+00:00"
 }

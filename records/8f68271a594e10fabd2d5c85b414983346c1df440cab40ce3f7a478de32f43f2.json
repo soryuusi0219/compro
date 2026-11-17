@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "2f20df29c27aae3eaa519178d034eacfd3d9d6e8ad04ba1cf91b41654d80d2d1",
-    "downloaded_at": "2026-11-17T04:44:53.229323+00:00",
+    "downloaded_at": "2026-11-17T04:54:39.191962+00:00",
     "suite": {
       "epoch": 1,
       "kind": "aoj",
@@ -10,7 +10,7 @@
     }
   },
   "key": "8f68271a594e10fabd2d5c85b414983346c1df440cab40ce3f7a478de32f43f2",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "aoj/range_assign_range_sum_lazy_segtree_template"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T04:44:55.331054+00:00"
+  "verified_at": "2026-11-17T04:54:40.605757+00:00"
 }

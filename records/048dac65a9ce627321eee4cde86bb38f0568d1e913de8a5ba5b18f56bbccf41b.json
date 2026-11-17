@@ -1,8 +1,8 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "cases": "2a061acab3fc28c1be3025ef1315f28d8cd25bb0681a2eab636ecfec3e6bb078",
-    "downloaded_at": "2026-11-17T05:00:40.248320+00:00",
+    "downloaded_at": "2026-11-17T05:10:32.942243+00:00",
     "suite": {
       "kind": "library_checker",
       "revision": "73876f1cbcf082d2b22722924b924d3d65a2f00e",
@@ -10,7 +10,7 @@
     }
   },
   "key": "048dac65a9ce627321eee4cde86bb38f0568d1e913de8a5ba5b18f56bbccf41b",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "jobs": 1,
@@ -417,5 +417,5 @@
     "target": "library_checker/min_of_mod_of_linear"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T05:00:41.943497+00:00"
+  "verified_at": "2026-11-17T05:10:34.706511+00:00"
 }

@@ -1,12 +1,12 @@
 {
-  "commit": "9b23963b6f51cdf422c6dbebb23fb3c0e6da858d",
+  "commit": "5231dcc06fc6ba4a574fc4ba3072b2c4861b67a9",
   "evidence": {
     "configurations": [
       null
     ]
   },
   "key": "c0d1ea1c0f9d1aec83091f66b91a10f5dcf69cfb80933b40458d9b923bb71e8b",
-  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44019065876",
+  "origin": "https://github.com/soryuusi0219/compro/actions/runs/44020175083",
   "payload": {
     "conditions": {
       "timeout": null
@@ -403,5 +403,5 @@
     "target": "unit/balanced_trees"
   },
   "status": "passed",
-  "verified_at": "2026-11-17T05:20:29.188277+00:00"
+  "verified_at": "2026-11-17T05:30:35.857067+00:00"
 }
