@@ -4,9 +4,9 @@
 
 ## 機能・前提条件
 
-modint向け形式的冪級数。四則演算、逆数、log/exp、冪、評価・補間など。定数項や可逆性の条件を各操作で満たすこと。
+modint向け形式的冪級数。四則演算、逆数、log/exp、冪、平方根、評価・補間、合成・逆合成、power projectionなど。定数項や可逆性の条件を各操作で満たすこと。
 
-係数は定数項から順に格納します。`inv` は定数項が可逆、`log` は定数項1、`exp` は定数項0を要求します。微積分・階乗を使う操作では必要な整数の逆元が存在することも必要です。
+係数は定数項から順に格納します。`inv` は定数項が可逆、`log` は定数項1、`exp` は定数項0を要求します。微積分・階乗を使う操作では必要な整数の逆元が存在することも必要です。`sqrt` は入力の定数項が1で、必要な精度が2以上なら2が可逆であることを前提とします。`sqrt_general` は先頭の非零係数の平方根を `modsqrt` で選び、平方根が存在しなければ空の級数を返します。
 
 ## インターフェース
 
@@ -114,34 +114,37 @@ struct static_composition;
 static_composition(const FormalPowerSeries<T>& G);
 static_composition(const FormalPowerSeries<T>& G, int m_);
 FormalPowerSeries<T> composition(FormalPowerSeries<T> F) const;
-template <typename T>
-struct static_composition<T, true>;
-static_composition(const FormalPowerSeries<T>& G);
-static_composition(const FormalPowerSeries<T>& G, int m_);
-FormalPowerSeries<T> composition(FormalPowerSeries<T> F) const;
 template <typename T, int b = 4, bool ntt_friendly = is_ntt_friendly_v<T>>
 struct online_composition;
 online_composition(FormalPowerSeries<T> G, int n_);
 T query(T x);
-inline T get(int i) const;
-template<typename T, int b>
-struct online_composition<T, b, true>;
-online_composition(FormalPowerSeries<T> G, int n_);
-T query(T x);
-inline T get(int i);
+T get(int i) const;
 template <typename T, class Factorials = modint_factorials<T>>
 vector<T> CompositionalPowerProjection(FormalPowerSeries<T> F, int n = -1, int m = -1, FormalPowerSeries<T> C1 = {}, FormalPowerSeries<T> C2 = {}, FormalPowerSeries<T> D = {});
 ```
 
+- `f.composition(g,m)` は有限多項式 `f(g(x))` の先頭 `m` 係数を返す。内側の定数項が0以外でも、渡した外側の全係数を使う。省略時の `m` は両入力長の最大値。
+- `f.compositional_inverse(m)` は `f(g(x)) = x mod x^m` を満たす `g` を求める。精度2以上では `f[0] == 0` と `f[1]` が可逆であること。
+- `PowerProjection(f,g,n,m)` は `[x^(n-1)] g(x) f(x)^i` を `0 <= i < m` に対して返す。取り出す次数 `n-1` と出力数 `m` は独立。
+- `static_composition<T>(g,m)` は同じ内側の級数に対して複数の外側の級数を合成する。精度省略時は `g.size()`。
+- `online_composition<T>(g,n)` は `g[0] == 0` を前提に、`query(f[i])` で外側の係数を低次から受け取り、合成結果の `i` 次係数を返す。`get(i)` は入力済みの係数だけで計算した値。次の添字より先を参照する場合は追加計算を行う。
+- `CompositionalPowerProjection` は `C2 o F^(o i) o C1` に `D` を掛けた `n-1` 次係数を返す。`F` と `C1` の定数項は0。`C1`、`C2` の空入力は恒等写像、`D` の空入力は1。線形化や放物型の正規形が使える場合はまとめて計算し、それ以外は反復合成を使う。
+
+合成系はNTTに適さない静的modintや動的modintでも使える。逆合成で必要な整数が可逆な素数法ではLagrange反転を使い、それ以外ではNewton法を使う。CRTの復元範囲を超える法では直接積を使う。
+
 ## 計算量
 
-NTTが使えるサイズでは、`Bostan_Mori` が偶奇周波数から次の段のスペクトルを取り出し、周波数を再利用する。
+畳み込み時間を $M(N)$ とする。標準的な $M(N)=O(N\log N)$ の場合、逆数・指数・対数・平方根は $O(M(N))$ 時間。NTT版の指数は逆数をNewton段間で引き継ぐ。多点評価は $O(M(N)\log N)$ 時間。
 
-畳み込みを M(N) として基本積 O(M(N))、Newton系 O(M(N) log N) を上界とする。多点処理 O(M(N) log N) 程度。空間は操作依存。
+同程度のサイズ $N$ での合成・逆合成・power projectionは $O(M(N)\log N)$ 時間。合成の事前計算は $O(N\log N)$ 領域を使い、固定した内側の級数に再利用できる。係数型と各パラメータによる詳細は[内部実装](internal_fps_composition.md)を参照。
+
+`CompositionalPowerProjection` が反復合成を使う場合、精度 $N$、出力数 $m$ に対して $O(mM(N)\log N)$ 時間。
 
 ## 依存関係
 
 - [convolution.hpp](convolution.md)
+- [internal_fps_composition.hpp](internal_fps_composition.md)
+- [internal_math.hpp](internal_math.md)
 - [modint_traits.hpp](modint_traits.md)
 - [modint_factorials.hpp](modint_factorials.md)
 - [ntt.hpp](ntt.md)
@@ -151,6 +154,9 @@ NTTが使えるサイズでは、`Bostan_Mori` が偶奇周波数から次の段
 
 ## Verify・利用例
 
+- [`unit/formal_power_series`](../../../verify/unit/formal_power_series.cpp)
+- [`library_checker/composition_of_formal_power_series_crt`](../../../verify/library_checker/polynomial/composition_of_formal_power_series_crt.cpp)
+- [`library_checker/compositional_inverse_of_formal_power_series_crt`](../../../verify/library_checker/polynomial/compositional_inverse_of_formal_power_series_crt.cpp)
 - [`library_checker/factorial`](../../../verify/library_checker/enumerative_combinatorics/factorial.cpp)
 - [`library_checker/kth_term_of_linearly_recurrent_sequence`](../../../verify/library_checker/other/kth_term_of_linearly_recurrent_sequence.cpp)
 - [`library_checker/bell_number`](../../../verify/library_checker/enumerative_combinatorics/bell_number.cpp)

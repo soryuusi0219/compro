@@ -1,6 +1,7 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/math/modint_factorials.hpp
 #pragma once
 #include <cassert>
+#include <cstdint>
 #include <vector>
 
 namespace soryuusi {
@@ -24,7 +25,7 @@ class modint_factorials{
     assert(n >= 0);
     const auto mod = T::mod();
     if(n < 1) n = 1;
-    assert(n < mod);
+    assert(static_cast<std::uint64_t>(n) < static_cast<std::uint64_t>(mod));
     if(n <= max_calculated) return;
     invs.resize(n+1);
     facts.resize(n+1);

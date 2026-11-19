@@ -275,13 +275,40 @@ std::vector<T> convolution_values(const std::vector<Mint>& values) {
     return result;
 }
 
-template <unsigned int Mod, class T, class Map>
+template <class Mint>
+std::vector<Mint> convolution_middle(std::vector<Mint> a, std::vector<Mint> b) {
+    if (b.empty() || a.size() < b.size()) return {};
+    assert(a.size() <= std::numeric_limits<int>::max());
+    const int n = static_cast<int>(a.size()), m = static_cast<int>(b.size());
+    const int first = m - 1;
+    if constexpr (!internal::convolution_has_ntt<Mint>) {
+        return internal::convolution_slice_naive<Mint>(a, b, first, n);
+    } else {
+        using NTT = NTTEngine<Mint>;
+        if (std::min(m, n - first) <= 60) return internal::convolution_slice_naive<Mint>(a, b, first, n);
+        const auto size = std::bit_ceil(static_cast<unsigned int>(n));
+        const bool cyclic = size <= (1U << NTT::rank2);
+        if (cyclic) internal::frequency_product<false>(a, b, static_cast<int>(size));
+        else a = convolution_linear<false>(std::move(a), std::move(b));
+        a.resize(n);
+        a.erase(a.begin(), a.begin() + first);
+        if (cyclic) NTT::normalize(a.begin(), a.end(), static_cast<int>(size));
+        return a;
+    }
+}
+
+template <unsigned int Mod, bool Middle = false, class T, class Map>
 auto convolution_residues(const std::vector<T>& a, const std::vector<T>& b, Map map) {
     using Mint = convolution_mint<Mod>;
-    std::vector<Mint> left(a.size()), right(b.size());
+    std::vector<Mint> left(a.size());
     std::transform(a.begin(), a.end(), left.begin(), map);
+    if constexpr (!Middle) {
+        if (&a == &b) return convolution_linear<true>(std::move(left), {});
+    }
+    std::vector<Mint> right(b.size());
     std::transform(b.begin(), b.end(), right.begin(), map);
-    return convolution_linear<false>(std::move(left), std::move(right));
+    if constexpr (Middle) return convolution_middle(std::move(left), std::move(right));
+    else return convolution_linear<false>(std::move(left), std::move(right));
 }
 
 }  // namespace internal
@@ -317,24 +344,7 @@ std::vector<T> convolution_square(const std::vector<T>& a) {
 
 template <class Mint, internal::is_static_modint_like_t<Mint>* = nullptr>
 std::vector<Mint> middle_product(std::vector<Mint> a, std::vector<Mint> b) {
-    if (b.empty() || a.size() < b.size()) return {};
-    assert(a.size() <= std::numeric_limits<int>::max());
-    const int n = static_cast<int>(a.size()), m = static_cast<int>(b.size());
-    const int first = m - 1;
-    if constexpr (!internal::convolution_has_ntt<Mint>) {
-        return internal::convolution_slice_naive<Mint>(a, b, first, n);
-    } else {
-        using NTT = NTTEngine<Mint>;
-        if (std::min(m, n - first) <= 60) return internal::convolution_slice_naive<Mint>(a, b, first, n);
-        const auto size = std::bit_ceil(static_cast<unsigned int>(n));
-        const bool cyclic = size <= (1U << NTT::rank2);
-        if (cyclic) internal::frequency_product<false>(a, b, static_cast<int>(size));
-        else a = convolution(std::move(a), std::move(b));
-        a.resize(n);
-        a.erase(a.begin(), a.begin() + first);
-        if (cyclic) NTT::normalize(a.begin(), a.end(), static_cast<int>(size));
-        return a;
-    }
+    return internal::convolution_middle(std::move(a), std::move(b));
 }
 
 template <unsigned int Mod = 998244353, class T,

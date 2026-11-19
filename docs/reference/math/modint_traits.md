@@ -4,7 +4,7 @@
 
 ## 機能・前提条件
 
-modint互換型とNTT対応型を検出する型traits。mod()、val()などのインターフェースで判定する。
+modint互換型とNTT対応型を検出する型traits。mod()、val()などのインターフェースで判定する。`is_ntt_friendly_v<T>` は符号付き32 bitに収まる静的素数法で、法から1を引いた値が2の20乗で割り切れる場合に真となる。
 `internal::has_native_ntt_residue<T>` は、オブジェクト表現が正規化済みの32 bit剰余1語であることを、対応する実装が明示する内部trait。NTTで連続する係数をまとめて読み書きするために使う。
 
 ## インターフェース
@@ -44,7 +44,7 @@ template <class T>
 
 ## 依存関係
 
-標準ライブラリのみ。
+- [internal_math.hpp](internal_math.md)
 
 ## Verify・利用例
 

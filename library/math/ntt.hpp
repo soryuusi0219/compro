@@ -647,6 +647,19 @@ struct NTTEngine {
         ntt_odd_extend(std::span<Mint>(spectrum).subspan(n));
     }
 
+    // Transpose of ntt_odd_extend for the ordinary dot product on spectra.
+    static void ntt_odd_extend_transposed(std::span<Mint> spectrum) {
+        check(spectrum.begin(), spectrum.end());
+        const int level = std::countr_zero(static_cast<unsigned int>(spectrum.size()));
+        assert(level < rank2);
+        if (level == 0) return;
+        intt_unnormalized(spectrum);
+        const Mint scale = info.inverse_size[level], ratio = info.iroot[level + 1];
+        spectrum.front() *= scale;
+        twist(spectrum.subspan(1), ratio, (Mint(0) - scale) * ratio);
+        ntt(spectrum);
+    }
+
     static void ntt_negate_argument(std::span<Mint> spectrum) {
         check(spectrum.begin(), spectrum.end());
         for (std::size_t i = 1; i < spectrum.size(); i += 2) {

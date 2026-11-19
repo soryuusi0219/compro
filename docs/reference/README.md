@@ -161,6 +161,7 @@
 | [general_floor_sum.hpp](math/general_floor_sum.md) | floorで定まる語の非可換モノイド積をEuclid再帰で求める。 |
 | [gf2.hpp](math/gf2.md) | GF(2^D)のスカラー演算。 |
 | [internal_bit.hpp](math/internal_bit.md) | 整数のbit幅・2冪切上げ・末尾零・popcountなどの移植用補助。 |
+| [internal_fps_composition.hpp](math/internal_fps_composition.md) | 形式的冪級数の合成とpower projectionの内部実装。 |
 | [internal_math.hpp](math/internal_math.md) | 符号付き除算の丸め、剰余、Barrett/Montgomery、mod冪、素数判定などの内部数論。 |
 | [light/fps_light.hpp](math/light/fps_light.md) | 軽量なFPS実装。 |
 | [light/mint_factorial_light.hpp](math/light/mint_factorial_light.md) | 型ごとの共有階乗表とnPk/nCkの軽量関数。 |

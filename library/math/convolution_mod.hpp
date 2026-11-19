@@ -14,31 +14,32 @@ namespace soryuusi {
 
 namespace internal {
 
-template <std::uint64_t StaticMod, class T, class Out, class Read, class Write>
+template <std::uint64_t StaticMod, class T, class Out, bool Middle = false, class Read, class Write>
 std::vector<Out> convolution_mod_impl(const std::vector<T>& a, const std::vector<T>& b,
                                       std::uint64_t modulus, Read read, Write write) {
-    if (a.empty() || b.empty()) return {};
+    if (a.empty() || b.empty() || (Middle && a.size() < b.size())) return {};
     const std::uint64_t mod = StaticMod ? StaticMod : modulus;
     assert(mod > 0);
-    assert(a.size() + b.size() - 1 <= std::numeric_limits<int>::max());
+    assert(a.size() + (Middle ? 0 : b.size() - 1) <= std::numeric_limits<int>::max());
     const int n = static_cast<int>(a.size()), m = static_cast<int>(b.size());
-    const int length = n + (m - 1);
+    const int first = Middle ? m - 1 : 0;
+    const int length = Middle ? n - first : n + (m - 1);
     std::vector<Out> result(length);
     if (mod == 1) return result;
 
-    if (std::min(n, m) <= 60) {
+    if (std::min(m, Middle ? length : n) <= 60) {
         std::vector<std::uint64_t> left(n), right(m);
         std::transform(a.begin(), a.end(), left.begin(), read);
         std::transform(b.begin(), b.end(), right.begin(), read);
         auto multiply = [&]<bool SmallMod>() {
-            for (int k = 0; k < length; ++k) {
+            for (int k = first; k < first + length; ++k) {
                 const int lo = std::max(0, k - (m - 1)), hi = std::min(k, n - 1);
                 __uint128_t sum = 0;
                 for (int i = lo; i <= hi; ++i) {
                     if constexpr (SmallMod) sum += left[i] * right[k - i];
                     else sum = (sum + __uint128_t(left[i]) * right[k - i]) % mod;
                 }
-                result[k] = write(static_cast<std::uint64_t>(sum % mod));
+                result[k-first] = write(static_cast<std::uint64_t>(sum % mod));
             }
         };
         if (mod <= std::numeric_limits<std::uint32_t>::max()) multiply.template operator()<true>();
@@ -49,9 +50,9 @@ std::vector<Out> convolution_mod_impl(const std::vector<T>& a, const std::vector
     constexpr std::uint64_t p = 167772161, q = 469762049, r = 754974721;
     constexpr std::uint64_t inv_p = inv_gcd(p, q).second;
     constexpr std::uint64_t inv_pq = inv_gcd(p * q, r).second;
-    const auto x = convolution_residues<p>(a, b, read);
-    const auto y = convolution_residues<q>(a, b, read);
-    const auto z = convolution_residues<r>(a, b, read);
+    const auto x = convolution_residues<p, Middle>(a, b, read);
+    const auto y = convolution_residues<q, Middle>(a, b, read);
+    const auto z = convolution_residues<r, Middle>(a, b, read);
     const std::uint64_t pq = p * q % mod;
     auto restore = [&]<class Wide>() {
         for (int i = 0; i < length; ++i) {
@@ -63,6 +64,17 @@ std::vector<Out> convolution_mod_impl(const std::vector<T>& a, const std::vector
     if (mod <= std::numeric_limits<std::uint32_t>::max()) restore.template operator()<std::uint64_t>();
     else restore.template operator()<__uint128_t>();
     return result;
+}
+
+template <bool Middle, class Mint>
+std::vector<Mint> convolution_mod_mint(const std::vector<Mint>& a, const std::vector<Mint>& b) {
+    constexpr std::uint64_t static_mod = [] {
+        if constexpr (internal::is_static_modint_like_v<Mint>) return std::uint64_t(Mint::mod());
+        else return std::uint64_t(0);
+    }();
+    auto read = [](const Mint& x) { return static_cast<std::uint64_t>(x.val()); };
+    auto write = [](std::uint64_t x) { return Mint::raw(x); };
+    return convolution_mod_impl<static_mod, Mint, Mint, Middle>(a, b, Mint::mod(), read, write);
 }
 
 }  // namespace internal
@@ -81,13 +93,7 @@ std::vector<long long> convolution_mod(const std::vector<long long>& a,
 
 template <class Mint, internal::is_modint_like_t<Mint>* = nullptr>
 std::vector<Mint> convolution_mod(const std::vector<Mint>& a, const std::vector<Mint>& b) {
-    constexpr std::uint64_t static_mod = [] {
-        if constexpr (internal::is_static_modint_like_v<Mint>) return std::uint64_t(Mint::mod());
-        else return std::uint64_t(0);
-    }();
-    auto read = [](const Mint& x) { return static_cast<std::uint64_t>(x.val()); };
-    auto write = [](std::uint64_t x) { return Mint::raw(x); };
-    return internal::convolution_mod_impl<static_mod, Mint, Mint>(a, b, Mint::mod(), read, write);
+    return internal::convolution_mod_mint<false>(a, b);
 }
 
 }  // namespace soryuusi

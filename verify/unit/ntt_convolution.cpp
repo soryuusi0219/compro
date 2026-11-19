@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <deque>
 #include <limits>
+#include <numeric>
 #include <random>
 #include <utility>
 #include <vector>
@@ -87,6 +88,10 @@ void check_transforms(std::mt19937& gen, int max_level) {
             copy = spectrum;
             NTT::ntt_odd_extend(copy);
             assert(std::equal(copy.begin(), copy.end(), doubled.begin() + n));
+            auto transposed = a;
+            NTT::ntt_odd_extend_transposed(transposed);
+            assert(std::inner_product(copy.begin(),copy.end(),a.begin(),Mint(0)) ==
+                   std::inner_product(spectrum.begin(),spectrum.end(),transposed.begin(),Mint(0)));
             std::fill(expected.begin(), expected.end(), Mint(0));
             for (int i = 0; i < n; ++i) expected[2 * i] = a[i];
             copy = spectrum;

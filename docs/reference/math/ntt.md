@@ -54,6 +54,7 @@ $N$ を入力スペクトルの長さとし、2倍長を扱う操作は $2N$ が
 | API | 結果 | 計算量 |
 | --- | --- | --- |
 | `ntt_odd_extend(span<Mint>)` | ゼロ埋めした $2N$ 点のうち奇数周波数だけを、元の配列に書き込む。 | $O(N\log(N+1))$ |
+| `ntt_odd_extend_transposed(span<Mint>)` | `ntt_odd_extend` の内積に関する転置。 | $O(N\log(N+1))$ |
 | `ntt_double(vector<Mint>&)` | ゼロ埋めした $2N$ 点への変換。既存の $N$ 点を前半に再利用する。 | $O(N\log(N+1))$ |
 | `ntt_negate_argument(span<Mint>)` | $f(-x)$ のスペクトル。 | $O(N)$ |
 | `ntt_square_argument(vector<Mint>&)` | $f(x^2)$ の $2N$ 点スペクトル。 | $O(N)$ |
@@ -79,4 +80,3 @@ $N$ を入力スペクトルの長さとし、2倍長を扱う操作は $2N$ が
 - [`unit/ntt_convolution`](../../../verify/unit/ntt_convolution.cpp)
 - [`library_checker/convolution_mod`](../../../verify/library_checker/convolution/convolution_mod.cpp)
 - [`library_checker/kth_term_of_linearly_recurrent_sequence`](../../../verify/library_checker/other/kth_term_of_linearly_recurrent_sequence.cpp)
-- [noshi91「FFT の回数を削減するテクニック集」](https://noshi91.hatenablog.com/entry/2023/12/10/163348)
