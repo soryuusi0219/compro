@@ -60,5 +60,6 @@ L=2^B、積 O(B²L)、他の操作は部分集合畳み込みの反復に依存�
 ## Verify・利用例
 
 - [`library_checker/exp_of_set_power_series`](../../../verify/library_checker/set_power_series/exp_of_set_power_series.cpp)
+- [`library_checker/log_of_set_power_series`](../../../verify/library_checker/set_power_series/log_of_set_power_series.cpp)
 - [`library_checker/polynomial_composite_set_power_series`](../../../verify/library_checker/set_power_series/polynomial_composite_set_power_series.cpp)
 - [`library_checker/power_projection_of_set_power_series`](../../../verify/library_checker/set_power_series/power_projection_of_set_power_series.cpp)

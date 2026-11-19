@@ -21,27 +21,39 @@ struct CentroidDecomposition{
   }
   void build(){
     G.build();
-    int g = -1, thre = n;
     vector<bool> seen(n,0);
-    auto rec = [&](auto self, int v, int p) -> bool {
+    struct Frame {int vertex; static_graph<>::edge_iterator next, end;};
+    vector<Frame> dfs;
+    auto enter = [&](int v){
       sz[v] = 1;
-      for(int c : G.vertices(v)) if(!seen[c] && c != p){
-        if(self(self,c,v)) return true;
-        sz[v] += sz[c];
-      }
-      if(sz[v]*2 >= thre){
-        g = v;
-        if(~p) sz[p] = thre - sz[v];
-        return true;
-      }
-      return false;
+      auto edges = G.edges(v);
+      dfs.push_back({v,edges.begin(),edges.end()});
     };
     vector<int> st = {0};
     st.reserve(n);
     while(st.size()){
-      int v = st.back(); st.pop_back();
-      thre = sz[v];
-      rec(rec,v,-1);
+      int start = st.back();
+      st.pop_back();
+      int thre = sz[start], g;
+      enter(start);
+      while(true){
+        auto& frame = dfs.back();
+        int v = frame.vertex;
+        int p = dfs.size() > 1 ? dfs[dfs.size()-2].vertex : -1;
+        if(frame.next != frame.end){
+          int to = (frame.next++)->to;
+          if(to != p && !seen[to]) enter(to);
+          continue;
+        }
+        if(sz[v]*2 >= thre){
+          g = v;
+          if(p != -1) sz[p] = thre-sz[v];
+          break;
+        }
+        dfs.pop_back();
+        sz[p] += sz[v];
+      }
+      dfs.clear();
       dfs_order.emplace_back(g);
       sz[g] = thre;
       seen[g] = true;

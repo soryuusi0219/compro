@@ -93,6 +93,7 @@
 | [static_rectangle_sum.hpp](data_structure/static_rectangle_sum.md) | 重み付き点と長方形質問を登録するオフライン二次元範囲和。 |
 | [swag.hpp](data_structure/swag.md) | 結合的演算の列キュー集約。 |
 | [swag_deque.hpp](data_structure/swag_deque.md) | 両端の追加削除に対応するSWAG。 |
+| [skew_heap.hpp](data_structure/skew_heap.md) | 一様加算とmeldを持つ最小ヒープ。可変版と永続版。 |
 | [splay_explicit.hpp](data_structure/splay_explicit.md) | splayによるキー集合と値の区間演算・単調キー作用・meld。 |
 | [treap_explicit.hpp](data_structure/treap_explicit.md) | treapによるキー集合と値の区間演算・単調キー作用・meld。 |
 | [treap_sortable.hpp](data_structure/treap_sortable.md) | treapによるソート可能列・区間集約・値とキーの遅延作用。 |
@@ -115,6 +116,7 @@
 | [dijkstra.hpp](graph/dijkstra.md) | 非負重みの最短路と経路復元。 |
 | [dijkstra_01.hpp](graph/dijkstra_01.md) | 辺重みが0または1の最短路。 |
 | [dijkstra_1.hpp](graph/dijkstra_1.md) | 全辺重み1の幅優先探索。 |
+| [directed_mst.hpp](graph/directed_mst.md) | 根を指定した有向最小全域木。 |
 | [dynamic_connectivity_offline.hpp](graph/dynamic_connectivity_offline.md) | 辺追加削除時刻を登録し時間軸セグメント木とrollback DSUで連結性を処理する。 |
 | [dynamic_connectivity_offline_data.hpp](graph/dynamic_connectivity_offline_data.md) | 動的連結性に成分値の加算・集約を追加したオフライン処理。 |
 | [enumerate_cliques.hpp](graph/enumerate_cliques.md) | 無向単純グラフのクリークをcallbackへ列挙する。 |
@@ -215,6 +217,7 @@
 | [static_top_tree.hpp](tree/static_top_tree.md) | 静的木をrake/compressで分解し一点変更に伴う木DPを更新する。 |
 | [static_top_tree_rerooting.hpp](tree/static_top_tree_rerooting.md) | 静的top tree上で一点変更と任意根のDP取得を行う。 |
 | [steiner_tree.hpp](tree/steiner_tree.md) | 少数のterminalを結ぶ最小Steiner木。 |
+| [tree_distance_frequency.hpp](tree/tree_distance_frequency.md) | 木の距離ごとの頂点対数。 |
 | [tree_isom.hpp](tree/tree_isom.md) | 根付き・根なし木の同型判定。 |
 
 ## utility

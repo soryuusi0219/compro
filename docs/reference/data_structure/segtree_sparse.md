@@ -37,4 +37,5 @@ S all_prod();
 ## Verify・利用例
 
 - [`library_checker/point_add_range_sum_segtree_sparse`](../../../verify/library_checker/data_structure/point_add_range_sum_segtree_sparse.cpp)
+- [`library_checker/point_set_range_composite_large_array_segtree_sparse`](../../../verify/library_checker/data_structure/point_set_range_composite_large_array_segtree_sparse.cpp)
 - [`unit/data_structure_misc`](../../../verify/unit/data_structure_misc.cpp)

@@ -103,6 +103,10 @@ a.concat(std::move(b)); // aは{1,2,3,4}、bは空
 値・キーへの遅延作用も選べます。 [splay_sortable](docs/reference/data_structure/splay_sortable.md) /
 [treap_sortable](docs/reference/data_structure/treap_sortable.md)
 
+meldと全キー加算が必要な最小ヒープには `SkewHeap` を使います。`new_heap()` で作った同じarenaの
+ヒープ同士をmeldできます。版を分岐させる場合は `PersistentSkewHeap` を使います。
+[skew_heap](docs/reference/data_structure/skew_heap.md)
+
 永続構造では更新が返す `Root` を保存して版を管理します。
 
 ```cpp

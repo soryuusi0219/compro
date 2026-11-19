@@ -148,6 +148,8 @@ vector<T> CompositionalPowerProjection(FormalPowerSeries<T> F, int n = -1, int m
 
 ## Verify・利用例
 
+- [`library_checker/factorial`](../../../verify/library_checker/enumerative_combinatorics/factorial.cpp)
+- [`library_checker/kth_term_of_linearly_recurrent_sequence`](../../../verify/library_checker/other/kth_term_of_linearly_recurrent_sequence.cpp)
 - [`library_checker/bell_number`](../../../verify/library_checker/enumerative_combinatorics/bell_number.cpp)
 - [`library_checker/partition_function`](../../../verify/library_checker/enumerative_combinatorics/partition_function.cpp)
 - [`library_checker/sharp_p_subset_sum`](../../../verify/library_checker/enumerative_combinatorics/sharp_p_subset_sum.cpp)

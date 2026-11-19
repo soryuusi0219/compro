@@ -39,4 +39,5 @@ template<class F> int min_left(int r, F f) const;
 
 ## Verify・利用例
 
+- [`library_checker/point_set_range_composite`](../../../verify/library_checker/data_structure/point_set_range_composite.cpp)
 - [`library_checker/vertex_set_path_composite`](../../../verify/library_checker/tree/vertex_set_path_composite.cpp)
