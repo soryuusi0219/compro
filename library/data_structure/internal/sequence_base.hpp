@@ -36,6 +36,7 @@ class SequenceBase {
   }
 public:
   using value_type = T;
+  using NodeRef = typename Arena::NodeRef;
   SequenceBase(const SequenceBase&) = delete;
   SequenceBase& operator=(const SequenceBase&) = delete;
   SequenceBase(SequenceBase&& other) noexcept : arena(std::move(other.arena)), root(std::exchange(other.root,nullptr)){}
@@ -59,6 +60,11 @@ public:
     root = arena->engine.join(a,c);
   }
   T get(int k){assert(0 <= k && k < size()); return arena->engine.access(root,k)->value;}
+  [[nodiscard]] NodeRef ref_at(int k){
+    assert(0 <= k && k < size());
+    return arena->reference(arena,arena->engine.access(root,k));
+  }
+  int index_of(const NodeRef& ref){return arena ? arena->index_of(root,ref) : -1;}
   void set(int k, T value){
     assert(0 <= k && k < size());
     Node* p = arena->engine.access(root,k);
@@ -88,19 +94,23 @@ public:
     assert(arena && other.arena);
     if(!root && arena == other.arena){root = std::exchange(other.root,nullptr); return;}
     Node* tail = other.root;
-    if(arena != other.arena) tail = build(other.to_vector());
+    if(arena != other.arena){
+      std::vector<Node*> source;
+      source.reserve(other.size());
+      Arena::visit_in_order(other.root,[&](Node* p){source.push_back(p);});
+      tail = arena->engine.build(source.size(),[&](int i){
+        Node* p = make_node(source[i]->value);
+        other.arena->transfer_reference(source[i],arena,p);
+        return p;
+      });
+    }
     root = arena->engine.join(root,tail);
     other.root = nullptr;
   }
   std::vector<T> to_vector(){
     std::vector<T> result;
     result.reserve(size());
-    std::vector<Node*> stack;
-    Node* p = root;
-    while(p || !stack.empty()){
-      while(p){Ops::push(p); stack.push_back(p); p = p->lp;}
-      p = stack.back(); stack.pop_back(); result.push_back(p->value); p = p->rp;
-    }
+    Arena::visit_in_order(root,[&](Node* p){result.push_back(p->value);});
     return result;
   }
   [[nodiscard]] SequenceBase clone(){assert(arena); SequenceBase copy(arena); copy.root = copy.build(to_vector()); return copy;}
@@ -116,6 +126,7 @@ class SequenceArena {
   void ensure(){if(!arena) arena = std::make_shared<Storage>();}
 public:
   using Sequence = SequenceBase<Ops,Backend>;
+  using NodeRef = typename Sequence::NodeRef;
   SequenceArena() = default;
   SequenceArena(const SequenceArena&) = delete;
   SequenceArena& operator=(const SequenceArena&) = delete;

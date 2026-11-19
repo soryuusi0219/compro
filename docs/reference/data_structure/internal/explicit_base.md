@@ -8,7 +8,7 @@
 
 ## インターフェース
 
-`ExplicitArena<Key,Ops,Backend,Multi,Compare>` が領域と比較関数を所有し、new_setでExplicitSetを作ります。ExplicitMonoidはReversibleMonoidのExtraに固定キーと平衡化情報を追加します。公開APIはsplay_explicit/treap_explicitのreferenceを参照してください。
+`ExplicitArena<Key,Ops,Backend,Multi,Compare>` が領域と比較関数を所有し、new_setでExplicitSetを作ります。ExplicitMonoidはReversibleMonoidのExtraにキーと平衡化情報を追加します。キー作用を持つPolicyではExtraに独立した遅延タグを置き、pushでキー写像を子へ伝播した後に既存の反転を伝播します。減少方向では部分木を反転して順逆集約を交換します。更新した区間の両端が隣接部分木と整列していればjoinし、そうでなければ更新していない部分へmeldします。公開APIはsplay_explicit/treap_explicitのreferenceを参照してください。
 
 順位・split/join/buildのBackend契約はSequenceBaseと共通です。キー探索は経路をpushしてから境界順位を求めます。Backendがaccess_node(root&,node)を提供すれば探索終点を直接アクセスし、なければaccess(root&,rank)を呼びます。splayでは探索終点をsplayするため償却計算量を維持します。
 

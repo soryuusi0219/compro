@@ -83,14 +83,25 @@ a.concat(std::move(b)); // aは{1,2,3,4}、bは空
 `split(k)` は呼出元を空にして2つの列を返します。列ハンドルは管理型の破棄後も使えます。
 通常版・遅延版の操作は [splay](docs/reference/data_structure/splay_tree.md) /
 [treap](docs/reference/data_structure/treap.md) を参照してください。
+列と集合では `ref_at(i)` で要素参照を取り、分割・結合後も `index_of(ref)` で現在の順位を調べられます。
+その列・集合に要素がなければ `-1` を返します。
 
 キー付きの集合は `SplayExplicit` / `TreapExplicit` の `new_set()` で作ります。
 テンプレート引数Multiで重複可否を選べます。`prod(l,r)` / `apply(l,r,f)` は順位区間、
 `prod_key(low,high)` / `apply_key(low,high,f)` はキーの半開区間を扱い、作用は値だけに適用します。
+キーを単調に更新する場合は `MonotoneSplayExplicit` / `MonotoneTreapExplicit` の
+`apply_keys(l,r,f)` を使います。単調減少の作用では第4引数を `true` にします。
+キーと値の両方に遅延作用を使う場合は `LazyMonotoneSplayExplicit` / `LazyMonotoneTreapExplicit` を選びます。
 `meld(std::move(other))` は相手を空にし、同値キーでは連結先の要素を先に置きます。
 重複不可の場合は連結先の値を残します。詳細は
 [splay_explicit](docs/reference/data_structure/splay_explicit.md) /
 [treap_explicit](docs/reference/data_structure/treap_explicit.md) を参照してください。
+
+列の順序を普段は保ち、指定した区間だけキー順に並べ替える場合は `SplaySortable` /
+`TreapSortable` を使います。`new_sequence({{key, value}, ...})` で作り、
+`sort_inc(l,r)` / `sort_dec(l,r)` で並べた後の値を `prod(l,r)` で集約します。
+値・キーへの遅延作用も選べます。 [splay_sortable](docs/reference/data_structure/splay_sortable.md) /
+[treap_sortable](docs/reference/data_structure/treap_sortable.md)
 
 永続構造では更新が返す `Root` を保存して版を管理します。
 

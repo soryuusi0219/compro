@@ -8,7 +8,6 @@
 #include "library/data_structure/link_cut.hpp"
 #include "library/data_structure/lazy_link_cut.hpp"
 #include "library/data_structure/splay_tree.hpp"
-#include "library/data_structure/splay_tree_lazy.hpp"
 
 long long add(long long a,long long b){return a+b;}
 long long zero(){return 0;}

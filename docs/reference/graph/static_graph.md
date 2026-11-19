@@ -47,13 +47,18 @@ void build();
 edge_range operator[](int v) const;
 edge_range edges(int v) const;
 vertex_range vertices(int v) const;
+int degree(int v) const;
 int size() const;
 int edge_size() const;
 ```
 
+`degree(v)` はbuild後に使用し、`0 <= v < size()` が前提です。頂点vの隣接辺数を返します。
+有向グラフでは出次数、無向辺を両方向に追加したグラフでは次数です。多重辺はそれぞれ数え、
+`undirected = true` で追加した自己ループは2本として数えます。重み付き・重みなしの双方で使用できます。
+
 ## 計算量
 
-辺追加 償却 O(1)、build O(V+E)、隣接走査 O(deg(v))、空間 O(V+E)。
+辺追加 償却 O(1)、build O(V+E)、degree(v) 最悪 O(1)、隣接走査 O(deg(v))、空間 O(V+E)。
 
 ## 依存関係
 

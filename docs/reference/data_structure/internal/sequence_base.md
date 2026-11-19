@@ -11,6 +11,7 @@ Backendから独立した1ノード1要素の可変列と、その生成用arena
 `SequenceArena<Ops,Backend>`：コピー不可・move可能。Sequence型、new_sequence()、new_sequence(vector)、allocated_nodes()を提供します。
 
 `SequenceBase<Ops,Backend>`：管理型だけが構築できます。move-onlyの列ハンドルです。公開操作・所有権は各splay/treapのreferenceを参照してください。cloneは同一arenaでの独立複製です。
+要素参照はTreeArenaで管理し、異arenaへのconcatではコピー先の各ノードへ参照を引き継ぎます。
 
 Backendはtemplate<class Node,class Ops>の型で、次の操作を実装します。
 

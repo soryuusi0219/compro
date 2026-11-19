@@ -47,7 +47,8 @@
 | [internal/splay_base.hpp](data_structure/internal/splay_base.md) | 補助木のsplayと列Backend。 |
 | [internal/treap_base.hpp](data_structure/internal/treap_base.md) | 親付きimplicit treapの平衡化Backend。 |
 | [internal/tree_arena.hpp](data_structure/internal/tree_arena.md) | 可変木の共有プール・ノード再利用・Backend作業領域。 |
-| [internal/explicit_base.hpp](data_structure/internal/explicit_base.md) | 固定キーのordered set/multisetとarena・meldの共通実装。 |
+| [internal/explicit_base.hpp](data_structure/internal/explicit_base.md) | ordered set/multisetと単調キー作用・arena・meldの共通実装。 |
+| [internal/sortable_base.hpp](data_structure/internal/sortable_base.md) | 重み付きSequenceとExplicit木によるソート可能列の共通基盤。 |
 | [internal/sequence_base.hpp](data_structure/internal/sequence_base.md) | 平衡化方式から独立した可変列と所有権管理。 |
 | [internal/link_cut_base.hpp](data_structure/internal/link_cut_base.md) | 反転可能な補助木コアを使うLCT共通実装。 |
 | [interval_heap.hpp](data_structure/interval_heap.md) | 最小・最大の双方を取り出せるヒープ。 |
@@ -82,8 +83,8 @@
 | [segtree_beats_templates.hpp](data_structure/segtree_beats_templates.md) | chmin/chmax/addと区間和・最小・最大のBeats設定。 |
 | [segtree_sparse.hpp](data_structure/segtree_sparse.md) | 更新する座標を事前登録するセグメント木。 |
 | [segtree_template.hpp](data_structure/segtree_template.md) | 和・最小最大・出現回数・ペア和・アフィン合成の定番Segtree設定。 |
-| [splay_tree.hpp](data_structure/splay_tree.md) | 挿入・削除・反転と順逆の区間集約を扱う列splay木。 |
-| [splay_tree_lazy.hpp](data_structure/splay_tree_lazy.md) | 列splay木に区間への遅延作用を追加する。 |
+| [splay_sortable.hpp](data_structure/splay_sortable.md) | splayによるソート可能列・区間集約・値とキーの遅延作用。 |
+| [splay_tree.hpp](data_structure/splay_tree.md) | 反転・順逆の区間集約を扱う通常・遅延の列splay木。 |
 | [static_bit_vector.hpp](data_structure/static_bit_vector.md) | 固定bit列とprefix rank。 |
 | [static_range_inversions.hpp](data_structure/static_range_inversions.md) | 静的配列の区間転倒数。 |
 | [static_range_lis.hpp](data_structure/static_range_lis.md) | 静的配列の区間LIS。重複値は非減少として扱う。 |
@@ -92,8 +93,9 @@
 | [static_rectangle_sum.hpp](data_structure/static_rectangle_sum.md) | 重み付き点と長方形質問を登録するオフライン二次元範囲和。 |
 | [swag.hpp](data_structure/swag.md) | 結合的演算の列キュー集約。 |
 | [swag_deque.hpp](data_structure/swag_deque.md) | 両端の追加削除に対応するSWAG。 |
-| [splay_explicit.hpp](data_structure/splay_explicit.md) | splayによる固定キー集合と値の区間演算・meld。 |
-| [treap_explicit.hpp](data_structure/treap_explicit.md) | treapによる固定キー集合と値の区間演算・meld。 |
+| [splay_explicit.hpp](data_structure/splay_explicit.md) | splayによるキー集合と値の区間演算・単調キー作用・meld。 |
+| [treap_explicit.hpp](data_structure/treap_explicit.md) | treapによるキー集合と値の区間演算・単調キー作用・meld。 |
+| [treap_sortable.hpp](data_structure/treap_sortable.md) | treapによるソート可能列・区間集約・値とキーの遅延作用。 |
 | [treap.hpp](data_structure/treap.md) | splayと列操作を共有する通常・遅延implicit treap。 |
 | [wavelet.hpp](data_structure/wavelet.md) | 非負 B bit 値の静的wavelet matrix。 |
 | [wavelet_bit.hpp](data_structure/wavelet_bit.md) | キー固定のwavelet matrixとFenwick tree。 |

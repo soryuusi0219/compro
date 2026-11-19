@@ -25,7 +25,6 @@
 #include "library/data_structure/persistent_vector.hpp"
 #include "library/data_structure/point_set_range_count.hpp"
 #include "library/data_structure/splay_tree.hpp"
-#include "library/data_structure/splay_tree_lazy.hpp"
 
 namespace {
 using namespace soryuusi;

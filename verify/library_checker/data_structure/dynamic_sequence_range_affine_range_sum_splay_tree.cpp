@@ -3,7 +3,7 @@
 #include <utility>
 #include <vector>
 
-#include "library/data_structure/splay_tree_lazy.hpp"
+#include "library/data_structure/splay_tree.hpp"
 #include "library/math/modint.hpp"
 
 using mint = soryuusi::modint998244353;

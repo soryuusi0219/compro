@@ -84,6 +84,7 @@ struct static_graph{
   edge_range operator[](int v) const{return {es.begin()+start[v],es.begin()+start[v+1]};}
   edge_range edges(int v) const{return (*this)[v];}
   vertex_range vertices(int v) const{return {{es.begin()+start[v]},{es.begin()+start[v+1]}};}
+  int degree(int v) const{return start[v+1]-start[v];}
   int size() const{return n;}
   int edge_size() const{return es.size();}
 };

@@ -1,0 +1,5 @@
+{
+  "name": "point_set_range_sort_range_composite_splay",
+  "problem": "data_structure/point_set_range_sort_range_composite",
+  "source": "verify/library_checker/data_structure/point_set_range_sort_range_composite_splay.cpp"
+}
