@@ -136,8 +136,10 @@
 
 | ヘッダー / reference | 機能 |
 | --- | --- |
+| [binomial_coefficient.hpp](math/binomial_coefficient.md) | 固定した合成数法にも対応する二項係数。 |
 | [binomial_coefficient_prefix_sum.hpp](math/binomial_coefficient_prefix_sum.md) | 質問 (n,k) ごとに二項係数のprefix和 Σ(i=0..k) C(n,i) を一括計算する。 |
 | [bitmatrix.hpp](math/bitmatrix.md) | F₂上の独立したビットパック行列。 |
+| [combinatorics.hpp](math/combinatorics.md) | Bernoulli数、Bell数、階乗、Montmort数、分割数、Stirling数、部分集合和の個数。 |
 | [convolution.hpp](math/convolution.md) | 通常畳み込み・二乗・middle product。 |
 | [convolution_bit_and.hpp](math/convolution_bit_and.md) | bit AND畳み込み。 |
 | [convolution_bit_or.hpp](math/convolution_bit_or.md) | bit OR畳み込み。 |
@@ -175,12 +177,15 @@
 | [mod_sqrt.hpp](math/mod_sqrt.md) | 素数modの平方根をTonelli–Shanksで求める。 |
 | [modint.hpp](math/modint.md) | 32/64bitの静的・動的modint。 |
 | [modint_factorials.hpp](math/modint_factorials.md) | modintの逆元・階乗・逆階乗、順列・組合せ・Catalan・格子路。 |
+| [modint_q_factorials.hpp](math/modint_q_factorials.md) | 固定した素数法とqに対するq-階乗・q-二項係数。 |
 | [modint_traits.hpp](math/modint_traits.md) | modint互換型とNTT対応型を検出する型traits。 |
 | [nimber.hpp](math/nimber.md) | 64bit nim積に対応する体要素。 |
 | [ntt.hpp](math/ntt.md) | 静的modintのNTTとスペクトル変換。 |
 | [number_of_increasing_sequence.hpp](math/number_of_increasing_sequence.md) | 各位置の上限制約下の増加列を畳み込みDPで数える。 |
+| [number_of_subsequences.hpp](math/number_of_subsequences.md) | 空でない相異なる部分列の個数を数える。 |
 | [piecewise_linear_function.hpp](math/piecewise_linear_function.md) | 長さ・傾き・jumpの列で区分線形関数を表す。 |
 | [prime_factorization.hpp](math/prime_factorization.md) | 64bit整数のMiller–RabinとPollard rhoによる素因数分解・約数列挙。 |
+| [prime_field_tables.hpp](math/prime_field_tables.md) | 素数体の逆元・離散対数・冪乗の定数時間クエリ。 |
 | [prime_table.hpp](math/prime_table.md) | 上限までの素数一覧を共有キャッシュで取得する。 |
 | [primitive_root.hpp](math/primitive_root.md) | 素数modの原始根を探索する。 |
 | [set_power_series.hpp](math/set_power_series.md) | 部分集合畳み込み上の冪級数。 |

@@ -1,0 +1,5 @@
+{
+  "name": "stirling_number_of_the_second_kind",
+  "problem": "enumerative_combinatorics/stirling_number_of_the_second_kind",
+  "source": "verify/library_checker/enumerative_combinatorics/stirling_number_of_the_second_kind.cpp"
+}

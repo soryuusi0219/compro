@@ -1,15 +1,14 @@
-#include "library/math/formal_power_series.hpp"
+#include "library/math/combinatorics.hpp"
 #include "library/math/modint.hpp"
 #include "library/utility/fastio.hpp"
 
 int main(){
-  using FPS = soryuusi::FormalPowerSeries<soryuusi::modint998244353>;
-  const FPS f{1,1};
+  using Mint = soryuusi::modint998244353;
   int t;
   soryuusi::cin >> t;
   while(t--){
     int n;
     soryuusi::cin >> n;
-    soryuusi::cout << f.prefix_product(n).val() << '\n';
+    soryuusi::cout << soryuusi::factorial<Mint>(n).val() << '\n';
   }
 }

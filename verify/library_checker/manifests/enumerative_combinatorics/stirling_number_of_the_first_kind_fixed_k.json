@@ -1,0 +1,5 @@
+{
+  "name": "stirling_number_of_the_first_kind_fixed_k",
+  "problem": "enumerative_combinatorics/stirling_number_of_the_first_kind_fixed_k",
+  "source": "verify/library_checker/enumerative_combinatorics/stirling_number_of_the_first_kind_fixed_k.cpp"
+}

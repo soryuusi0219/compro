@@ -1,0 +1,5 @@
+{
+  "name": "consecutive_terms_of_linear_recurrent_sequence",
+  "problem": "other/consecutive_terms_of_linear_recurrent_sequence",
+  "source": "verify/library_checker/other/consecutive_terms_of_linear_recurrent_sequence.cpp"
+}

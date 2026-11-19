@@ -1,0 +1,5 @@
+{
+  "name": "many_factorials",
+  "problem": "enumerative_combinatorics/many_factorials",
+  "source": "verify/library_checker/enumerative_combinatorics/many_factorials.cpp"
+}

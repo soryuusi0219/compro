@@ -4,7 +4,7 @@
 
 ## 機能・前提条件
 
-質問 (n,k) ごとに二項係数のprefix和 Σ(i=0..k) C(n,i) を一括計算する。階乗と2の逆元を使う。
+質問 $(n,k)$ ごとに二項係数のprefix和 $\sum_{i=0}^k\binom ni$ を一括計算する。$n\ge0$ を前提とし、$k<0$ なら0、$k\ge n$ なら $2^n$ を返す。階乗と2の逆元を使い、二項係数の対称性で中央より右の質問を左半分に移す。
 
 ## インターフェース
 
@@ -31,3 +31,5 @@ N=max n、質問Qに O(N+Q log Q+N√Q) 時間程度、O(N+Q) 空間。
 ## Verify・利用例
 
 - [`unit/math_misc`](../../../verify/unit/math_misc.cpp)
+- [`unit/modular_combinatorics`](../../../verify/unit/modular_combinatorics.cpp)
+- [`library_checker/prefix_sum_of_binomial_coefficient`](../../../verify/library_checker/enumerative_combinatorics/prefix_sum_of_binomial_coefficient.cpp)

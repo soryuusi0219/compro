@@ -1,0 +1,5 @@
+{
+  "name": "binomial_coefficient",
+  "problem": "enumerative_combinatorics/binomial_coefficient",
+  "source": "verify/library_checker/enumerative_combinatorics/binomial_coefficient.cpp"
+}

@@ -1,4 +1,5 @@
 #include <cassert>
+#include <bit>
 #include <limits>
 #include <random>
 
@@ -121,6 +122,93 @@ void arithmetic(){
   assert(FPS<T>({0,1}).pow(std::numeric_limits<long long>::max(),3) == FPS<T>(3,0));
 }
 
+template<class T>
+void polynomial_prefix_sums(){
+  std::mt19937 gen(944);
+  assert(FPS<T>().prefix_sum().empty());
+  for(int n : {1,2,3,31,32,65,128,513}){
+    FPS<T> polynomial(n);
+    for(T& x : polynomial) x = gen();
+    const FPS<T> sums = polynomial.prefix_sum();
+    assert(sums.size() == polynomial.size()+1 && sums[0] == T(0));
+    const auto difference = sums.Taylor_shift(T(1))-sums;
+    assert(difference.pre(n) == polynomial && difference[n] == T(0));
+    T expected = 0;
+    for(int i = 0; i < n+5; ++i){
+      assert(sums.eval(T(i)) == expected);
+      expected += polynomial.eval(T(i));
+    }
+  }
+}
+
+void shortest_recurrences(){
+  using Fps = FPS<soryuusi::static_modint<2>>;
+  for(int n = 0; n <= 11; ++n){
+    for(unsigned int bits = 0; bits < (1U << n); ++bits){
+      Fps samples(n);
+      for(int i = 0; i < n; ++i) samples[i] = (bits >> i)&1;
+      const auto recurrence = Fps::find_linear_recurrence(samples);
+      const int d = recurrence.size();
+      unsigned int mask = 0;
+      for(auto c : recurrence) mask = (mask << 1)|c.val();
+      auto fits = [=](int order, unsigned int coefficients){
+        for(int i = order; i < n; ++i)
+          if((std::popcount((bits >> (i-order))&coefficients)&1) != ((bits >> i)&1)) return false;
+        return true;
+      };
+      assert(d <= n && fits(d,mask));
+      for(int order = 0; order < d; ++order)
+        for(unsigned int c = 0; c < (1U << order); ++c) assert(!fits(order,c));
+    }
+  }
+  const Fps impulse{1,0,0};
+  assert(Fps::find_linear_recurrence(impulse) == Fps{0});
+  assert(Fps::linear_recurrence_terms(impulse,0,5) == Fps({1,0,0,0,0}));
+  assert(Fps::linear_recurrence_terms(Fps{},100,3) == Fps(3));
+  assert(Fps::kth_term_of_linear_recurrence(Fps{},100) == 0);
+}
+
+template<class T, bool Infer>
+void recurrence_terms(){
+  using Fps = FPS<T>;
+  std::mt19937 gen(537);
+  for(int d : {1,2,3,16,33,65,79,128}){
+    Fps initial(d), recurrence(d);
+    for(T& x : initial) x = gen();
+    for(T& x : recurrence) x = gen();
+    recurrence.back() = 0;
+    Fps expected = initial;
+    for(int i = d; i < 12*d+27; ++i){
+      T next = 0;
+      for(int j = 0; j < d; ++j) next += expected[i-1-j]*recurrence[j];
+      expected.push_back(next);
+    }
+    const auto samples = expected.pre(2*d+1);
+    for(int start : {0,d-1,d,d+1,4*d+7,9*d}){
+      assert(Fps::kth_term_of_linear_recurrence(initial,recurrence,start) == expected[start]);
+      if constexpr (Infer) assert(Fps::kth_term_of_linear_recurrence(samples,start) == expected[start]);
+      for(int count : {0,1,2,d,d+13}){
+        const Fps range(expected.begin()+start,expected.begin()+start+count);
+        assert(Fps::linear_recurrence_terms(initial,recurrence,start,count) == range);
+        if constexpr (Infer) assert(Fps::linear_recurrence_terms(samples,start,count) == range);
+      }
+    }
+
+    recurrence.assign(d,T(0));
+    recurrence.back() = 1;
+    constexpr long long start = std::numeric_limits<long long>::max();
+    Fps periodic(d+3), repeated(2*d);
+    for(int i = 0; i < d+3; ++i) periodic[i] = initial[(start%d+i)%d];
+    for(int i = 0; i < 2*d; ++i) repeated[i] = initial[i%d];
+    assert(Fps::linear_recurrence_terms(initial,recurrence,start,d+3) == periodic);
+    assert(Fps::kth_term_of_linear_recurrence(initial,recurrence,start) == periodic[0]);
+    if constexpr (Infer){
+      assert(Fps::linear_recurrence_terms(repeated,start,d+3) == periodic);
+      assert(Fps::kth_term_of_linear_recurrence(repeated,start) == periodic[0]);
+    }
+  }
+}
+
 }  // namespace
 
 int main(){
@@ -133,4 +221,8 @@ int main(){
   composition_family<Wide>();
   iterates<Native>(); iterates<CRT>(); iterates<Ring>(); iterates<Wide>();
   arithmetic<Native>(); arithmetic<CRT>();
+  polynomial_prefix_sums<Native>(); polynomial_prefix_sums<CRT>();
+  shortest_recurrences();
+  recurrence_terms<Native,true>(); recurrence_terms<CRT,true>();
+  recurrence_terms<Ring,false>();
 }

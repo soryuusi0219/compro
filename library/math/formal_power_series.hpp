@@ -812,6 +812,149 @@ struct FormalPowerSeries : vector<T>{
     return res;
   }
 
+  // g(0) = 0 and g(x+1)-g(x) = f(x).
+  FPS prefix_sum() const {
+    const int n = this->size();
+    if(n == 0) return {};
+    if constexpr (requires { factorials.precompute(n); }) factorials.precompute(n);
+    FPS bernoulli(n), reversed(n);
+    for(int i = 0; i < n; ++i){
+      bernoulli[i] = factorials.mint_inv_factorial(i+1);
+      reversed[n-1-i] = (*this)[i]*factorials.mint_factorial(i);
+    }
+    // B(x) = x/(exp(x)-1). Apply B(d/dx), then integrate with zero constant.
+    reversed *= bernoulli.inv();
+    FPS result(n+1);
+    for(int i = 0; i < n; ++i) result[i+1] = reversed[n-1-i]*factorials.mint_inv_factorial(i+1);
+    return result;
+  }
+
+private:
+  static T exponential_sum_constant(const vector<T>& values, T r, T fact, const vector<T>& inverse){
+    // The (d+1)-st difference of r^(-n)*(S(n)-C) is zero.
+    const int n = values.size();
+    T result = 0, prefix = 0, power = 1;
+    for(int i = 0; i < n; ++i){
+      prefix += power*values[i];
+      result = result*(-r)+prefix*inverse[i+1]*inverse[n-1-i];
+      power *= r;
+    }
+    return result*fact*(T(1)-r).inv().pow(n);
+  }
+
+  static T evaluate_consecutive_samples(const vector<T>& values, T x, const vector<T>& inverse){
+    if(static_cast<uint64_t>(x.val()) < values.size()) return values[x.val()];
+    const int n = values.size();
+    vector<T> suffix(n+1,T(1));
+    for(int i = n-1; i >= 0; --i) suffix[i] = suffix[i+1]*(x-T(i));
+    T answer = 0, prefix = 1;
+    for(int i = 0; i < n; ++i){
+      const T term = values[i]*prefix*suffix[i+1]*inverse[i]*inverse[n-1-i];
+      if((n-1-i)&1) answer -= term;
+      else answer += term;
+      prefix *= x-T(i);
+    }
+    return answer;
+  }
+
+  T exponential_sum_from_coefficients(T r, optional<long long> count) const {
+    int n = this->size();
+    while(n > 1 && (*this)[n-1] == T(0)) --n;
+    const bool unweighted = r == T(1);
+    const auto inverse = internal::factorial_and_inverse_factorials<T>(n-1+unweighted).second;
+    FPS denominator(n);
+    if(unweighted){
+      for(int i = 0; i < n; ++i) denominator[i] = inverse[i+1];
+    }else{
+      denominator[0] = T(1)-r;
+      for(int i = 1; i < n; ++i) denominator[i] = -r*inverse[i];
+    }
+    FPS moments = denominator.inv();
+    if(count){
+      // The exponential generating function is (1-r^count*exp(count*x))/(1-r*exp(x)).
+      // At r=1 remove the common factor x before forming the quotient.
+      const T weight = r.pow(*count), step = T(*count);
+      if(weight != T(0)){
+        FPS numerator(n);
+        T power = unweighted ? step : -weight;
+        for(int i = 0; i < n; ++i){
+          numerator[i] = power*inverse[i+unweighted];
+          power *= step;
+        }
+        if(!unweighted) numerator[0] += T(1);
+        moments *= numerator;
+      }
+    }
+    T result = 0, fact = 1;
+    for(int i = 0; i < n; ++i){
+      result += (*this)[i]*moments[i]*fact;
+      fact *= T(i+1);
+    }
+    return result;
+  }
+
+public:
+  // With d+1 samples at 0,...,d of a polynomial of degree at most d.
+  static T sum_of_exponential_times_polynomial_limit(const vector<T>& values, T r){
+    assert(r != T(1));
+    if(values.empty()) return 0;
+    if(r == T(0)) return values[0];
+    const auto [fact,inverse] = internal::factorial_and_inverse_factorials<T>(values.size());
+    return exponential_sum_constant(values,r,fact,inverse);
+  }
+
+  static T sum_of_exponential_times_polynomial(vector<T> values, T r, long long n){
+    assert(n >= 0);
+    if(n == 0 || values.empty()) return 0;
+    if(r == T(0)) return values[0];
+    if(static_cast<uint64_t>(n) <= values.size()){
+      T result = 0;
+      for(long long i = n; i > 0; --i) result = result*r + values[i-1];
+      return result;
+    }
+    const auto [fact,inverse] = internal::factorial_and_inverse_factorials<T>(values.size());
+    if(r == T(1)){
+      values.push_back(0);
+      T prefix = 0;
+      for(T& x : values){
+        const T next = prefix+x;
+        x = prefix;
+        prefix = next;
+      }
+      return evaluate_consecutive_samples(values,T(n),inverse);
+    }
+    const T constant = exponential_sum_constant(values,r,fact,inverse);
+    const T inverse_r = r.inv();
+    T prefix = 0, power = 1, inverse_power = 1;
+    for(T& x : values){
+      const T next = prefix+power*x;
+      x = (prefix-constant)*inverse_power;
+      prefix = next;
+      power *= r;
+      inverse_power *= inverse_r;
+    }
+    return constant+r.pow(n)*evaluate_consecutive_samples(values,T(n),inverse);
+  }
+
+  T sum_of_exponential_times_polynomial_limit(T r) const {
+    assert(r != T(1));
+    if(this->empty()) return 0;
+    if(r == T(0)) return this->front();
+    return exponential_sum_from_coefficients(r,nullopt);
+  }
+
+  T sum_of_exponential_times_polynomial(T r, long long n) const {
+    assert(n >= 0);
+    if(n == 0 || this->empty()) return 0;
+    if(r == T(0)) return this->front();
+    if(n <= 4){
+      T result = 0;
+      for(long long i = n; i > 0; --i) result = result*r+eval(T(i-1));
+      return result;
+    }
+    return exponential_sum_from_coefficients(r,n);
+  }
+
   struct Mat {
     FPS a, b, c, d;
     Mat() = default;
@@ -863,6 +1006,121 @@ struct FormalPowerSeries : vector<T>{
     p.first >>= j;
     p.second >>= j;
     return Half_GCD(p, res, pre + j) * R1;
+  }
+
+  // Return c[0], ..., c[d-1] with a[i] = sum_j c[j]*a[i-1-j] for i >= d.
+  static FPS find_linear_recurrence(FPS samples){
+    const int n = samples.size(), middle = (n+1)/2;
+    if(samples.shrink().empty()) return {};
+    pair<FPS,FPS> p{FPS(n+1),std::move(samples)};
+    p.first[n] = 1;
+    T unused_resultant = 1;
+    Mat basis = Mat::I();
+    if((int)p.second.size() > middle){
+      basis = Half_GCD(p,unused_resultant);
+      p = basis.app(p);
+      while((int)p.second.size() > middle) Naive_GCD(basis,p,unused_resultant,0);
+    }
+
+    // A row (R,Q) of this Euclidean basis obeys Q*A = R mod x^n.
+    // If Q has zero constant, use the better of the adjacent Euclidean rows.
+    if(basis.d[0] == T(0)){
+      if(p.second.empty() || p.first.size() <= n+1-p.second.size()){
+        p.second = std::move(p.first);
+        basis.d = std::move(basis.b);
+      }else Naive_GCD(basis,p,unused_resultant,0);
+    }
+    FPS q = std::move(basis.d);
+    const auto order = max(q.size()-1,p.second.size());
+    const T scale = -q[0].inv();
+    q >>= 1;
+    q.resize(order);
+    q *= scale;
+    return q;
+  }
+
+private:
+  static FPS recurrence_denominator(const FPS& recurrence){
+    FPS q = -recurrence;
+    q <<= 1;
+    q[0] = 1;
+    return q;
+  }
+
+  // Return [x^(end-length+1)], ..., [x^end] of 1/q, including zero for negative indices.
+  static FPS reciprocal_window(FPS q, long long end, int length){
+    if(end < length){
+      FPS result = q.inv(static_cast<int>(end)+1);
+      result <<= length-(int)result.size();
+      return result;
+    }
+    FPS opposite = q;
+    for(int i = 1; i < (int)q.size(); i += 2) opposite[i] = -opposite[i];
+    {
+      FPS even = q*opposite;
+      for(int i = 0; i < (int)q.size(); ++i) q[i] = even[2*i];
+    }
+    FPS half = reciprocal_window(std::move(q),end/2,length);
+    FPS lifted(2*length);
+    for(int i = 0; i < length; ++i) lifted[2*i+1-(end&1)] = half[i];
+    return internal::fps_middle_product<T>(std::move(lifted),std::move(opposite));
+  }
+
+public:
+  static T kth_term_of_linear_recurrence(const FPS& initial, const FPS& recurrence, long long k){
+    assert(initial.size() == recurrence.size() && k >= 0);
+    if(k < (long long)initial.size()) return initial[k];
+    if(initial.empty()) return 0;
+    FPS q = recurrence_denominator(recurrence), p = initial*q;
+    p.resize(initial.size());
+    return Bostan_Mori(std::move(p.shrink()),std::move(q.shrink()),k);
+  }
+
+  static FPS linear_recurrence_terms(const FPS& initial, const FPS& recurrence, long long k, int count){
+    assert(initial.size() == recurrence.size() && k >= 0 && count >= 0);
+    if(count == 0) return {};
+    if(count == 1) return {kth_term_of_linear_recurrence(initial,recurrence,k)};
+    const int d = recurrence.size();
+    if(k < d && count <= d-k) return FPS(initial.begin()+k,initial.begin()+k+count);
+    if(d == 0) return FPS(count);
+    FPS q = recurrence_denominator(recurrence), p = initial*q;
+    p.resize(d);
+    if(k <= d){
+      const int start = k, precision = start+count;
+      return (p*q.inv(precision)).pred(precision) >> start;
+    }
+
+    // The low d terms of the quotient of x^k by x^d*q(1/x) are a
+    // reversed slice of 1/q. They determine x^k mod the characteristic polynomial.
+    FPS quotient = reciprocal_window(q,k-d,d);
+    FPS reduced = quotient.reversed()*q.rev().pred(d);
+    reduced.resize(d);
+    reduced *= T(-1);
+
+    const int take = min(d,count), precision = d+take-1;
+    FPS inverse = q.inv(max(precision,count));
+    FPS prefix = (p*inverse.pre(precision)).pred(precision);
+    FPS result(internal::fps_middle_product<T>(std::move(prefix),std::move(reduced.reversed())));
+    if(count <= d) return result;
+    (result *= q).pred(d);
+    (result *= inverse).pred(count);
+    return result;
+  }
+
+  static T kth_term_of_linear_recurrence(const FPS& samples, long long k){
+    assert(k >= 0);
+    if(k < (long long)samples.size()) return samples[k];
+    FPS recurrence = find_linear_recurrence(samples);
+    return kth_term_of_linear_recurrence(samples.pre(recurrence.size()),recurrence,k);
+  }
+
+  static FPS linear_recurrence_terms(const FPS& samples, long long k, int count){
+    assert(k >= 0 && count >= 0);
+    if(count == 0) return {};
+    const long long n = samples.size();
+    if(k < n && count <= n-k) return FPS(samples.begin()+k,samples.begin()+k+count);
+    FPS recurrence = find_linear_recurrence(samples);
+    return linear_recurrence_terms(samples.pre(recurrence.size()),recurrence,k,count);
   }
 
   static pair<Mat, T> GCD_Mat(const FPS& f, const FPS& g){
