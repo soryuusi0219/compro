@@ -8,11 +8,11 @@
 
 ## インターフェース
 
-`ReversibleMonoid<T,op,e,Action=NoTreeAction,Counted=true,Indexed=false,Extra=EmptyTreeState>` を使用します。
+`ReversibleMonoid<T,op,e,Action=NoTreeAction,Counted=true,Indexed=false,Extra=EmptyTreeState,Reversible=true>` を使用します。
 
-Nodeはpp/lp/rp、value、lsum（inorder積）、rsum（逆inorder積）、revを保持します。Countedならcount.size、Indexedならlabel.indexを追加します。Extraは追加の平衡化情報や固定キー用で、extraとして保持します。Node(value,extra)で明示的な追加状態を渡せます。不要な状態にはno_unique_addressを用い、通常版にダミーの遅延タグを置きません。
+Nodeはpp/lp/rp、value、lsum（inorder積）、rsum（逆inorder積）を保持します。Reversibleなら反転フラグrev、Countedならcount.size、Indexedならlabel.indexを追加します。Extraは追加の平衡化情報やキー用で、extraとして保持します。Node(value,extra)で明示的な追加状態を渡せます。反転しない固定キー型はReversible=falseを指定し、反転フラグと伝播処理を省きます。逆順集約はどちらでも使用できます。
 
-Policyはvalue_type/action_type/Node、identity、pull/push/toggle、size/local_size（Countedの場合）を提供します。priorityを持つExtraにはpriority(node)も提供します。
+Policyはvalue_type/action_type/Node、identity/combine、pull/push、toggle（Reversibleの場合）、size/local_size（Countedの場合）を提供します。priorityを持つExtraにはpriority(node)も提供します。
 
 - `TreeAction<F,mapping,composition,id>`：action_type=F。composition(f,g)はf∘gです。mapping(f,x)は値と順逆集約へ適用します。
 - `NoTreeAction`：作用なし。applyは公開されません。

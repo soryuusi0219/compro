@@ -12,11 +12,12 @@
 
 順位・split/join/buildのBackend契約はSequenceBaseと共通です。キー探索は経路をpushしてから境界順位を求めます。Backendがaccess_node(root&,node)を提供すれば探索終点を直接アクセスし、なければaccess(root&,rank)を呼びます。splayでは探索終点をsplayするため償却計算量を維持します。
 
-meldは小さい方の中央値キーで両方を3分割し、左右を再帰的に統合します。同値部分はMultiなら連結先・消費元の順に結合し、重複不可なら連結先を残します。1段ごとに小さい側のサイズが半分以下となり、再帰深さを抑えます。所有権の異なる入力は、先に連結先arenaへ移送します。
+treapの重複可meldは優先度の高い根で相手を分割し、左右を併合します。残りの型では小さい方の中央値キーで両方を3分割し、左右を統合します。どちらも同値キーでは連結先・消費元の順を保ち、重複不可なら連結先を残します。所有権の異なる入力は、先に連結先arenaへ移送します。
 
 ## 計算量
 
-公開型のreferenceに従います。同一arenaのmeldは保守的にm=min(N,M)に対して O(m log(N+M+1))（splayは償却、treapは期待）、再帰深さ O(log(m+1))。
+公開型のreferenceに従います。大きい方のサイズをn、小さい方をmとします。treapの重複可meldは期待 O(m log(1+n/m))。中央値によるmeldは保守的に O(m log(n+m+1))（splayは償却、treapは期待）で、再帰深さ O(log(m+1))。
+優先度による併合の参考文献は [Fast Set Operations Using Treaps](https://www.cs.cmu.edu/afs/cs.cmu.edu/project/scandal/public/papers/treaps-spaa98.html) です。
 
 ## 依存関係
 

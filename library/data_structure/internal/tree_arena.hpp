@@ -1,5 +1,6 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/internal/tree_arena.hpp
 #pragma once
+#include <cassert>
 #include <memory>
 #include <unordered_map>
 #include <utility>
@@ -74,11 +75,44 @@ public:
     int index = Ops::size(p->lp);
     for(Node* q = p; q->pp; q = q->pp)
       if(q == q->pp->rp) index += Ops::local_size(q->pp)+Ops::size(q->pp->lp);
-    if constexpr(requires {engine.access_node(root,p);}) engine.access_node(root,p);
+    if constexpr(requires {engine.access_pushed(root,p);}) engine.access_pushed(root,p);
+    else if constexpr(requires {engine.access_node(root,p);}) engine.access_node(root,p);
     else engine.access(root,index);
     return index;
   }
   int index_of(Node*& root, const NodeRef& ref){return index_of_node(root,node_of(ref));}
+  void insert_at(Node*& root, int k, Node* node){
+    if constexpr(requires {engine.insert_at(root,k,node);}) engine.insert_at(root,k,node);
+    else {
+      auto [a,b] = engine.split(root,k);
+      root = engine.join(engine.join(a,node),b);
+    }
+  }
+  void erase_at(Node*& root, int k){
+    if constexpr(requires {engine.erase_at(root,k);}) release(engine.erase_at(root,k));
+    else {
+      auto [a,bc] = engine.split(root,k);
+      auto [b,c] = engine.split(bc,1);
+      release(b);
+      root = engine.join(a,c);
+    }
+  }
+  template<bool Reverse> auto prod(Node*& root, int l, int r){
+    assert(0 <= l && l < r && r <= Ops::size(root));
+    auto sum = [](Node* p){return Reverse ? p->rsum : p->lsum;};
+    auto local = [](Node* p,int,int){return p->value;};
+    if constexpr(requires {engine.template with_range<false>(root,l,r,sum);}){
+      return engine.template with_range<false>(root,l,r,sum);
+    }else if constexpr(requires {engine.template fold_range<Reverse>(root,l,r,local,Ops::combine);}){
+      return engine.template fold_range<Reverse>(root,l,r,local,Ops::combine);
+    }else{
+      auto [a,bc] = engine.split(root,l);
+      auto [b,c] = engine.split(bc,r-l);
+      auto result = sum(b);
+      root = engine.join(engine.join(a,b),c);
+      return result;
+    }
+  }
   template<class Function> static void visit_in_order(Node* p, Function visit, bool reverse = false){
     std::vector<Node*> stack;
     while(p || !stack.empty()){

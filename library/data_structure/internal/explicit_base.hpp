@@ -22,16 +22,15 @@ struct ExplicitExtra : Balance {
   explicit ExplicitExtra(const Key& k) : key(k){}
 };
 template<class Key, class S, auto op, auto e, class Action, class Balance, class KeyAction = NoTreeAction>
-struct ExplicitMonoid : ReversibleMonoid<S,op,e,Action,true,false,ExplicitExtra<Key,Balance,KeyAction>> {
+struct ExplicitMonoid : ReversibleMonoid<S,op,e,Action,true,false,ExplicitExtra<Key,Balance,KeyAction>,KeyAction::enabled> {
   using Extra = ExplicitExtra<Key,Balance,KeyAction>;
-  using Base = ReversibleMonoid<S,op,e,Action,true,false,Extra>;
+  using Base = ReversibleMonoid<S,op,e,Action,true,false,Extra,KeyAction::enabled>;
   using Node = typename Base::Node;
   using ValueAction = Action;
   using KeyUpdate = KeyAction;
   using key_action_type = typename KeyAction::value_type;
   static constexpr bool has_key_action = KeyAction::enabled;
   static const Key& key(const Node* p){return p->extra.key;}
-  static S combine(const S& a, const S& b){return op(a,b);}
   static void map_keys(Node* p, const key_action_type& f) requires has_key_action {
     if(!p) return;
     p->extra.key = KeyAction::map(f,p->extra.key);
@@ -85,7 +84,8 @@ class ExplicitSet {
     }
     // Splaying the last visited node is essential for amortized search bounds.
     if(last){
-      if constexpr(requires {arena->engine.access_node(tree,last);}) arena->engine.access_node(tree,last);
+      if constexpr(requires {arena->engine.access_pushed(tree,last);}) arena->engine.access_pushed(tree,last);
+      else if constexpr(requires {arena->engine.access_node(tree,last);}) arena->engine.access_node(tree,last);
       else arena->engine.access(tree,last_rank);
     }
     return passed;
@@ -107,6 +107,8 @@ class ExplicitSet {
   template<class Function> auto range(int l, int r, Function function){
     assert(0 <= l && l <= r && r <= size());
     if(l == r){Node* empty = nullptr; return function(empty);}
+    if constexpr(requires {arena->engine.with_range(root,l,r,function);})
+      return arena->engine.with_range(root,l,r,function);
     auto [a,bc] = arena->engine.split(root,l);
     auto [b,c] = arena->engine.split(bc,r-l);
     auto result = function(b);
@@ -126,6 +128,13 @@ class ExplicitSet {
     }
   }
   std::tuple<Node*,Node*,Node*> partition(Node* p, const Key& key){
+    auto before = [&](Node* node){return less(Ops::key(node),key);};
+    auto through = [&](Node* node){return !less(key,Ops::key(node));};
+    if constexpr(requires {arena->engine.split_prefix(p,before);}){
+      auto [a,bc] = arena->engine.split_prefix(p,before);
+      auto [b,c] = arena->engine.split_prefix(bc,through);
+      return {a,b,c};
+    }
     int l = bound(p,key,false), r = bound(p,key,true);
     auto [a,bc] = arena->engine.split(p,l);
     auto [b,c] = arena->engine.split(bc,r-l);
@@ -133,6 +142,9 @@ class ExplicitSet {
   }
   Node* unite(Node* a, Node* b){
     if(!a || !b) return a ? a : b;
+    auto compare = [&](Node* x, Node* y){return less(Ops::key(x),Ops::key(y));};
+    if constexpr(Multi && requires {arena->engine.meld_multi(a,b,compare);})
+      return arena->engine.meld_multi(a,b,compare);
     Node*& smaller = Ops::size(a) <= Ops::size(b) ? a : b;
     Key pivot = Ops::key(arena->engine.access(smaller,Ops::size(smaller)/2));
     auto [al,ae,ar] = partition(a,pivot);
@@ -174,8 +186,7 @@ public:
         if(!less(key,Ops::key(p))) return false;
       }
     }
-    auto [a,b] = arena->engine.split(root,pos);
-    root = arena->engine.join(arena->engine.join(a,make_node(key,value)),b);
+    arena->insert_at(root,pos,make_node(key,value));
     return true;
   }
   bool insert(const Key& key) requires std::is_constructible_v<S,Key> {return insert(key,S(key));}
@@ -193,11 +204,17 @@ public:
   int erase_range(int l, int r){
     return range(l,r,[&](Node*& p){release_tree(p); p = nullptr; return r-l;});
   }
-  void erase_at(int i){assert(0 <= i && i < size()); erase_range(i,i+1);}
+  void erase_at(int i){assert(0 <= i && i < size()); arena->erase_at(root,i);}
   bool erase(const Key& key){int l = lower_bound(key), r = upper_bound(key); if(l == r) return false; erase_at(l); return true;}
   int erase_all(const Key& key){int l = lower_bound(key), r = upper_bound(key); return erase_range(l,r);}
-  S prod(int l, int r){return range(l,r,[](Node* p){return p ? p->lsum : Ops::identity();});}
-  S prodrev(int l, int r){return range(l,r,[](Node* p){return p ? p->rsum : Ops::identity();});}
+  S prod(int l, int r){
+    assert(0 <= l && l <= r && r <= size());
+    return l == r ? Ops::identity() : arena->template prod<false>(root,l,r);
+  }
+  S prodrev(int l, int r){
+    assert(0 <= l && l <= r && r <= size());
+    return l == r ? Ops::identity() : arena->template prod<true>(root,l,r);
+  }
   S prod_all() const {return root ? root->lsum : Ops::identity();}
   S prodrev_all() const {return root ? root->rsum : Ops::identity();}
   S prod_key(const Key& low, const Key& high){assert(!less(high,low)); int l = lower_bound(low), r = lower_bound(high); return prod(l,r);}

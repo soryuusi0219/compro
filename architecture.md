@@ -79,6 +79,9 @@ LazyMonotone版はキー作用と値作用のタグを独立に持ち、既存�
 - [LinkCutBase](docs/reference/data_structure/internal/link_cut_base.md)：preferred edgeとpath-parentを管理するLCT操作。固定配列を所有します。
 
 追加の平衡化方式には、`prepare`、`access(root&,k)`、`split`、`join`、`build` を実装します。
+探索済み経路を使うアクセス、単要素の挿入・削除、区間への直接アクセスはBackendで提供できます。
+Sortableの区間集約では区間構成を維持し、完全に含まれる部分木の保存済み集約を使います。
+実装と計測条件は [平衡二分木の性能比較](docs/reference/data_structure/internal/sequence_base.md#区間処理meldの高速化) を参照してください。
 ノードの追加情報はPolicyのExtraに保持でき、既存の列操作を複製する必要はありません。
 LCTの補助木にはpath-parentを維持するsplay相当の契約が必要です。
 

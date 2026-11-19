@@ -28,6 +28,8 @@ class SequenceBase {
   template<class Function> auto range(int l, int r, Function function){
     assert(0 <= l && l <= r && r <= size());
     if(l == r) return function(nullptr);
+    if constexpr(requires {arena->engine.with_range(root,l,r,function);})
+      return arena->engine.with_range(root,l,r,function);
     auto [a,bc] = arena->engine.split(root,l);
     auto [b,c] = arena->engine.split(bc,r-l);
     auto result = function(b);
@@ -49,15 +51,11 @@ public:
   std::size_t allocated_nodes() const {return arena ? arena->pool.size() : 0;}
   void insert_at(int k, T value){
     assert(0 <= k && k <= size());
-    auto [a,b] = arena->engine.split(root,k);
-    root = arena->engine.join(arena->engine.join(a,make_node(value)),b);
+    arena->insert_at(root,k,make_node(value));
   }
   void erase_at(int k){
     assert(0 <= k && k < size());
-    auto [a,bc] = arena->engine.split(root,k);
-    auto [b,c] = arena->engine.split(bc,1);
-    arena->release(b);
-    root = arena->engine.join(a,c);
+    arena->erase_at(root,k);
   }
   T get(int k){assert(0 <= k && k < size()); return arena->engine.access(root,k)->value;}
   [[nodiscard]] NodeRef ref_at(int k){
@@ -76,8 +74,14 @@ public:
   void apply(int l, int r, typename Ops::action_type f) requires Ops::has_action {
     range(l,r,[&](Node* p){Ops::apply(p,f); return 0;});
   }
-  T prod(int l, int r){return range(l,r,[](Node* p){return p ? p->lsum : Ops::identity();});}
-  T prodrev(int l, int r){return range(l,r,[](Node* p){return p ? p->rsum : Ops::identity();});}
+  T prod(int l, int r){
+    assert(0 <= l && l <= r && r <= size());
+    return l == r ? Ops::identity() : arena->template prod<false>(root,l,r);
+  }
+  T prodrev(int l, int r){
+    assert(0 <= l && l <= r && r <= size());
+    return l == r ? Ops::identity() : arena->template prod<true>(root,l,r);
+  }
   T prod_all() const {return root ? root->lsum : Ops::identity();}
   T prodrev_all() const {return root ? root->rsum : Ops::identity();}
   [[nodiscard]] std::pair<SequenceBase,SequenceBase> split(int k){

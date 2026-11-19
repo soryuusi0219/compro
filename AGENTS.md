@@ -118,7 +118,8 @@
   全ノードへ未使用の頂点番号・サイズを追加したりしないでください。virtual関数・型消去は用いません。
 - LCTのppは補助木の親またはpath-parentです。根判定は親の子リンクとの対応で行い、
   exposeで外した右の子のppを無条件に消しません。回転では関連タグをpush済みにし、構成が変わる
-  2ノードを下からpullします。path-parentを通常の祖先としてpullしないでください。
+  2ノードを下からpullします。連続する2回の回転では、次の回転で更新する上側のpullを省けます。
+  path-parentを通常の祖先としてpullしないでください。
 - 通常の列は1ノード1要素、DynamicBitVectorは1ノード複数bitです。重み付き探索で返すoffsetと、
   ノード間のsplit境界を区別します。ブロック内部の分割はpayload側が担当します。
 - 構築のO(N)を維持してください。Cartesian tree構築はbuild_cartesianを共有し、

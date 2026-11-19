@@ -123,23 +123,29 @@ class SortableSequence {
   Node* make_element(const Key& key, const S& value){
     return make_block(arena->entries.make_node(key,value));
   }
+  std::pair<Node*,Node*> cut_block(Node* block, int offset){
+    int length = Blocks::local_size(block);
+    auto [first,second] = arena->entries.arena->engine.split(
+        block->inner,block->descending ? length-offset : offset);
+    if(block->descending) std::swap(first,second);
+    attach(block,first);
+    return {block,make_block(second,block->descending)};
+  }
   std::pair<Node*,Node*> split_nodes(Node* tree, int k){
+    auto& outer = arena->blocks.engine;
+    auto cut = [&](Node* block,int offset){return cut_block(block,offset);};
+    if constexpr(requires {outer.split_weighted(tree,k,cut);}) return outer.split_weighted(tree,k,cut);
     if(k == 0) return {nullptr,tree};
     if(k == Blocks::size(tree)) return {tree,nullptr};
     auto [p,offset] = Links::locate(tree,k);
-    auto& outer = arena->blocks.engine;
     if(offset == 0) return outer.split(tree,k);
     const int length = Blocks::local_size(p);
     auto [a,bc] = outer.split(tree,k-offset);
     auto [block,c] = outer.split(bc,length);
     Blocks::push(block);
-    auto [first,second] = arena->entries.arena->engine.split(
-        block->inner,block->descending ? length-offset : offset);
-    if(block->descending) std::swap(first,second);
-    attach(block,first);
-    Blocks::pull(block);
-    auto* tail = make_block(second,block->descending);
-    return {outer.join(a,block),outer.join(tail,c)};
+    auto [first,second] = cut(block,offset);
+    Blocks::pull(first);
+    return {outer.join(a,first),outer.join(second,c)};
   }
   template<class Function> auto range(int l, int r, Function function){
     assert(0 <= l && l <= r && r <= size());
@@ -154,7 +160,9 @@ class SortableSequence {
   std::pair<Node*,Inner*> access(int i){
     assert(0 <= i && i < size());
     auto [block,offset] = Links::locate(root,i);
-    arena->blocks.engine.access_node(root,block);
+    auto& engine = arena->blocks.engine;
+    if constexpr(requires {engine.access_pushed(root,block);}) engine.access_pushed(root,block);
+    else engine.access_node(root,block);
     Inner* node = arena->entries.arena->engine.access(
         block->inner,block->descending ? Blocks::local_size(block)-1-offset : offset);
     attach(block,block->inner);
@@ -171,6 +179,23 @@ class SortableSequence {
     const Key& a_min = Ops::key(engine.access(a,0));
     if(!entries.less(a_min,b_max)) return engine.join(b,a);
     return entries.unite(a,b);
+  }
+  template<bool Reverse> S fold_block(Node* block, int l, int r){
+    int n = Blocks::local_size(block);
+    bool backward = Reverse != block->descending;
+    if(l == 0 && r == n) return backward ? block->inner->rsum : block->inner->lsum;
+    if(block->descending){int start = n-r; r = n-l; l = start;}
+    auto& storage = *arena->entries.arena;
+    auto result = backward ? storage.template prod<true>(block->inner,l,r)
+                           : storage.template prod<false>(block->inner,l,r);
+    attach(block,block->inner);
+    return result;
+  }
+  template<bool Reverse> S fold(int l, int r){
+    assert(0 <= l && l <= r && r <= size());
+    if(l == r) return Ops::identity();
+    auto local = [&](Node* p,int from,int to){return fold_block<Reverse>(p,from,to);};
+    return arena->blocks.engine.template fold_range<Reverse>(root,l,r,local,Ops::combine);
   }
   template<class Function> static void visit_elements(Node* tree, Function visit){
     Outer::visit_in_order(tree,[&](Node* p){
@@ -286,8 +311,8 @@ public:
   void apply_keys(int l, int r, typename Ops::key_action_type f, bool decreasing = false) requires Ops::has_key_action {
     range(l,r,[&](Node* p){Blocks::apply_keys(p,f,decreasing); return 0;});
   }
-  S prod(int l, int r){return range(l,r,[](Node* p){return p ? p->lsum : Ops::identity();});}
-  S prodrev(int l, int r){return range(l,r,[](Node* p){return p ? p->rsum : Ops::identity();});}
+  S prod(int l, int r){return fold<false>(l,r);}
+  S prodrev(int l, int r){return fold<true>(l,r);}
   S prod_all() const {return root ? root->lsum : Ops::identity();}
   S prodrev_all() const {return root ? root->rsum : Ops::identity();}
   [[nodiscard]] std::pair<SortableSequence,SortableSequence> split(int k){
