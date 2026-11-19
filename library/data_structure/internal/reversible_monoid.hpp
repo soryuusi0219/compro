@@ -22,6 +22,7 @@ struct TreeAction {
   template<class T> static T map(F f, T x){return mapping(f,x);}
 };
 struct EmptyTreeState {};
+struct NoTreeReverse {};
 template<bool Enabled> struct TreeCount {};
 template<> struct TreeCount<true> {int size = 1;};
 template<bool Enabled> struct TreeIndex {};
@@ -29,7 +30,8 @@ template<> struct TreeIndex<true> {int index = -1;};
 
 // Node layout and augmentation are independent of balancing and allocation.
 template<class T, auto op, auto e, class Action = NoTreeAction,
-         bool Counted = true, bool Indexed = false, class Extra = EmptyTreeState>
+         bool Counted = true, bool Indexed = false, class Extra = EmptyTreeState,
+         bool Reversible = true>
 struct ReversibleMonoid {
   static_assert(std::is_invocable_r_v<T,decltype(op),T,T>);
   static_assert(std::is_invocable_r_v<T,decltype(e)>);
@@ -41,7 +43,7 @@ struct ReversibleMonoid {
     Node* lp = nullptr;
     Node* rp = nullptr;
     T value, lsum, rsum;
-    bool rev = false;
+    [[no_unique_address]] std::conditional_t<Reversible,bool,NoTreeReverse> rev{};
     [[no_unique_address]] TreeCount<Counted> count;
     [[no_unique_address]] TreeIndex<Indexed> label;
     [[no_unique_address]] typename Action::State action;
@@ -50,6 +52,7 @@ struct ReversibleMonoid {
     Node(const T& x, Extra state) : value(x), lsum(x), rsum(x), extra(std::move(state)){}
   };
   static T identity(){return e();}
+  static T combine(const T& a, const T& b){return op(a,b);}
   static int size(const Node* p) requires Counted {return p ? p->count.size : 0;}
   static int local_size(const Node*) requires Counted {return 1;}
   static auto& priority(Node* p) requires requires {p->extra.priority;} {return p->extra.priority;}
@@ -59,7 +62,7 @@ struct ReversibleMonoid {
     if(p->lp){p->lsum = op(p->lp->lsum,p->lsum); p->rsum = op(p->rsum,p->lp->rsum);}
     if(p->rp){p->lsum = op(p->lsum,p->rp->lsum); p->rsum = op(p->rp->rsum,p->rsum);}
   }
-  static void toggle(Node* p){
+  static void toggle(Node* p) requires Reversible {
     if(!p) return;
     std::swap(p->lp,p->rp); std::swap(p->lsum,p->rsum); p->rev ^= true;
   }
@@ -77,7 +80,8 @@ struct ReversibleMonoid {
         p->action.lazy = Action::identity();
       }
     }
-    if(p->rev){toggle(p->lp); toggle(p->rp); p->rev = false;}
+    if constexpr(Reversible)
+      if(p->rev){toggle(p->lp); toggle(p->rp); p->rev = false;}
   }
 };
 

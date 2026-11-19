@@ -10,7 +10,7 @@ template<class Node, class Ops>
 struct BinaryTreeOps {
   static bool is_root(Node* p){return !p->pp || (p->pp->lp != p && p->pp->rp != p);}
   // Ancestor tags must already be pushed. A path-parent is preserved.
-  static void rotate(Node* p){
+  template<bool PullTop = true> static void rotate(Node* p){
     Node* q = p->pp;
     Node* r = q->pp;
     if(q->lp == p){
@@ -30,7 +30,7 @@ struct BinaryTreeOps {
       else if(r->rp == q) r->rp = p;
     }
     Ops::pull(q);
-    Ops::pull(p);
+    if constexpr(PullTop) Ops::pull(p);
   }
   // End insertion is supported. The result includes an offset within a block.
   static std::pair<Node*,int> locate(Node* p, int k, bool allow_end = false){

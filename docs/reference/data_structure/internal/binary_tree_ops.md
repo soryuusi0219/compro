@@ -12,6 +12,7 @@
 
 - `is_root(p)`：pが補助木の根か。pは非null。
 - `rotate(p)`：親との回転。pには補助木内の親が必要です。関連する祖先のタグは事前にpushしてください。接続が変わる2ノードを下からpullし、祖父はpullしません。path-parentは引き継ぎます。高さなど構造依存の情報を祖先へ再計算する処理はBackendが担当します。
+- `rotate<false>(p)`：直後の回転で更新する上側ノードのpullを省きます。連続回転の途中から集約を読まないでください。
 - `locate(root,k,allow_end=false)`：論理位置kを含む `{Node*,ブロック内offset}`。Ops::size(p)とlocal_size(p)で重みを取得します。size(nullptr)=0、非負の重みを要求します。探索経路はpushします。
 
 locateは非空木に対して `0 <= k < size(root)`。allow_end=trueならk=size(root)も許し、末尾ノードの末尾offsetを返します。呼出側はノード内の分割・挿入を担当します。

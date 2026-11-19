@@ -10,6 +10,7 @@
 #include <type_traits>
 
 #include "internal_math.hpp"
+#include "modint_traits.hpp"
 
 namespace soryuusi {
 
@@ -151,6 +152,11 @@ struct static_modint : internal::static_modint_base {
     static constexpr unsigned int umod() { return static_cast<unsigned int>(m); }
     static constexpr bool prime = internal::is_prime<m>;
 };
+
+namespace internal {
+template <int m, std::enable_if_t<(1 <= m)>* E>
+inline constexpr bool has_native_ntt_residue<static_modint<m, E>> = true;
+}
 
 // ACL-compatible 32-bit dynamic modint. Multiplication uses Barrett reduction.
 template <int id>

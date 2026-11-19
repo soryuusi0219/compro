@@ -1,0 +1,5 @@
+{
+  "name": "prefix_sum_of_polynomial",
+  "problem": "polynomial/prefix_sum_of_polynomial",
+  "source": "verify/library_checker/polynomial/prefix_sum_of_polynomial.cpp"
+}

@@ -16,7 +16,6 @@
 #include "library/data_structure/lazy_link_cut.hpp"
 #include "library/data_structure/link_cut.hpp"
 #include "library/data_structure/splay_tree.hpp"
-#include "library/data_structure/splay_tree_lazy.hpp"
 #include "library/data_structure/treap.hpp"
 
 namespace {

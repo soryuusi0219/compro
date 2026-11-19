@@ -4,7 +4,9 @@
 
 ## 機能・前提条件
 
-modintの逆元・階乗・逆階乗、順列・組合せ・Catalan・格子路。表を必要に応じ拡張する。必要な整数が可逆であること。
+modintの逆元・階乗・逆階乗、順列・組合せ・Catalan・格子路。必要な整数が可逆であること。
+
+表は法ごとに共有し、必要に応じて最大の添字まで拡張する。同じ法を使う別のオブジェクトや静的・動的modint型からも同じ表を参照する。動的modintは呼び出し時の法を使うため、法を戻すと以前の表を再利用する。表はプログラム終了まで保持する。複数スレッドで使う場合、表の初期化・拡張や法の切り替えは、読み取りも含めて呼び出し側で同期する。
 
 ## インターフェース
 
@@ -43,12 +45,14 @@ T Narayana(int n, int k);
 
 ## 計算量
 
-最大参照Nまで合計 O(N) 前計算・空間。表を使う標準問い合わせ O(1)、Path_between等の和は項数に依存。
+法ごとの最大参照を $N_p$ として合計 $O(\sum_p(N_p+1))$ の前計算時間・領域。現在の表を使う標準問い合わせは $O(1)$。型が初めて表を参照するときや、動的modintの法を切り替えたときは、保持している法の数を $D$ として $O(\log(D+1))$ の検索が加わる。`Path_between` 等の和は項数に依存する。
 
 ## 依存関係
 
-標準ライブラリのみ。
+- [internal_math.hpp](internal_math.md)
+- [modint_traits.hpp](modint_traits.md)
 
 ## Verify・利用例
 
 - [`library_checker/binomial_coefficient_prime_mod`](../../../verify/library_checker/enumerative_combinatorics/binomial_coefficient_prime_mod.cpp)
+- [`unit/combinatorics`](../../../verify/unit/combinatorics.cpp)

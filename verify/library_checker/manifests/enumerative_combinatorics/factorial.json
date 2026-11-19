@@ -1,0 +1,5 @@
+{
+  "name": "factorial",
+  "problem": "enumerative_combinatorics/factorial",
+  "source": "verify/library_checker/enumerative_combinatorics/factorial.cpp"
+}

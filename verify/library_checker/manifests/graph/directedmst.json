@@ -1,0 +1,5 @@
+{
+  "name": "directedmst",
+  "problem": "graph/directedmst",
+  "source": "verify/library_checker/graph/directedmst.cpp"
+}

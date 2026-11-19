@@ -4,7 +4,10 @@
 #include <bit>
 #include <cassert>
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <numeric>
+#include <optional>
 #include <queue>
 #include <random>
 #include <tuple>
@@ -13,11 +16,14 @@
 #include <vector>
 
 #include "convolution.hpp"
+#include "internal_fps_composition.hpp"
+#include "internal_math.hpp"
 #include "modint_traits.hpp"
 #include "modint_factorials.hpp"
 #include "convolution_mod.hpp"
 #include "convolution_semi_online.hpp"
 #include "convolution_online.hpp"
+#include "ntt.hpp"
 
 namespace soryuusi {
 
@@ -72,14 +78,19 @@ struct FormalPowerSeries : vector<T>{
   }
   friend FPS operator*(const FPS& x, const FPS& y) {
     if constexpr (is_ntt_friendly_v<T>) {
+      if(&x == &y) return soryuusi::convolution_square(x);
       return soryuusi::convolution(x,y);
     }else{
-      return convolution_mod(x,y);
+      return internal::fps_product(x,y);
     }
   }
   friend FPS& operator*=(FPS& x, const FPS& y) {
     if constexpr (is_ntt_friendly_v<T>) {
-      if(&x == &y) return x = x * y;
+      if(&x == &y){
+        vector<T> values;
+        values.swap(x);
+        return x = FPS(soryuusi::convolution_square(std::move(values)));
+      }
       vector<T> lhs;
       lhs.swap(x);
       vector<T> rhs(y.begin(), y.end());
@@ -98,33 +109,44 @@ struct FormalPowerSeries : vector<T>{
     if(N == 0) return {};
     assert(!this->empty() && this->front() != T(0));
     FPS g = {this->front().inv()};
+    g.reserve(N);
+    for(int i = 1; i < min(32,N); ++i){
+      T sum = 0;
+      for(int j = 1; j <= min<int>(i,this->size()-1); ++j) sum += (*this)[j]*g[i-j];
+      g.push_back(-sum*g[0]);
+    }
     if constexpr (is_ntt_friendly_v<T>) {
-      while((int)g.size() < N) {
+      using NTT = NTTEngine<T>;
+      while((int)g.size() < N && (int)g.size() <= (1 << (NTT::rank2-1))) {
         const int k = g.size();
         const int z = k << 1;
         FPS f_ntt(this->begin(), this->begin() + min<int>(this->size(), z));
         f_ntt.resize(z);
         FPS g_ntt(g);
         g_ntt.resize(z);
-        NTTEngine<T>::ntt(f_ntt);
-        NTTEngine<T>::ntt(g_ntt);
+        NTT::ntt(f_ntt);
+        NTT::ntt(g_ntt);
         for(int i = 0; i < z; ++i) f_ntt[i] *= g_ntt[i];
-        NTTEngine<T>::intt(f_ntt);
+        NTT::intt_unnormalized(f_ntt);
+        const T scale = -NTT::inverse_size(z);
         fill(f_ntt.begin(), f_ntt.begin() + k, T(0));
-        for(int i = k; i < z; ++i) f_ntt[i] = -f_ntt[i];
-        NTTEngine<T>::ntt(f_ntt);
+        for(int i = k; i < z; ++i) f_ntt[i] *= scale;
+        NTT::ntt(f_ntt);
         for(int i = 0; i < z; ++i) f_ntt[i] *= g_ntt[i];
-        NTTEngine<T>::intt(f_ntt);
+        NTT::intt_unnormalized(f_ntt);
         const int next = min(z, N);
-        g.reserve(next);
+        NTT::normalize(f_ntt.begin() + k, f_ntt.begin() + next, z);
         g.insert(g.end(), f_ntt.begin() + k, f_ntt.begin() + next);
       }
-      return g;
-    } else {
-      for(int k = 1; k < N;) k <<= 1, (g *= (-pre(k)*g+2)).pred(k);
-      g.pred(N);
-      return g;
     }
+    while((int)g.size() < N){
+      const int k = g.size(), length = min(2*k,N), count = length-k;
+      FPS error(internal::fps_middle_product<T>(pre(length),g));
+      error >>= 1;  // Drop coefficient k-1, which is already known.
+      error *= g.pre(count);
+      for(int i = 0; i < count; ++i) g.push_back(-error[i]);
+    }
+    return g;
   }
   friend FPS& operator>>=(FPS& x, int k){
     if((int)x.size() < k) x.clear();
@@ -139,7 +161,7 @@ struct FormalPowerSeries : vector<T>{
   friend FPS operator<<(FPS x, int k){x <<= k; return x;}
   T eval(T x) const {
     T ans = 0;
-    for(int i = this->size()-1; i >= 0; --i) (ans *= x) += (*this)[i];
+    for(auto it = this->rbegin(); it != this->rend(); ++it) (ans *= x) += *it;
     return ans;
   }
   FPS& shrink() {while(this->size() && this->back() == 0) this->pop_back(); return *this;}
@@ -159,6 +181,7 @@ struct FormalPowerSeries : vector<T>{
     return res;
   }
   FPS& diffed() {
+    if(this->empty()) return *this;
     for(int i = 0; i < (int)this->size() - 1; ++i) (*this)[i] = (*this)[i+1] * T(i+1);
     this->pop_back();
     return *this;
@@ -174,7 +197,7 @@ struct FormalPowerSeries : vector<T>{
   FPS log(int N = -1) const {
     assert(this->empty() || this->front() == 1);
     if(N == -1) N = this->size();
-    if(N == 0) return {};
+    if(N <= 1) return FPS(N,0);
     FPS res(this->begin(), this->begin() + min((int)this->size(), N));
     res.diffed();
     res *= inv(N-1);
@@ -184,16 +207,77 @@ struct FormalPowerSeries : vector<T>{
   FPS exp(int N = -1) const {
     assert(this->empty() || this->front() == 0);
     if(N == -1) N = this->size();
+    if(N == 0) return {};
+    if(N == 1) return FPS{T(1)};
+    if constexpr (requires {factorials.precompute(N-1);}) factorials.precompute(N-1);
     FPS g = {1};
-    for(int k = 1; k < N; k <<= 1) {
-      FPS g2 = g*((pre(k<<1)-g.log(k<<1)) >> k);
-      g.insert(g.end(), g2.begin(), g2.begin() + k);
+    g.reserve(N);
+    const int input_size = min<int>(N,this->size());
+    FPS derivative(input_size > 0 ? input_size-1 : 0);
+    for(int i = 1; i < input_size; ++i) derivative[i-1] = (*this)[i]*T(i);
+    for(int i = 1; i < min(32,N); ++i){
+      T sum = 0;
+      for(int j = 0; j < min<int>(i,derivative.size()); ++j) sum += derivative[j]*g[i-1-j];
+      g.push_back(sum*factorials.mint_inv(i));
+    }
+    if constexpr (is_ntt_friendly_v<T>){
+      using NTT = NTTEngine<T>;
+      if((int)g.size() < N && N <= (1 << NTT::rank2)){
+        FPS reciprocal = g.inv();
+        FPS a, b, correction, error;
+        while((int)g.size() < N){
+          const int k = g.size(), z = 2*k, length = min(z,N), count = length-k;
+          const T scale = NTT::inverse_size(z), square_scale = scale*scale;
+          a.assign(g.begin(),g.end()); a.resize(z);
+          b.assign(reciprocal.begin(),reciprocal.end()); b.resize(z);
+          NTT::ntt(a); NTT::ntt(b);
+
+          error.assign(derivative.begin(),derivative.begin()+min<int>(length-1,derivative.size()));
+          error.resize(z);
+          NTT::ntt(error);
+          for(int i = 0; i < z; ++i) error[i] *= a[i];
+          NTT::intt_unnormalized(error);
+          // The cyclic wrap is below degree k-1, where f' * g - g' vanishes.
+          std::copy_n(error.begin()+k-1,count,error.begin());
+          fill(error.begin()+count,error.end(),T(0));
+          NTT::ntt(error);
+          for(int i = 0; i < z; ++i) error[i] *= b[i];
+          NTT::intt_unnormalized(error);
+          for(int i = 0; i < count; ++i) error[i] *= square_scale*factorials.mint_inv(k+i);
+          fill(error.begin()+count,error.end(),T(0));
+          NTT::ntt(error);
+
+          if(length < N){
+            correction.resize(z);
+            for(int i = 0; i < z; ++i) correction[i] = a[i]*b[i];
+            NTT::intt_unnormalized(correction);
+            for(int i = 0; i < k; ++i) correction[i] = correction[i+k]*scale;
+            fill(correction.begin()+k,correction.end(),T(0));
+            NTT::ntt(correction);
+            for(int i = 0; i < z; ++i) correction[i] = (correction[i]+error[i])*b[i];
+            NTT::intt_unnormalized(correction);
+            for(int i = 0; i < k; ++i) reciprocal.push_back(-correction[i]*scale);
+          }
+          for(int i = 0; i < z; ++i) a[i] *= error[i];
+          NTT::intt_unnormalized(a);
+          NTT::normalize(a.begin(),a.begin()+count,z);
+          g.insert(g.end(),a.begin(),a.begin()+count);
+        }
+        return g;
+      }
+    }
+    while((int)g.size() < N){
+      const int k = g.size(), length = min(2*k,N);
+      FPS g2 = g*((pre(length)-g.log(length)) >> k);
+      g.insert(g.end(),g2.begin(),g2.begin()+length-k);
     }
     g.pred(N);
     return g;
   }
   FPS pow(long long int k, int N = -1) const {
     if(N == -1) N = this->size();
+    assert(k >= 0);
+    if(N == 0) return {};
     if(k == 0){
       FPS res(N,0);
       if(N > 0) res[0] = 1;
@@ -201,7 +285,7 @@ struct FormalPowerSeries : vector<T>{
     }
     int c = 0, n = min((int)this->size(),N);
     while(c < n && (*this)[c] == 0) ++c;
-    if(c == n || c >= (N+k-1)/k) return FPS(N,0);
+    if(c == n || c > (N-1)/k) return FPS(N,0);
     FPS res(this->begin()+c, this->begin()+n);
     T a = res[0];
     FPS lg = (res/=a).log(N-c*k);
@@ -212,12 +296,22 @@ struct FormalPowerSeries : vector<T>{
   }
   FPS sqrt(int N = -1) const {
     if(N == -1) N = this->size();
+    if(N == 0) return {};
+    assert(!this->empty() && this->front() == T(1));
+    if(N == 1) return FPS{T(1)};
     FPS g = {1};
-    for(int k = 1; k < N; k <<= 1) {
-      FPS g2 = ((pre(k<<1)*g.inv(k<<1)) >> k) / 2;
-      g.insert(g.end(), g2.begin(), g2.begin() + k);
+    g.reserve(N);
+    const T half = T(2).inv();
+    while((int)g.size() < N){
+      const int k = g.size(), length = min(2*k,N), count = length-k;
+      FPS square = g*g, error(count);
+      for(int i = 0; i < count; ++i){
+        if(k+i < (int)this->size()) error[i] = (*this)[k+i];
+        if(k+i < (int)square.size()) error[i] -= square[k+i];
+      }
+      error /= g;
+      for(T x : error) g.push_back(x*half);
     }
-    g.resize(N);
     return g;
   }
   FPS sqrt_general(int N = -1) const {
@@ -229,7 +323,7 @@ struct FormalPowerSeries : vector<T>{
     FPS res(this->begin()+c, this->begin()+n);
     T b = modsqrt<T>(res[0]);
     if(b == -1) return {};
-    FPS sq = (res/=res[0]).sqrt().pre(N-c/2);
+    FPS sq = (res/=res[0]).sqrt(N-c/2);
     sq *= b;
     sq <<= c/2;
     return sq;
@@ -237,19 +331,35 @@ struct FormalPowerSeries : vector<T>{
   pair<FPS,FPS> div(FPS g) const {
     FPS f(*this);
     f.shrink(), g.shrink();
+    assert(!g.empty());
     if(f.size() < g.size()) return {{},std::move(f)};
-    FPS q = f.rev() / g.reversed();
-    q.pred(f.size()-g.size()+1).reversed();
-    FPS r = f-g.reversed()*q;
-    r.shrink();
-    return {std::move(q),std::move(r)};
+    const int qsize = f.size()-g.size()+1, rsize = g.size()-1;
+    if(min(qsize,rsize) <= 32){
+      const T inverse = g.back().inv();
+      FPS q(qsize);
+      for(int i = qsize-1; i >= 0; --i){
+        q[i] = f[i+rsize]*inverse;
+        for(int j = 0; j < rsize; ++j) f[i+j] -= q[i]*g[j];
+      }
+      f.resize(rsize);
+      return {std::move(q),std::move(f.shrink())};
+    }
+    FPS q(f.rbegin(),f.rbegin()+qsize);
+    q /= FPS(g.rbegin(),g.rbegin()+min<int>(g.size(),qsize));
+    q.reversed();
+    f.resize(rsize);
+    g.resize(rsize);
+    FPS product = qsize > rsize ? g*FPS(q.begin(),q.begin()+rsize) : g*q;
+    product.resize(rsize);
+    f -= product;
+    return {std::move(q),std::move(f.shrink())};
   }
   vector<T> mult_eval(const vector<T>& p) const {
     int n = p.size();
     if(n == 0) return {};
     vector<T> ans(n);
     constexpr int B = 6;
-    if(n < (1 << (B+1))){
+    if(min<int>(n,this->size()) < (1 << (B+1))){
       for(auto i = 0; i < n; ++i) ans[i] = eval(p[i]);
       return ans;
     }
@@ -257,7 +367,7 @@ struct FormalPowerSeries : vector<T>{
     vector<FPS> r(((n*2-1) >> B)+1);
     for(int i = 0; i < n; ++i) g[i+n] = {-p[i],1};
     for(int i = n-1; i; --i) g[i] = g[i<<1] * g[i<<1|1];
-    r[1] = (*this);
+    r[1] = this->size() >= g[1].size() ? this->div(g[1]).second : *this;
     for(int i = 2; i <= ((n*2-1) >> B); ++i) r[i] = r[i>>1].div(g[i]).second;
     for(int i = 0; i < n; ++i) ans[i] = r[(i+n) >> B].eval(p[i]);
     return ans;
@@ -286,22 +396,23 @@ struct FormalPowerSeries : vector<T>{
     if(m == 0) return {};
     int n = this->size();
     if(n == 0) return vector<T>(m,0);
+    if(r == T(1)) return vector<T>(m,eval(a));
     if(r == 0){
       vector<T> res(m, this->front());
       res[0] = eval(a);
       return res;
     }
-    FPS x(n+m,1), y(n,1);
+    FPS x(n+m-1,1), y(n,1);
     T e = 1, f = 1;
     T ri = r.inv();
-    for(int i = 0; i < n+m-1; ++ i) x[i+1] = e*x[i], e *= r;
+    for(int i = 0; i+1 < (int)x.size(); ++i) x[i+1] = e*x[i], e *= r;
     e = 1;
     for(int i = n-2; i >= 0; --i) y[i] = a*e*y[i+1], e *= ri;
     for(int i = 0; i < n; ++i) y[i] *= (*this)[n-i-1];
-    FPS z = x*y;
+    auto z = internal::fps_middle_product<T>(std::move(x),std::move(y));
     vector<T> res(m);
     e = 1;
-    for(int i = 0; i < m; ++i) res[i] = f*z[n+i-1], f *= e, e *= ri;
+    for(int i = 0; i < m; ++i) res[i] = f*z[i], f *= e, e *= ri;
     return res;
   }
   static FPS interpolation(const vector<T>& x, const vector<T>& y){
@@ -386,8 +497,9 @@ struct FormalPowerSeries : vector<T>{
     return std::move(QR[k]);
   }
   FPS Taylor_shift(T a) const {
-    if(a == 0) return *this;
+    if(a == 0 || this->empty()) return *this;
     int n = this->size();
+    if constexpr (requires {factorials.precompute(n-1);}) factorials.precompute(n-1);
     FPS res(n);
     for(int i = 0; i < n; ++i) res[i] = (*this)[i] * factorials.mint_factorial(i);
     FPS g(n,1);
@@ -567,6 +679,37 @@ struct FormalPowerSeries : vector<T>{
   }
   // return [X^k](F/G)
   static T Bostan_Mori(FPS F, FPS G, long long int k){
+    assert(k >= 0 && !G.empty() && G[0] != 0);
+    if(F.empty()) return 0;
+    if constexpr (is_ntt_friendly_v<T>) {
+      using NTT = NTTEngine<T>;
+      const size_t length = max(F.size(), G.size());
+      if(k > 0 && length > 60 && length <= (size_t{1} << (NTT::rank2 - 1))){
+        const int n = std::bit_ceil(length);
+        F.resize(2*n);
+        G.resize(2*n);
+        NTT::ntt(F);
+        NTT::ntt(G);
+        const T half = NTT::inverse_size(2);
+        while(true){
+          const bool odd = k&1;
+          T phase = half;
+          for(int i = 0; i < n; ++i){
+            const T left = F[2*i]*G[2*i+1], right = F[2*i+1]*G[2*i];
+            F[i] = odd ? (left-right)*phase : (left+right)*half;
+            G[i] = G[2*i]*G[2*i+1];
+            if(odd && i+1 < n) phase *= NTT::inv_rate2(std::countr_zero(~static_cast<unsigned int>(i)));
+          }
+          F.resize(n);
+          G.resize(n);
+          if(!(k >>= 1)) break;
+          NTT::ntt_double(F);
+          NTT::ntt_double(G);
+        }
+        // The inverse-transform constant is the mean of its evaluations.
+        return accumulate(F.begin(),F.end(),T(0)) / accumulate(G.begin(),G.end(),T(0));
+      }
+    }
     FPS G2(G.size());
     while(k){
       if(F.empty()) return 0;
@@ -584,7 +727,7 @@ struct FormalPowerSeries : vector<T>{
       }
       k >>= 1;
     }
-    return F[0]/G[0];
+    return F.empty() ? T(0) : F[0]/G[0];
   }
   //return (cx+d)^n f((ax+b)/(cx+d))
   FPS Mobius_Transform(T a, T b, T c, T d) const {
@@ -669,6 +812,149 @@ struct FormalPowerSeries : vector<T>{
     return res;
   }
 
+  // g(0) = 0 and g(x+1)-g(x) = f(x).
+  FPS prefix_sum() const {
+    const int n = this->size();
+    if(n == 0) return {};
+    if constexpr (requires { factorials.precompute(n); }) factorials.precompute(n);
+    FPS bernoulli(n), reversed(n);
+    for(int i = 0; i < n; ++i){
+      bernoulli[i] = factorials.mint_inv_factorial(i+1);
+      reversed[n-1-i] = (*this)[i]*factorials.mint_factorial(i);
+    }
+    // B(x) = x/(exp(x)-1). Apply B(d/dx), then integrate with zero constant.
+    reversed *= bernoulli.inv();
+    FPS result(n+1);
+    for(int i = 0; i < n; ++i) result[i+1] = reversed[n-1-i]*factorials.mint_inv_factorial(i+1);
+    return result;
+  }
+
+private:
+  static T exponential_sum_constant(const vector<T>& values, T r, T fact, const vector<T>& inverse){
+    // The (d+1)-st difference of r^(-n)*(S(n)-C) is zero.
+    const int n = values.size();
+    T result = 0, prefix = 0, power = 1;
+    for(int i = 0; i < n; ++i){
+      prefix += power*values[i];
+      result = result*(-r)+prefix*inverse[i+1]*inverse[n-1-i];
+      power *= r;
+    }
+    return result*fact*(T(1)-r).inv().pow(n);
+  }
+
+  static T evaluate_consecutive_samples(const vector<T>& values, T x, const vector<T>& inverse){
+    if(static_cast<uint64_t>(x.val()) < values.size()) return values[x.val()];
+    const int n = values.size();
+    vector<T> suffix(n+1,T(1));
+    for(int i = n-1; i >= 0; --i) suffix[i] = suffix[i+1]*(x-T(i));
+    T answer = 0, prefix = 1;
+    for(int i = 0; i < n; ++i){
+      const T term = values[i]*prefix*suffix[i+1]*inverse[i]*inverse[n-1-i];
+      if((n-1-i)&1) answer -= term;
+      else answer += term;
+      prefix *= x-T(i);
+    }
+    return answer;
+  }
+
+  T exponential_sum_from_coefficients(T r, optional<long long> count) const {
+    int n = this->size();
+    while(n > 1 && (*this)[n-1] == T(0)) --n;
+    const bool unweighted = r == T(1);
+    const auto inverse = internal::factorial_and_inverse_factorials<T>(n-1+unweighted).second;
+    FPS denominator(n);
+    if(unweighted){
+      for(int i = 0; i < n; ++i) denominator[i] = inverse[i+1];
+    }else{
+      denominator[0] = T(1)-r;
+      for(int i = 1; i < n; ++i) denominator[i] = -r*inverse[i];
+    }
+    FPS moments = denominator.inv();
+    if(count){
+      // The exponential generating function is (1-r^count*exp(count*x))/(1-r*exp(x)).
+      // At r=1 remove the common factor x before forming the quotient.
+      const T weight = r.pow(*count), step = T(*count);
+      if(weight != T(0)){
+        FPS numerator(n);
+        T power = unweighted ? step : -weight;
+        for(int i = 0; i < n; ++i){
+          numerator[i] = power*inverse[i+unweighted];
+          power *= step;
+        }
+        if(!unweighted) numerator[0] += T(1);
+        moments *= numerator;
+      }
+    }
+    T result = 0, fact = 1;
+    for(int i = 0; i < n; ++i){
+      result += (*this)[i]*moments[i]*fact;
+      fact *= T(i+1);
+    }
+    return result;
+  }
+
+public:
+  // With d+1 samples at 0,...,d of a polynomial of degree at most d.
+  static T sum_of_exponential_times_polynomial_limit(const vector<T>& values, T r){
+    assert(r != T(1));
+    if(values.empty()) return 0;
+    if(r == T(0)) return values[0];
+    const auto [fact,inverse] = internal::factorial_and_inverse_factorials<T>(values.size());
+    return exponential_sum_constant(values,r,fact,inverse);
+  }
+
+  static T sum_of_exponential_times_polynomial(vector<T> values, T r, long long n){
+    assert(n >= 0);
+    if(n == 0 || values.empty()) return 0;
+    if(r == T(0)) return values[0];
+    if(static_cast<uint64_t>(n) <= values.size()){
+      T result = 0;
+      for(long long i = n; i > 0; --i) result = result*r + values[i-1];
+      return result;
+    }
+    const auto [fact,inverse] = internal::factorial_and_inverse_factorials<T>(values.size());
+    if(r == T(1)){
+      values.push_back(0);
+      T prefix = 0;
+      for(T& x : values){
+        const T next = prefix+x;
+        x = prefix;
+        prefix = next;
+      }
+      return evaluate_consecutive_samples(values,T(n),inverse);
+    }
+    const T constant = exponential_sum_constant(values,r,fact,inverse);
+    const T inverse_r = r.inv();
+    T prefix = 0, power = 1, inverse_power = 1;
+    for(T& x : values){
+      const T next = prefix+power*x;
+      x = (prefix-constant)*inverse_power;
+      prefix = next;
+      power *= r;
+      inverse_power *= inverse_r;
+    }
+    return constant+r.pow(n)*evaluate_consecutive_samples(values,T(n),inverse);
+  }
+
+  T sum_of_exponential_times_polynomial_limit(T r) const {
+    assert(r != T(1));
+    if(this->empty()) return 0;
+    if(r == T(0)) return this->front();
+    return exponential_sum_from_coefficients(r,nullopt);
+  }
+
+  T sum_of_exponential_times_polynomial(T r, long long n) const {
+    assert(n >= 0);
+    if(n == 0 || this->empty()) return 0;
+    if(r == T(0)) return this->front();
+    if(n <= 4){
+      T result = 0;
+      for(long long i = n; i > 0; --i) result = result*r+eval(T(i-1));
+      return result;
+    }
+    return exponential_sum_from_coefficients(r,n);
+  }
+
   struct Mat {
     FPS a, b, c, d;
     Mat() = default;
@@ -720,6 +1006,121 @@ struct FormalPowerSeries : vector<T>{
     p.first >>= j;
     p.second >>= j;
     return Half_GCD(p, res, pre + j) * R1;
+  }
+
+  // Return c[0], ..., c[d-1] with a[i] = sum_j c[j]*a[i-1-j] for i >= d.
+  static FPS find_linear_recurrence(FPS samples){
+    const int n = samples.size(), middle = (n+1)/2;
+    if(samples.shrink().empty()) return {};
+    pair<FPS,FPS> p{FPS(n+1),std::move(samples)};
+    p.first[n] = 1;
+    T unused_resultant = 1;
+    Mat basis = Mat::I();
+    if((int)p.second.size() > middle){
+      basis = Half_GCD(p,unused_resultant);
+      p = basis.app(p);
+      while((int)p.second.size() > middle) Naive_GCD(basis,p,unused_resultant,0);
+    }
+
+    // A row (R,Q) of this Euclidean basis obeys Q*A = R mod x^n.
+    // If Q has zero constant, use the better of the adjacent Euclidean rows.
+    if(basis.d[0] == T(0)){
+      if(p.second.empty() || p.first.size() <= n+1-p.second.size()){
+        p.second = std::move(p.first);
+        basis.d = std::move(basis.b);
+      }else Naive_GCD(basis,p,unused_resultant,0);
+    }
+    FPS q = std::move(basis.d);
+    const auto order = max(q.size()-1,p.second.size());
+    const T scale = -q[0].inv();
+    q >>= 1;
+    q.resize(order);
+    q *= scale;
+    return q;
+  }
+
+private:
+  static FPS recurrence_denominator(const FPS& recurrence){
+    FPS q = -recurrence;
+    q <<= 1;
+    q[0] = 1;
+    return q;
+  }
+
+  // Return [x^(end-length+1)], ..., [x^end] of 1/q, including zero for negative indices.
+  static FPS reciprocal_window(FPS q, long long end, int length){
+    if(end < length){
+      FPS result = q.inv(static_cast<int>(end)+1);
+      result <<= length-(int)result.size();
+      return result;
+    }
+    FPS opposite = q;
+    for(int i = 1; i < (int)q.size(); i += 2) opposite[i] = -opposite[i];
+    {
+      FPS even = q*opposite;
+      for(int i = 0; i < (int)q.size(); ++i) q[i] = even[2*i];
+    }
+    FPS half = reciprocal_window(std::move(q),end/2,length);
+    FPS lifted(2*length);
+    for(int i = 0; i < length; ++i) lifted[2*i+1-(end&1)] = half[i];
+    return internal::fps_middle_product<T>(std::move(lifted),std::move(opposite));
+  }
+
+public:
+  static T kth_term_of_linear_recurrence(const FPS& initial, const FPS& recurrence, long long k){
+    assert(initial.size() == recurrence.size() && k >= 0);
+    if(k < (long long)initial.size()) return initial[k];
+    if(initial.empty()) return 0;
+    FPS q = recurrence_denominator(recurrence), p = initial*q;
+    p.resize(initial.size());
+    return Bostan_Mori(std::move(p.shrink()),std::move(q.shrink()),k);
+  }
+
+  static FPS linear_recurrence_terms(const FPS& initial, const FPS& recurrence, long long k, int count){
+    assert(initial.size() == recurrence.size() && k >= 0 && count >= 0);
+    if(count == 0) return {};
+    if(count == 1) return {kth_term_of_linear_recurrence(initial,recurrence,k)};
+    const int d = recurrence.size();
+    if(k < d && count <= d-k) return FPS(initial.begin()+k,initial.begin()+k+count);
+    if(d == 0) return FPS(count);
+    FPS q = recurrence_denominator(recurrence), p = initial*q;
+    p.resize(d);
+    if(k <= d){
+      const int start = k, precision = start+count;
+      return (p*q.inv(precision)).pred(precision) >> start;
+    }
+
+    // The low d terms of the quotient of x^k by x^d*q(1/x) are a
+    // reversed slice of 1/q. They determine x^k mod the characteristic polynomial.
+    FPS quotient = reciprocal_window(q,k-d,d);
+    FPS reduced = quotient.reversed()*q.rev().pred(d);
+    reduced.resize(d);
+    reduced *= T(-1);
+
+    const int take = min(d,count), precision = d+take-1;
+    FPS inverse = q.inv(max(precision,count));
+    FPS prefix = (p*inverse.pre(precision)).pred(precision);
+    FPS result(internal::fps_middle_product<T>(std::move(prefix),std::move(reduced.reversed())));
+    if(count <= d) return result;
+    (result *= q).pred(d);
+    (result *= inverse).pred(count);
+    return result;
+  }
+
+  static T kth_term_of_linear_recurrence(const FPS& samples, long long k){
+    assert(k >= 0);
+    if(k < (long long)samples.size()) return samples[k];
+    FPS recurrence = find_linear_recurrence(samples);
+    return kth_term_of_linear_recurrence(samples.pre(recurrence.size()),recurrence,k);
+  }
+
+  static FPS linear_recurrence_terms(const FPS& samples, long long k, int count){
+    assert(k >= 0 && count >= 0);
+    if(count == 0) return {};
+    const long long n = samples.size();
+    if(k < n && count <= n-k) return FPS(samples.begin()+k,samples.begin()+k+count);
+    FPS recurrence = find_linear_recurrence(samples);
+    return linear_recurrence_terms(samples.pre(recurrence.size()),recurrence,k,count);
   }
 
   static pair<Mat, T> GCD_Mat(const FPS& f, const FPS& g){
@@ -839,185 +1240,133 @@ struct FormalPowerSeries : vector<T>{
   }
 
 
-  // returns [x^{N-1}] G * F^i for i=0,...,M-1
+  // Returns [x^{N-1}] G * F^i for i=0,...,M-1.
   static FPS PowerProjection(FPS F, FPS G, int N, int M){
-    if constexpr (is_ntt_friendly_v<T>) {
-      using NTT = NTTEngine<T>;
-      static constexpr int inv2 = (T::mod() + 1) >> 1;
-      
-      int n = 32 - __builtin_clz((unsigned)(N-1));
-      G <<= ((1 << n) - N);
-      N = 1 << n;
-      F.pred(N); G.pred(N);
-      int n2 = 0, N2 = 1;
-      T invN = T(N).inv(), invN2 = 1;
-      vector<FPS> P = {G}, Q = {-F};
-      while(N > 1){
-        vector<FPS> NP(N2 << 1, FPS(N << 1, 0)), NQ(N2 << 1, FPS(N << 1, 0));
-        for(int i = 0; i < N2; ++i) {
-          copy_n(P[i].begin(), N, NP[i].begin());
-          copy_n(Q[i].begin(), N, NQ[i].begin());
-        }
-        vector<T> p(N2), q(N2);
-        for(int j = 0; j < N; ++j){
-          for(int i = 0; i < N2; ++i) p[i] = P[i][j], q[i] = Q[i][j];
-          NTTEngine<T>::intt_unnormalized(p); NTTEngine<T>::intt_unnormalized(q);
-          T e = 1;
-          for(int i = 0; i < N2; ++i){
-            p[i] *= e; q[i] *= e;
-            if(i + 1 != N2) e *= NTT::root(n2+1);
-          }
-          NTTEngine<T>::ntt(p); NTTEngine<T>::ntt(q);
-          for(int i = 0; i < N2; ++i) NP[i+N2][j] = p[i] * invN2, NQ[i+N2][j] = q[i] * invN2;
-        }
-        P = vector<FPS>(N2 << 1, FPS(N)); Q = vector<FPS>(N2 << 1, FPS(N));
-        const T projection_scale = invN * T(inv2);
-        for(int i = 0; i < (N2 << 1); ++i){
-          NQ[i][0] += (i & N2 ? T(-1) : T(1));
-          NTTEngine<T>::ntt(NP[i]); NTTEngine<T>::ntt(NQ[i]);
-          T e = 1;
-          for(int j = 0; j < N; ++j){
-            Q[i][j] = (NQ[i][2*j] * NQ[i][2*j+1]) * invN;
-            P[i][j] = (NP[i][2*j] * NQ[i][2*j+1] - NP[i][2*j+1] * NQ[i][2*j]) * projection_scale * e;
-            if(j + 1 != N) e *= NTT::inv_rate2(__builtin_ctz(~(unsigned int)(j)));
-          }
-          NTTEngine<T>::intt_unnormalized(P[i]); NTTEngine<T>::intt_unnormalized(Q[i]);
-          P[i].resize(N >> 1); Q[i].resize(N >> 1);
-          Q[i][0] -= 1;
-        }
-        N >>= 1; n--; invN *= 2;
-        N2 <<= 1; n2++; invN2 *= inv2;
-      }
-      FPS p(N2), q(N2);
-      for(int i = 0; i < N2; ++i) p[i] = P[i][0]*invN2, q[i] = Q[i][0]*invN2;
-      NTTEngine<T>::intt_unnormalized(p); NTTEngine<T>::intt_unnormalized(q);
-      q.push_back(1);
-      reverse(p.begin(), p.end()); reverse(q.begin(), q.end());
-      p.resize(M); q.resize(M);
-      return p / q;
-    } else {
-      assert(false && "PowerProjection is not implemented for non-NTT-friendly types.");
-      return {};
+    assert(N >= 0 && M >= 0);
+    if(M == 0 || N == 0 || G.empty()) return FPS(M,0);
+    F.resize(min<int>(N,F.size()));
+    F.shrink();
+    const T coefficient = N <= (int)G.size() ? G[N-1] : T(0);
+    if(M == 1) return FPS{coefficient};
+    if(F.size() <= 1){
+      const T constant = F.empty() ? T(0) : F[0];
+      FPS result(M);
+      result[0] = coefficient;
+      for(int i = 1; i < M; ++i) result[i] = result[i-1]*constant;
+      return result;
     }
+    if constexpr (is_ntt_friendly_v<T>){
+      using NTT = NTTEngine<T>;
+      if((F.empty() || F[0] == T(0)) && N <= (1 << (NTT::rank2-1)) && M > 1){
+        const int requested = N;
+        N = std::bit_ceil(static_cast<unsigned int>(N));
+        G.resize(requested);
+        G <<= N-requested;
+        F.resize(N);
+        int rows = 1;
+        vector<FPS> P = {std::move(G)}, Q = {-F};
+        while(N > 1){
+          vector<FPS> NP(2*rows), NQ(2*rows);
+          for(int i = rows; i < 2*rows; ++i) NP[i].resize(2*N), NQ[i].resize(2*N);
+          if(rows == 1){
+            copy_n(P[0].begin(),N,NP[1].begin());
+            copy_n(Q[0].begin(),N,NQ[1].begin());
+          }else{
+            vector<T> p(rows), q(rows);
+            for(int j = 0; j < N; ++j){
+              for(int i = 0; i < rows; ++i) p[i] = P[i][j], q[i] = Q[i][j];
+              NTT::ntt_odd_extend(p);
+              NTT::ntt_odd_extend(q);
+              for(int i = 0; i < rows; ++i) NP[i+rows][j] = p[i], NQ[i+rows][j] = q[i];
+            }
+          }
+          for(int i = 0; i < rows; ++i){
+            NP[i] = std::move(P[i]); NP[i].resize(2*N);
+            NQ[i] = std::move(Q[i]); NQ[i].resize(2*N);
+          }
+          P.resize(2*rows); Q.resize(2*rows);
+          vector<T> phase(N);
+          phase[0] = NTT::inverse_size(2*N);
+          for(int j = 1; j < N; ++j)
+            phase[j] = phase[j-1]*NTT::inv_rate2(std::countr_zero(static_cast<unsigned int>(j)));
+          for(int i = 0; i < 2*rows; ++i){
+            NQ[i][0] += i < rows ? T(1) : T(-1);
+            NTT::ntt(NP[i]);
+            NTT::ntt(NQ[i]);
+            P[i].resize(N);
+            for(int j = 0; j < N; ++j)
+              P[i][j] = (NP[i][2*j]*NQ[i][2*j+1]-NP[i][2*j+1]*NQ[i][2*j])*phase[j];
+            NTT::intt_unnormalized(P[i]);
+            P[i].resize(N/2);
+            if(N == 2) continue;
+            Q[i].resize(N);
+            for(int j = 0; j < N; ++j) Q[i][j] = NQ[i][2*j]*NQ[i][2*j+1];
+            NTT::intt_unnormalized(Q[i]);
+            Q[i].resize(N/2);
+            NTT::normalize(Q[i].begin(),Q[i].end(),N);
+            Q[i][0] -= T(1);
+          }
+          N /= 2; rows *= 2;
+        }
+        FPS result(rows);
+        for(int i = 0; i < rows; ++i) result[i] = P[i][0];
+        NTT::intt(result);
+        reverse(result.begin(),result.end());
+        result.resize(M);
+        return result;
+      }
+    }
+    return internal::FPSCompositionCRT<FPS>::project(F,G,N,M);
   }
 
   static FPS Compositional_inverse(FPS F, int m = -1){
     if(m == -1) m = F.size();
-    assert(F.size() > 1);
-    assert(F[0] == 0);
-    T c = F[1].inv();
-    F *= c;
-    FPS G = PowerProjection(F, FPS{T(1)}, m, m);
-    for(int i = 1; i < m; ++i) G[i] *= factorials.mint_inv(i) * (m-1);
-    reverse(G.begin(), G.end());
-    G.pop_back();
-    G = (G.pow((-factorials.mint_inv(m-1)).val())) << 1;
-    T e = c;
-    for(int i = 1; i < m; ++i) G[i] *= e, e *= c;
-    return G;
+    assert(m >= 0);
+    if(m <= 1) return FPS(m,0);
+    assert(F.size() >= 2 && F[0] == T(0));
+    const T c = F[1].inv();
+    if(m == 2) return FPS{T(0),c};
+    const auto modulus = static_cast<std::uint64_t>(T::mod());
+    if(static_cast<std::uint64_t>(m) <= modulus && (is_ntt_friendly_v<T> || internal::is_prime64_runtime(modulus))){
+      F.resize(min<int>(F.size(),m));
+      F *= c;
+      FPS G = PowerProjection(F,FPS{T(1)},m,m);
+      for(int i = 1; i < m; ++i) G[i] *= factorials.mint_inv(i)*T(m-1);
+      reverse(G.begin(),G.end());
+      G.pop_back();
+      G = (G.log()*(-factorials.mint_inv(m-1))).exp() << 1;
+      T e = c;
+      for(int i = 1; i < m; ++i) G[i] *= e, e *= c;
+      return G;
+    }else{
+      FPS g{T(0),c};
+      F.resize(min<int>(m,F.size()));
+      auto derivative = F.diff();
+      while((int)g.size() < m){
+        const int k = g.size(), length = min(2*k,m);
+        internal::FPSCompositionPlan<FPS> plan(g,length);
+        FPS error = plan.composition(F) >> k;
+        // The lower k coefficients of F(g)-x already vanish.
+        error /= derivative.composition(g,length-k);
+        for(T& x : error) g.push_back(-x);
+      }
+      return g;
+    }
   }
 
-  // return F(G(X))
   static FPS Composition(FPS F, FPS G, int m = -1){
-    if constexpr (is_ntt_friendly_v<T>) {
-      using NTT = NTTEngine<T>;
-      static constexpr int inv2 = (T::mod() + 1) >> 1;
-      if(m == -1) m = max(F.size(), G.size());
-      if(F.empty()) return FPS(m, 0);
-      if(G.empty()) { FPS ret(m, 0); ret[0] = F[0]; return ret; }
-      if(m == 1) return {F[0]};
-      int n = 32 - __builtin_clz((unsigned)(m-1));
-      int N = 1 << n;
-      F.resize(N); G.resize(N);
-      int n2 = 0, N2 = 1;
-      T invN = T(N).inv(), invN2 = 1;
-      vector<FPS> Q = {-G};
-      vector<vector<FPS>> NQ(n);
-      while(N > 1){
-        NQ[n2] = vector<FPS>(N2 << 1, FPS(N << 1, 0));
-        for(int i = 0; i < N2; ++i) copy_n(Q[i].begin(), N, NQ[n2][i].begin());
-        vector<T> q(N2);
-        for(int j = 0; j < N; ++j){
-          for(int i = 0; i < N2; ++i) q[i] = Q[i][j];
-          NTTEngine<T>::intt_unnormalized(q);
-          T e = 1;
-          for(int i = 0; i < N2; ++i){
-            q[i] *= e;
-            if(i + 1 != N2) e *= NTT::root(n2+1);
-          }
-          NTTEngine<T>::ntt(q);
-          for(int i = 0; i < N2; ++i) NQ[n2][i+N2][j] = q[i] * invN2;
-        }
-        Q = vector<FPS>(N2 << 1, FPS(N));
-        for(int i = 0; i < (N2 << 1); ++i){
-          NQ[n2][i][0] += (i & N2 ? T(-1) : T(1));
-          NTTEngine<T>::ntt(NQ[n2][i]);
-          for(int j = 0; j < N; ++j) Q[i][j] = (NQ[n2][i][2*j] * NQ[n2][i][2*j+1]) * invN;
-          NTTEngine<T>::intt_unnormalized(Q[i]);
-          Q[i].resize(N >> 1);
-          Q[i][0] -= 1;
-        }
-        N >>= 1; n--; invN *= 2;
-        N2 <<= 1; n2++; invN2 *= inv2;
-      }
-      FPS q(N2);
-      for(int i = 0; i < N2; ++i) q[i] = Q[i][0] * invN2;
-      NTTEngine<T>::intt_unnormalized(q);
-      q.push_back(1);
-      reverse(q.begin(), q.end());
-      q = q.inv(N2);
-      reverse(q.begin(), q.end());
-      F *= q;
-      F[0] = F.back();
-      for(int i = 1; i < N2; ++i) F[i] = F[i+N2-2];
-      F.resize(N2);
-      NTTEngine<T>::ntt(F);
-
-      vector<FPS> P(N2, FPS(1));
-      for(int i = 0; i < N2; ++i) P[i][0] = F[i] * invN2;
-
-      while(N2 > 1){
-        N <<= 1; n++; invN *= T(inv2);
-        N2 >>= 1; n2--; invN2 *= 2;
-        vector<FPS> NP(N2 << 1, FPS(N << 1, 0));
-        const T composition_scale = invN * T(inv2);
-        for(int i = 0; i < (N2 << 1); ++i){
-          P[i].resize(N);
-          reverse(P[i].begin()+1, P[i].end());
-          NTTEngine<T>::ntt(P[i]);
-          T e = 1;
-          for(int j = 0; j < N; ++j){
-            const T coefficient = P[i][j] * composition_scale * e;
-            NP[i][2*j] = coefficient * NQ[n2][i][2*j+1];
-            NP[i][2*j+1] = -coefficient * NQ[n2][i][2*j];
-            if(j + 1 != N) e *= NTT::inv_rate2(__builtin_ctz(~(unsigned int)(j)));
-          }
-          NTTEngine<T>::intt_unnormalized(NP[i]);
-          reverse(NP[i].begin()+1, NP[i].end());
-        }
-        P.clear();
-        P.reserve(N2);
-        for(int i = 0; i < N2; ++i) P.emplace_back(NP[i].begin(), NP[i].begin() + N);
-        vector<T> p(N2);
-        for(int j = 0; j < N; ++j){
-          for(int i = 0; i < N2; ++i) p[i] = NP[i+N2][j] * invN2;
-          NTTEngine<T>::intt_unnormalized(p);
-          const T root = NTT::root(n2+1);
-          T e = root;
-          for(int i = 1; i < N2; ++i) {
-            p[N2-i] *= e;
-            if(i + 1 != N2) e *= root;
-          }
-          NTTEngine<T>::ntt(p);
-          for(int i = 0; i < N2; ++i) P[i][j] += p[i];
-        }
-      }
-      reverse(P[0].begin(), P[0].end());
-      return P[0].pre(m);
-    } else {
-      assert(false && "composition is not implemented for non-NTT-friendly types.");
-      return {};
+    if(m == -1) m = max(F.size(),G.size());
+    assert(m >= 0);
+    if(m == 0 || F.empty()) return FPS(m,0);
+    if(G.empty() || F.size() == 1){
+      FPS result(m,0);
+      result[0] = F[0];
+      return result;
     }
+    if(m == 1) return FPS{F.eval(G[0])};
+    G.resize(min<int>(G.size(),m));
+    if(G[0] == T(0)) F.resize(min<int>(F.size(),m));
+    return internal::FPSCompositionPlan<FPS>(G,m).composition(std::move(F));
   }
   FPS composition(const FPS& g, int d = -1) const { return Composition(*this, g, d); }
   FPS compositional_inverse(int d = -1) const { return Compositional_inverse(*this, d); }
@@ -1025,259 +1374,220 @@ struct FormalPowerSeries : vector<T>{
 
 template <typename T, bool ntt_friendly = is_ntt_friendly_v<T>>
 struct static_composition {
-  static_composition(const FormalPowerSeries<T>& G) { assert(false && "Not implemented"); }
-  static_composition(const FormalPowerSeries<T>& G, int m_) { assert(false && "Not implemented"); }
-  FormalPowerSeries<T> composition(FormalPowerSeries<T> F) const { assert(false && "Not implemented"); return {}; }
-};
-
-template <typename T>
-struct static_composition<T, true> {
-  private:
-    using NTT = NTTEngine<T>;
-    static constexpr int inv2 = (T::mod()+1) >> 1;
-
-    int m, n, N, n2, N2;
-    T invN, invN2;
-    FormalPowerSeries<T> q;
-    vector<vector<FormalPowerSeries<T>>> NQ;
-
-    void init(const FormalPowerSeries<T>& G){
-      n = 32 - __builtin_clz(m-1); N = 1 << n; n2 = 0, N2 = 1;
-      invN = T(N).inv(), invN2 = 1;
-      vector<FormalPowerSeries<T>> Q = {-G}; Q[0].resize(N); NQ.resize(n);
-      while(N > 1){
-        NQ[n2] = vector<FormalPowerSeries<T>>(N2 << 1, FormalPowerSeries<T>(N << 1, 0));
-        for(int i = 0; i < N2; ++i) copy_n(Q[i].begin(), N, NQ[n2][i].begin());
-        vector<T> qt(N2);
-        for(int j = 0; j < N; ++j){
-          for(int i = 0; i < N2; ++i) qt[i] = Q[i][j];
-          NTTEngine<T>::intt_unnormalized(qt);
-          T e = 1;
-          for(int i = 0; i < N2; ++i){
-            qt[i] *= e;
-            if(i + 1 != N2) e *= NTT::root(n2+1);
-          }
-          NTTEngine<T>::ntt(qt);
-          for(int i = 0; i < N2; ++i) NQ[n2][i+N2][j] = qt[i] * invN2;
-        }
-        Q = vector<FormalPowerSeries<T>>(N2 << 1, FormalPowerSeries<T>(N));
-        for(int i = 0; i < (N2 << 1); ++i){
-          NQ[n2][i][0] += (i & N2 ? T(-1) : T(1));
-          NTTEngine<T>::ntt(NQ[n2][i]);
-          for(int j = 0; j < N; ++j) Q[i][j] = (NQ[n2][i][2*j] * NQ[n2][i][2*j+1]) * invN;
-          NTTEngine<T>::intt_unnormalized(Q[i]);
-          Q[i].resize(N >> 1); Q[i][0] -= T(1);
-        }
-        N >>= 1; n--; invN *= 2; N2 <<= 1; n2++; invN2 *= inv2;
-      }
-      q.resize(N2);
-      for(int i = 0; i < N2; ++i) q[i] = Q[i][0]*invN2;
-      NTTEngine<T>::intt_unnormalized(q);
-      q.push_back(1);
-      reverse(q.begin(), q.end());
-      q = q.inv(N2);
-      reverse(q.begin(), q.end());
-    }
-  public:
-    static_composition(const FormalPowerSeries<T>& G) : m(G.size()) {init(G);}
-    static_composition(const FormalPowerSeries<T>& G, int m_) : m(m_) {init(G);}
-    FormalPowerSeries<T> composition(FormalPowerSeries<T> F) const {
-      if(F.empty()) return FormalPowerSeries<T>(m, 0);
-      if(m == 1) return {F[0]};
-      F.resize(N2); F *= q; F[0] = F.back();
-      for(int i = 1; i < N2; ++i) F[i] = F[i+N2-2];
-      F.resize(N2);
-      NTTEngine<T>::ntt(F);
-      vector<FormalPowerSeries<T>> P(N2, FormalPowerSeries<T>(1));
-      for(int i = 0; i < N2; ++i) P[i][0] = F[i] * invN2;
-
-      int N_ = N, n_ = n, N2_ = N2, n2_ = n2;
-      T invN_ = invN, invN2_ = invN2; 
-      while(N2_ > 1){
-        N_ <<= 1; n_++; invN_ *= T(inv2); N2_ >>= 1; n2_--; invN2_ *= 2;
-        vector<FormalPowerSeries<T>> NP(N2_ << 1, FormalPowerSeries<T>(N_ << 1, 0));
-        const T composition_scale = invN_ * T(inv2);
-        for(int i = 0; i < (N2_ << 1); ++i){
-          P[i].resize(N_); reverse(P[i].begin()+1, P[i].end());
-          NTTEngine<T>::ntt(P[i]);
-          T e = 1;
-          for(int j = 0; j < N_; ++j){
-            const T coefficient = P[i][j] * composition_scale * e;
-            NP[i][2*j] = coefficient * NQ[n2_][i][2*j+1];
-            NP[i][2*j+1] = -coefficient * NQ[n2_][i][2*j];
-            if(j + 1 != N_) e *= NTT::inv_rate2(__builtin_ctz(~(unsigned int)(j)));
-          }
-          NTTEngine<T>::intt_unnormalized(NP[i]); reverse(NP[i].begin()+1, NP[i].end());
-        }
-        P.clear();
-        P.reserve(N2_);
-        for(int i = 0; i < N2_; ++i) P.emplace_back(NP[i].begin(), NP[i].begin() + N_);
-        vector<T> p(N2_);
-        for(int j = 0; j < N_; ++j){
-          for(int i = 0; i < N2_; ++i) p[i] = NP[i+N2_][j] * invN2_;
-          NTTEngine<T>::intt_unnormalized(p);
-          const T root = NTT::root(n2_+1);
-          T e = root;
-          for(int i = 1; i < N2_; ++i){
-            p[N2_-i] *= e;
-            if(i + 1 != N2_) e *= root;
-          }
-          NTTEngine<T>::ntt(p);
-          for(int i = 0; i < N2_; ++i) P[i][j] += p[i];
-        }
-      }
-      reverse(P[0].begin(), P[0].end());
-      return P[0].pre(m);
-    }
+  using FPS = FormalPowerSeries<T>;
+private:
+  internal::FPSCompositionPlan<FPS,ntt_friendly && is_ntt_friendly_v<T>> plan;
+public:
+  static_composition(const FPS& g) : static_composition(g,g.size()) {}
+  static_composition(const FPS& g, int m) : plan(g,m) {}
+  FPS composition(FPS f) const {return plan.composition(std::move(f));}
 };
 
 template <typename T, int b = 4, bool ntt_friendly = is_ntt_friendly_v<T>>
 struct online_composition {
-  online_composition(FormalPowerSeries<T> G, int n_) { assert(false && "Not implemented"); }
-  T query(T x) { assert(false && "Not implemented"); return 0; }
-  inline T get(int i) const { assert(false && "Not implemented"); return 0; }
-};
+  using FPS = FormalPowerSeries<T>;
+private:
+  static_assert(0 <= b && b < 30);
+  static constexpr int B = 1 << b;
+  int n, order = 0;
+  FPS inner, normalized, low, power, scratch;
+  vector<T> coefficients, answer;
+  vector<optional<static_composition<T,ntt_friendly>>> plans;
+  optional<FPS> logarithm;
 
-template<typename T, int b>
-struct online_composition<T, b, true> {
-  private:
-    static constexpr int B = 1 << b;
-    int N0, n, N, k, c;
-    T a, G1;
-    FormalPowerSeries<T> logG;
-    vector<FormalPowerSeries<T>> powG;
-    vector<T> F, ans;
-    vector<static_composition<T>> comps;
-    inline FormalPowerSeries<T> Gpow(int m, int len){
-      if(!m) return {T(1)};
-      if(len <= (long long)c*m || c == N-1) return {T(0)};
-      return ((FormalPowerSeries<T>(logG.begin(), logG.begin()+(len-c*m)) * T(m)).exp() * a.pow(m)) << (c*m);
-    }
-  public:
-    online_composition(FormalPowerSeries<T> G, int n_) : N0(n_), n(__bit_width((unsigned)n_ - 1)), N(1 << n), k(0), c(0) {
-      G.resize(N); powG.resize(N0); F.resize(N0); ans.assign(N0, 0);
-      assert(G[0] == 0);
-      if(N0 == 1) return;
-      G1 = G[1];
-      while(c < N && G[c] == 0) ++c;
-      if(c < N){ a = G[c]; logG = ((G >> c)/a).log(); --c; }
-      powG[1] = FormalPowerSeries<T>(G.begin() + 1, G.begin() + min(N0, B+1));
-      for(int i = 1; i < N0-1; ++i) powG[i+1] = (powG[i] * powG[1]).pre(min(N0-i-1, B));
-      while(G.size() > B){ comps.emplace_back(G); G.resize(G.size() >> 1); }
-      reverse(comps.begin(), comps.end());
-    }
-    T query(T x){
-      if(N0 == 1) { ans[0] = x; return x; }
-      F[k] = x;
-      ans[k] += x * G1.pow(k);
-      for(int i = k+1; i < min<int>(N0, powG[k].size() + k) && (i & (B-1)); ++i) ans[i] += powG[k][i-k] * x;
-      ++k;
-      if(!(k&(B-1)) && k < N0){
-        int d = k & -k;
-        FormalPowerSeries<T> F0(F.begin()+k-d, F.begin()+k);
-        auto H = comps[__builtin_ctz(d)-b].composition(F0) * Gpow(k-d, min(d<<1, N0-k+d));
-        for(int i = 0; i < min(d, N0-k); ++i) ans[k+i] += H[d+i];
+  FPS coefficient_power(int exponent, int precision){
+    if constexpr (is_ntt_friendly_v<T> && ntt_friendly){
+      if(!logarithm) logarithm = (normalized/normalized[0]).log(n);
+      auto result = (logarithm->pre(precision)*T(exponent)).exp();
+      return result *= normalized[0].pow(exponent);
+    }else{
+      FPS result{T(1)}, base = normalized.pre(precision);
+      while(exponent){
+        if(exponent&1) (result *= base).pred(precision);
+        if(exponent >>= 1) (base *= base).pred(precision);
       }
-      return ans[k-1];
+      return result;
     }
-    inline T get(int i) {
-      T res = ans[i];
-      int k2 = k;
-      while(i >= k2){
-        ++k2;
-        if(!(k2&(B-1)) && k2 < N0){
-          int d = k2 & -k2;
-          FormalPowerSeries<T> F0(F.begin()+k2-d, F.begin()+k2);
-          auto H = comps[__builtin_ctz(d)-b].composition(F0) * Gpow(k2-d, min(d<<1, N0-k2+d));
-          for(int j = 0; j < min(d, N0-k2); ++j) if(k2+j == i) res += H[d+j];
-        }
-      }
-      return res;
-    }
-};
-
-//return [X^{n-1}] D \times (C2 \circ F^{\circ i} \circ C1) for i=0...m-1
-template <typename T, class Factorials = modint_factorials<T>>
-vector<T> CompositionalPowerProjection(FormalPowerSeries<T> F, int n = -1, int m = -1, FormalPowerSeries<T> C1 = {}, FormalPowerSeries<T> C2 = {}, FormalPowerSeries<T> D = {}){
-  Factorials factorials;
-  if constexpr (is_ntt_friendly_v<T>) {
-    using FPS = FormalPowerSeries<T>;
-    if(n == -1) n = F.size();
-    if(m == -1) m = n;
-    assert(F[0] == 0);
-    if(F[1] != T(1)){
-      T a = F[1];
-      online_composition<T> oc(F, n);
-      FPS G(n, 0); G[1] = a;
-      oc.query(T(0)); oc.query(a);
-      T c = a;
-      for(int i = 2; i < n; ++i){
-        c *= a;
-        auto t = oc.get(i);
-        G[i] -= t/(c-a);
-        oc.query(G[i]);
-      }
-      FPS H = G.compositional_inverse();
-      if(!C1.empty()) G = G.composition(C1);
-      if(!C2.empty()) H = C2.composition(H);
-      vector<T> g = FPS::PowerProjection(G, D.empty() ? FPS{T(1)} : D, n, n);
-      for(int i = 0; i < n; ++i) H[i] *= g[i];
-      return H.geo_eval(T(1), a, m);
-    } else {
-      if(n == 1) return vector<T>(m, 0);
-      if(n == 2) {
-        T c1 = C1.empty() ? T(1) : C1[1];
-        T c2 = C2.empty() ? T(1) : C2[1];
-        T d = D.empty() ? T(1) : D[1];
-        return vector<T>(m, c1*c2*d);
-      }
-      F.resize(n);
-      assert(F[3] == F[2]*F[2]);
-      FPS H = {0,F[2].inv(),0,0};
-      for(int k = 3; k < n-1;){
-        int k2 = min(k*2-1,n);
-        FPS C(k2-k+1);
-        for(int i = 0; i < k2-k+1; ++i) C[i] = factorials.nCk(k-1,i) * (i&1 ? -1 : 1);
-        FPS B = (H.compositional_inverse(k2).composition(F,k2).composition(H,k2) >> k)*C;
-        for(int i = 0; i < k2-k; ++i) B[i] -= factorials.nCk(k-2,i) * (i&1 ? -1 : 1);
-        semi_online_convolution ocA([&]() -> vector<T> {
-          vector<T> A(k2-k-1);
-          for(int i = 0; i < k2-k-1; ++i) A[i] = factorials.nCk(k-3,i+2) * (i&1 ? -1 : 1);
-          return A;
-        }()), ocV([&]() -> vector<T> {
-          vector<T> res(k2-k-1);
-          for(int i = 0; i < k2-k-1; ++i) res[i] = factorials.mint_inv_factorial(i+2);
-          return res;
-        }());
-        FPS u(k2-k,0);
-        for(int i = 0; i < k2-k-1; ++i){
-          u[i] = B[i+1] * factorials.mint_inv(k+i-2);
-          T x = ocA.push(u[i]);
-          T y = ocV.push(u[i]*factorials.mint_inv_factorial(i)) * factorials.mint_factorial(i+2);
-          B[i+2] += x-y;
-        }
-        u[k2-k-1] = B[k2-k] / factorials.mint_inv(k2-3);
-        H = ((H.diff() * u).pre(k2-k) << k) + H;
-        k = k2-1;
-      }
-      auto G = H.compositional_inverse();
-      if(!C1.empty()) G = G.composition(C1);
-      if(!C2.empty()) H = C2.composition(H);
-      vector<T> v = !D.empty() ? FPS::PowerProjection(G, G*D, n, n-1) : FPS::PowerProjection(G, G, n, n-1);
-      vector<T> w(H.rbegin(), H.rend()-1);
-      for(int i = 0; i < n-1; ++i) v[i] *= factorials.mint_factorial(i);
-      for(int i = 0; i < n-1; ++i) w[i] *= factorials.mint_inv_factorial(n-i-2);
-      auto vw = soryuusi::convolution(v, w);
-      FPS f(n-1);
-      for(int i = 0; i < n-1; ++i) f[i] = vw[n+i-2] * factorials.mint_inv_factorial(i);
-      vector<T> x(m);
-      for(int i = 0; i < m; ++i) x[i] = T(i);
-      return f.mult_eval(x);
-    }
-  } else {
-    assert(false && "CompositionalPowerProjection is not implemented for non-NTT-friendly types.");
-    return {};
   }
+
+  void cross_block(int boundary){
+    if(order == 0) return;
+    const int half = boundary & -boundary, first = boundary-half;
+    const int end = min(boundary+half,n), precision = end-first;
+    const long long shift = first == 0 ? 0 : 1LL*(order-1)*first;
+    if(first != 0 && shift >= precision) return;
+    const int level = std::countr_zero(static_cast<unsigned int>(half));
+    auto& plan = plans[level];
+    if(!plan) plan.emplace(inner,precision);
+    auto contribution = plan->composition(FPS(coefficients.begin()+first,coefficients.end()));
+    if(first != 0){
+      contribution.resize(precision-shift);
+      contribution *= coefficient_power(first,precision-shift);
+    }
+    for(int j = max<int>(half,shift); j < precision; ++j) answer[first+j] += contribution[j-shift];
+  }
+
+public:
+  online_composition(FPS g, int n_) : n(n_), inner(std::move(g)), answer(n){
+    assert(n >= 0 && (inner.empty() || inner[0] == T(0)));
+    inner.resize(min<int>(n,inner.size()));
+    coefficients.reserve(n);
+    plans.resize(std::bit_width(static_cast<unsigned int>(n)));
+    for(int i = 1; i < (int)inner.size(); ++i) if(inner[i] != T(0)){order = i; break;}
+    if(order != 0) normalized = inner >> order;
+    low = (inner >> 1).pre(min(B,n));
+    power.resize(low.size());
+    scratch.resize(low.size());
+    if(n > 0) power[0] = 1;
+  }
+
+  T query(T x){
+    const int i = coefficients.size();
+    assert(i < n);
+    for(int j = 0; j < min(n-i,B-(i&(B-1))); ++j) answer[i+j] += x*power[j];
+    coefficients.push_back(x);
+    if(i+1 < n){
+      const int length = min(B,n-i-1);
+      for(int k = 0; k < length; ++k){
+        T sum = 0;
+        for(int j = 0; j <= k; ++j) sum += power[j]*low[k-j];
+        scratch[k] = sum;
+      }
+      power.swap(scratch);
+      if(!((i+1)&(B-1))) cross_block(i+1);
+    }
+    return answer[i];
+  }
+
+  T get(int i) const {
+    assert(0 <= i && i < n);
+    if(i <= (int)coefficients.size()) return answer[i];
+    const auto weights = FPS::PowerProjection(inner,FPS{T(1)},i+1,coefficients.size());
+    return inner_product(coefficients.begin(),coefficients.end(),weights.begin(),T(0));
+  }
+};
+
+// Returns [x^{n-1}] D * (C2 o F^{o i} o C1), i=0,...,m-1.
+template <typename T, class Factorials = modint_factorials<T>>
+vector<T> CompositionalPowerProjection(FormalPowerSeries<T> F, int n = -1, int m = -1,
+    FormalPowerSeries<T> C1 = {}, FormalPowerSeries<T> C2 = {}, FormalPowerSeries<T> D = {}){
+  using FPS = FormalPowerSeries<T>;
+  if(n == -1) n = F.size();
+  if(m == -1) m = n;
+  assert(n >= 0 && m >= 0);
+  if(n == 0 || m == 0) return vector<T>(m,0);
+  if(C1.empty()) C1 = {T(0),T(1)};
+  if(C2.empty()) C2 = {T(0),T(1)};
+  if(D.empty()) D = {T(1)};
+  F.resize(n); D.resize(n);
+  assert(F[0] == T(0) && C1[0] == T(0));
+  if(n == 1) return vector<T>(m,C2[0]*D[0]);
+
+  auto is_unit = [](T x){return std::gcd(static_cast<std::uint64_t>(x.val()),
+                                        static_cast<std::uint64_t>(T::mod())) == 1;};
+  const T a = F[1];
+  if((a == T(0) || is_unit(a)) && all_of(F.begin()+2,F.end(),[](T x){return x == T(0);})){
+    auto weights = FPS::PowerProjection(C1,D,n,n);
+    C2.resize(n);
+    for(int j = 0; j < n; ++j) C2[j] *= weights[j];
+    return C2.geo_eval(T(1),a,m);
+  }
+  if(m > 8 && a != T(1) && is_unit(a)){
+    vector<T> differences(n);
+    T power = a;
+    int i = 2;
+    for(; i < n; ++i){
+      power *= a;
+      differences[i] = power-a;
+      if(!is_unit(differences[i])) break;
+    }
+    if(i == n){
+      // G(F(x)) = a*G(x). The nonresonance test makes the recurrence solvable.
+      T product = 1;
+      for(int j = 2; j < n; ++j) differences[j] *= product, product = differences[j];
+      T inverse = product.inv(), p = a.pow(n-1);
+      const T a_inverse = a.inv();
+      for(int j = n-1; j >= 2; --j){
+        const T prefix = j == 2 ? T(1) : differences[j-1];
+        differences[j] = inverse*prefix;
+        inverse *= p-a;
+        p *= a_inverse;
+      }
+      online_composition<T> online(FormalPowerSeries<T>(F.begin(),F.end()),n);
+      FPS g(n);
+      g[1] = 1;
+      online.query(T(0)); online.query(T(1));
+      for(int j = 2; j < n; ++j){
+        g[j] = -online.get(j)*differences[j];
+        online.query(g[j]);
+      }
+      auto h = C2.composition(g.compositional_inverse(n),n);
+      g = g.composition(C1,n);
+      auto weights = FPS::PowerProjection(g,D,n,n);
+      for(int j = 0; j < n; ++j) h[j] *= weights[j];
+      return h.geo_eval(T(1),a,m);
+    }
+  }
+  bool parabolic = m > 8 && n >= 4 && a == T(1) && is_unit(F[2]) && F[3] == F[2]*F[2];
+  if constexpr (!is_ntt_friendly_v<T>) parabolic &= internal::fps_crt_fits<T>(n);
+  if(parabolic){
+    for(int i = 2; i < n && parabolic; ++i) parabolic = is_unit(T(i));
+  }
+  if(parabolic){
+    Factorials factorials;
+    FPS H = {0,F[2].inv(),0,0};
+    for(int k = 3; k < n-1;){
+      int k2 = min(k*2-1,n);
+      FPS C(k2-k+1);
+      for(int i = 0; i < k2-k+1; ++i) C[i] = factorials.nCk(k-1,i) * (i&1 ? -1 : 1);
+      FPS B = (H.compositional_inverse(k2).composition(F,k2).composition(H,k2) >> k)*C;
+      for(int i = 0; i < k2-k; ++i) B[i] -= factorials.nCk(k-2,i) * (i&1 ? -1 : 1);
+      semi_online_convolution ocA([&]() -> vector<T> {
+        vector<T> A(k2-k-1);
+        for(int i = 0; i < k2-k-1 && i+2 <= k-3; ++i)
+          A[i] = factorials.nCk(k-3,i+2) * (i&1 ? -1 : 1);
+        return A;
+      }()), ocV([&]() -> vector<T> {
+        vector<T> res(k2-k-1);
+        for(int i = 0; i < k2-k-1; ++i) res[i] = factorials.mint_inv_factorial(i+2);
+        return res;
+      }());
+      FPS u(k2-k,0);
+      for(int i = 0; i < k2-k-1; ++i){
+        u[i] = B[i+1] * factorials.mint_inv(k+i-2);
+        T x = ocA.push(u[i]);
+        T y = ocV.push(u[i]*factorials.mint_inv_factorial(i)) * factorials.mint_factorial(i+2);
+        B[i+2] += x-y;
+      }
+      u[k2-k-1] = B[k2-k] / factorials.mint_inv(k2-3);
+      H = ((H.diff() * u).pre(k2-k) << k) + H;
+      k = k2-1;
+    }
+    auto G = H.compositional_inverse(n);
+    G = G.composition(C1,n);
+    H = C2.composition(H,n);
+    FPS v = FPS::PowerProjection(G,G*D,n,n-1);
+    FPS w(H.rbegin(), H.rend()-1);
+    for(int i = 0; i < n-1; ++i) v[i] *= factorials.mint_factorial(i);
+    for(int i = 0; i < n-1; ++i) w[i] *= factorials.mint_inv_factorial(n-i-2);
+    auto vw = v*w;
+    FPS f(n-1);
+    for(int i = 0; i < n-1; ++i) f[i] = vw[n+i-2] * factorials.mint_inv_factorial(i);
+    f[0] += H[0]*D[n-1];
+    vector<T> x(m);
+    for(int i = 0; i < m; ++i) x[i] = T(i);
+    return f.mult_eval(x);
+  }
+
+  auto weights = FPS::PowerProjection(C1,D,n,n);
+  internal::FPSCompositionPlan<FPS> iterate(F,n);
+  FPS current = C2.pre(n);
+  vector<T> result(m);
+  for(int i = 0; i < m; ++i){
+    result[i] = inner_product(current.begin(),current.end(),weights.begin(),T(0));
+    if(i+1 < m) current = iterate.composition(std::move(current));
+  }
+  return result;
 }
 
 }  // namespace soryuusi

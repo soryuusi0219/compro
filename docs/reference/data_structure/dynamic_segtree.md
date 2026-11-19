@@ -36,3 +36,4 @@ std::size_t allocated_nodes() const;
 
 - [unit/pointer_structures](../../../verify/unit/pointer_structures.cpp)
 - [library_checker/ordered_set_dynamic_segment_tree](../../../verify/library_checker/data_structure/ordered_set_dynamic_segment_tree.cpp)
+- [`library_checker/point_set_range_composite_large_array_dynamic_segtree`](../../../verify/library_checker/data_structure/point_set_range_composite_large_array_dynamic_segtree.cpp)

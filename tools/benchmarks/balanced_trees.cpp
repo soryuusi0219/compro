@@ -8,7 +8,7 @@
 #include "library/data_structure/link_cut.hpp"
 #include "library/data_structure/lazy_link_cut.hpp"
 #include "library/data_structure/splay_tree.hpp"
-#include "library/data_structure/splay_tree_lazy.hpp"
+#include "library/data_structure/treap.hpp"
 
 long long add(long long a,long long b){return a+b;}
 long long zero(){return 0;}
@@ -17,6 +17,32 @@ S op(S a,S b){return {a.first+b.first,a.second+b.second};}
 S e(){return {0,0};}
 S mapping(long long f,S x){return {x.first+f*x.second,x.second};}
 
+template<class Arena> long long sequence_ranges(int n,int q,std::mt19937& rng){
+  Arena arena;
+  auto seq = arena.new_sequence(std::vector<long long>(n,1));
+  long long checksum = 0;
+  for(int i=0;i<q;++i){
+    int l=rng()%n,r=rng()%n;
+    if(l>r) std::swap(l,r);
+    if(i&1) checksum+=seq.prod(l,r+1);
+    else seq.flip(l,r+1);
+  }
+  return checksum;
+}
+
+template<class Arena> long long lazy_sequence_ranges(int n,int q,std::mt19937& rng){
+  Arena arena;
+  auto seq = arena.new_sequence(std::vector<S>(n,S{1,1}));
+  long long checksum = 0;
+  for(int i=0;i<q;++i){
+    int l=rng()%n,r=rng()%n;
+    if(l>r) std::swap(l,r);
+    if(i&1) checksum+=seq.prod(l,r+1).first;
+    else seq.apply(l,r+1,1);
+  }
+  return checksum;
+}
+
 int main(int argc,char** argv){
   const std::string mode = argc > 1 ? argv[1] : "splay";
   constexpr int n = 50000, q = 100000;
@@ -24,15 +50,13 @@ int main(int argc,char** argv){
   long long checksum = 0;
   const auto start = std::chrono::steady_clock::now();
   if(mode == "splay"){
-    std::vector<long long> a(n,1);
-    soryuusi::SplayTree<long long,add,zero> seq_arena;
-    auto seq = seq_arena.new_sequence(a);
-    for(int i=0;i<q;++i){int l=rng()%n,r=rng()%n;if(l>r)std::swap(l,r);++r;if(i&1)checksum+=seq.prod(l,r);else seq.flip(l,r);}
+    checksum=sequence_ranges<soryuusi::SplayTree<long long,add,zero>>(n,q,rng);
+  }else if(mode == "treap"){
+    checksum=sequence_ranges<soryuusi::TreapSequence<long long,add,zero>>(n,q,rng);
   }else if(mode == "lazy_splay"){
-    std::vector<S> a(n,S{1,1});
-    soryuusi::LazySplayTree<S,op,e,long long,mapping,add,zero> seq_arena;
-    auto seq = seq_arena.new_sequence(a);
-    for(int i=0;i<q;++i){int l=rng()%n,r=rng()%n;if(l>r)std::swap(l,r);++r;if(i&1)checksum+=seq.prod(l,r).first;else seq.apply(l,r,1);}
+    checksum=lazy_sequence_ranges<soryuusi::LazySplayTree<S,op,e,long long,mapping,add,zero>>(n,q,rng);
+  }else if(mode == "lazy_treap"){
+    checksum=lazy_sequence_ranges<soryuusi::LazyTreapSequence<S,op,e,long long,mapping,add,zero>>(n,q,rng);
   }else if(mode == "lct"){
     soryuusi::linkcuttree<long long,add,zero> tree(n);
     for(int i=0;i<n;++i)tree.set(i,1);

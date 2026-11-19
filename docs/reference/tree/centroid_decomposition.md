@@ -4,7 +4,7 @@
 
 ## 機能・前提条件
 
-無向木の重心分解。addEdgeで木を作りbuildで重心の階層を構築する。
+無向木の重心分解。addEdgeで木を作りbuildで重心の階層を構築する。深さ優先探索は明示的なスタックを使う。
 
 ## インターフェース
 
@@ -32,4 +32,5 @@ O(N log N) 時間、O(N) 空間。
 
 ## Verify・利用例
 
+- [`library_checker/frequency_table_of_tree_distance`](../../../verify/library_checker/tree/frequency_table_of_tree_distance.cpp)
 - [`unit/csr_graph`](../../../verify/unit/csr_graph.cpp)

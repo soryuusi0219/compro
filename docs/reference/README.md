@@ -47,7 +47,8 @@
 | [internal/splay_base.hpp](data_structure/internal/splay_base.md) | 補助木のsplayと列Backend。 |
 | [internal/treap_base.hpp](data_structure/internal/treap_base.md) | 親付きimplicit treapの平衡化Backend。 |
 | [internal/tree_arena.hpp](data_structure/internal/tree_arena.md) | 可変木の共有プール・ノード再利用・Backend作業領域。 |
-| [internal/explicit_base.hpp](data_structure/internal/explicit_base.md) | 固定キーのordered set/multisetとarena・meldの共通実装。 |
+| [internal/explicit_base.hpp](data_structure/internal/explicit_base.md) | ordered set/multisetと単調キー作用・arena・meldの共通実装。 |
+| [internal/sortable_base.hpp](data_structure/internal/sortable_base.md) | 重み付きSequenceとExplicit木によるソート可能列の共通基盤。 |
 | [internal/sequence_base.hpp](data_structure/internal/sequence_base.md) | 平衡化方式から独立した可変列と所有権管理。 |
 | [internal/link_cut_base.hpp](data_structure/internal/link_cut_base.md) | 反転可能な補助木コアを使うLCT共通実装。 |
 | [interval_heap.hpp](data_structure/interval_heap.md) | 最小・最大の双方を取り出せるヒープ。 |
@@ -82,8 +83,8 @@
 | [segtree_beats_templates.hpp](data_structure/segtree_beats_templates.md) | chmin/chmax/addと区間和・最小・最大のBeats設定。 |
 | [segtree_sparse.hpp](data_structure/segtree_sparse.md) | 更新する座標を事前登録するセグメント木。 |
 | [segtree_template.hpp](data_structure/segtree_template.md) | 和・最小最大・出現回数・ペア和・アフィン合成の定番Segtree設定。 |
-| [splay_tree.hpp](data_structure/splay_tree.md) | 挿入・削除・反転と順逆の区間集約を扱う列splay木。 |
-| [splay_tree_lazy.hpp](data_structure/splay_tree_lazy.md) | 列splay木に区間への遅延作用を追加する。 |
+| [splay_sortable.hpp](data_structure/splay_sortable.md) | splayによるソート可能列・区間集約・値とキーの遅延作用。 |
+| [splay_tree.hpp](data_structure/splay_tree.md) | 反転・順逆の区間集約を扱う通常・遅延の列splay木。 |
 | [static_bit_vector.hpp](data_structure/static_bit_vector.md) | 固定bit列とprefix rank。 |
 | [static_range_inversions.hpp](data_structure/static_range_inversions.md) | 静的配列の区間転倒数。 |
 | [static_range_lis.hpp](data_structure/static_range_lis.md) | 静的配列の区間LIS。重複値は非減少として扱う。 |
@@ -92,8 +93,10 @@
 | [static_rectangle_sum.hpp](data_structure/static_rectangle_sum.md) | 重み付き点と長方形質問を登録するオフライン二次元範囲和。 |
 | [swag.hpp](data_structure/swag.md) | 結合的演算の列キュー集約。 |
 | [swag_deque.hpp](data_structure/swag_deque.md) | 両端の追加削除に対応するSWAG。 |
-| [splay_explicit.hpp](data_structure/splay_explicit.md) | splayによる固定キー集合と値の区間演算・meld。 |
-| [treap_explicit.hpp](data_structure/treap_explicit.md) | treapによる固定キー集合と値の区間演算・meld。 |
+| [skew_heap.hpp](data_structure/skew_heap.md) | 一様加算とmeldを持つ最小ヒープ。可変版と永続版。 |
+| [splay_explicit.hpp](data_structure/splay_explicit.md) | splayによるキー集合と値の区間演算・単調キー作用・meld。 |
+| [treap_explicit.hpp](data_structure/treap_explicit.md) | treapによるキー集合と値の区間演算・単調キー作用・meld。 |
+| [treap_sortable.hpp](data_structure/treap_sortable.md) | treapによるソート可能列・区間集約・値とキーの遅延作用。 |
 | [treap.hpp](data_structure/treap.md) | splayと列操作を共有する通常・遅延implicit treap。 |
 | [wavelet.hpp](data_structure/wavelet.md) | 非負 B bit 値の静的wavelet matrix。 |
 | [wavelet_bit.hpp](data_structure/wavelet_bit.md) | キー固定のwavelet matrixとFenwick tree。 |
@@ -113,6 +116,7 @@
 | [dijkstra.hpp](graph/dijkstra.md) | 非負重みの最短路と経路復元。 |
 | [dijkstra_01.hpp](graph/dijkstra_01.md) | 辺重みが0または1の最短路。 |
 | [dijkstra_1.hpp](graph/dijkstra_1.md) | 全辺重み1の幅優先探索。 |
+| [directed_mst.hpp](graph/directed_mst.md) | 根を指定した有向最小全域木。 |
 | [dynamic_connectivity_offline.hpp](graph/dynamic_connectivity_offline.md) | 辺追加削除時刻を登録し時間軸セグメント木とrollback DSUで連結性を処理する。 |
 | [dynamic_connectivity_offline_data.hpp](graph/dynamic_connectivity_offline_data.md) | 動的連結性に成分値の加算・集約を追加したオフライン処理。 |
 | [enumerate_cliques.hpp](graph/enumerate_cliques.md) | 無向単純グラフのクリークをcallbackへ列挙する。 |
@@ -132,9 +136,11 @@
 
 | ヘッダー / reference | 機能 |
 | --- | --- |
+| [binomial_coefficient.hpp](math/binomial_coefficient.md) | 固定した合成数法にも対応する二項係数。 |
 | [binomial_coefficient_prefix_sum.hpp](math/binomial_coefficient_prefix_sum.md) | 質問 (n,k) ごとに二項係数のprefix和 Σ(i=0..k) C(n,i) を一括計算する。 |
 | [bitmatrix.hpp](math/bitmatrix.md) | F₂上の独立したビットパック行列。 |
-| [convolution.hpp](math/convolution.md) | 静的modintまたは整数係数の通常畳み込み。 |
+| [combinatorics.hpp](math/combinatorics.md) | Bernoulli数、Bell数、階乗、Montmort数、分割数、Stirling数、部分集合和の個数。 |
+| [convolution.hpp](math/convolution.md) | 通常畳み込み・二乗・middle product。 |
 | [convolution_bit_and.hpp](math/convolution_bit_and.md) | bit AND畳み込み。 |
 | [convolution_bit_or.hpp](math/convolution_bit_or.md) | bit OR畳み込み。 |
 | [convolution_bit_xor.hpp](math/convolution_bit_xor.md) | bit XOR畳み込み。 |
@@ -157,6 +163,7 @@
 | [general_floor_sum.hpp](math/general_floor_sum.md) | floorで定まる語の非可換モノイド積をEuclid再帰で求める。 |
 | [gf2.hpp](math/gf2.md) | GF(2^D)のスカラー演算。 |
 | [internal_bit.hpp](math/internal_bit.md) | 整数のbit幅・2冪切上げ・末尾零・popcountなどの移植用補助。 |
+| [internal_fps_composition.hpp](math/internal_fps_composition.md) | 形式的冪級数の合成とpower projectionの内部実装。 |
 | [internal_math.hpp](math/internal_math.md) | 符号付き除算の丸め、剰余、Barrett/Montgomery、mod冪、素数判定などの内部数論。 |
 | [light/fps_light.hpp](math/light/fps_light.md) | 軽量なFPS実装。 |
 | [light/mint_factorial_light.hpp](math/light/mint_factorial_light.md) | 型ごとの共有階乗表とnPk/nCkの軽量関数。 |
@@ -170,12 +177,15 @@
 | [mod_sqrt.hpp](math/mod_sqrt.md) | 素数modの平方根をTonelli–Shanksで求める。 |
 | [modint.hpp](math/modint.md) | 32/64bitの静的・動的modint。 |
 | [modint_factorials.hpp](math/modint_factorials.md) | modintの逆元・階乗・逆階乗、順列・組合せ・Catalan・格子路。 |
+| [modint_q_factorials.hpp](math/modint_q_factorials.md) | 固定した素数法とqに対するq-階乗・q-二項係数。 |
 | [modint_traits.hpp](math/modint_traits.md) | modint互換型とNTT対応型を検出する型traits。 |
 | [nimber.hpp](math/nimber.md) | 64bit nim積に対応する体要素。 |
-| [ntt.hpp](math/ntt.md) | 静的modintのNTTエンジン。 |
+| [ntt.hpp](math/ntt.md) | 静的modintのNTTとスペクトル変換。 |
 | [number_of_increasing_sequence.hpp](math/number_of_increasing_sequence.md) | 各位置の上限制約下の増加列を畳み込みDPで数える。 |
+| [number_of_subsequences.hpp](math/number_of_subsequences.md) | 空でない相異なる部分列の個数を数える。 |
 | [piecewise_linear_function.hpp](math/piecewise_linear_function.md) | 長さ・傾き・jumpの列で区分線形関数を表す。 |
 | [prime_factorization.hpp](math/prime_factorization.md) | 64bit整数のMiller–RabinとPollard rhoによる素因数分解・約数列挙。 |
+| [prime_field_tables.hpp](math/prime_field_tables.md) | 素数体の逆元・離散対数・冪乗の定数時間クエリ。 |
 | [prime_table.hpp](math/prime_table.md) | 上限までの素数一覧を共有キャッシュで取得する。 |
 | [primitive_root.hpp](math/primitive_root.md) | 素数modの原始根を探索する。 |
 | [set_power_series.hpp](math/set_power_series.md) | 部分集合畳み込み上の冪級数。 |
@@ -213,6 +223,7 @@
 | [static_top_tree.hpp](tree/static_top_tree.md) | 静的木をrake/compressで分解し一点変更に伴う木DPを更新する。 |
 | [static_top_tree_rerooting.hpp](tree/static_top_tree_rerooting.md) | 静的top tree上で一点変更と任意根のDP取得を行う。 |
 | [steiner_tree.hpp](tree/steiner_tree.md) | 少数のterminalを結ぶ最小Steiner木。 |
+| [tree_distance_frequency.hpp](tree/tree_distance_frequency.md) | 木の距離ごとの頂点対数。 |
 | [tree_isom.hpp](tree/tree_isom.md) | 根付き・根なし木の同型判定。 |
 
 ## utility

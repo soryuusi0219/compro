@@ -1,5 +1,8 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/internal/tree_arena.hpp
 #pragma once
+#include <cassert>
+#include <memory>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 #include "node_pool.hpp"
@@ -9,6 +12,23 @@ namespace soryuusi::internal {
 template<class Ops, template<class,class> class Backend>
 struct TreeArena {
   using Node = typename Ops::Node;
+private:
+  struct Reference {
+    std::weak_ptr<TreeArena> owner;
+    Node* node;
+  };
+public:
+  class NodeRef {
+    friend struct TreeArena;
+    std::shared_ptr<Reference> state;
+    explicit NodeRef(std::shared_ptr<Reference> ref) : state(std::move(ref)){}
+  public:
+    NodeRef() = default;
+  };
+private:
+  std::unordered_map<Node*,std::weak_ptr<Reference>> references;
+  std::vector<Node*> path;
+public:
   NodePool<Node> pool;
   std::vector<Node*> free_nodes;
   Backend<Node,Ops> engine;
@@ -19,7 +39,88 @@ struct TreeArena {
     engine.prepare(p);
     return p;
   }
-  void release(Node* p){free_nodes.push_back(p);}
+  void release(Node* p){
+    if(auto it = references.find(p); it != references.end()){
+      if(auto ref = it->second.lock()) ref->node = nullptr;
+      references.erase(it);
+    }
+    free_nodes.push_back(p);
+  }
+  NodeRef reference(const std::shared_ptr<TreeArena>& owner, Node* p){
+    auto& slot = references[p];
+    auto ref = slot.lock();
+    if(!ref){ref = std::make_shared<Reference>(Reference{owner,p}); slot = ref;}
+    return NodeRef(std::move(ref));
+  }
+  void transfer_reference(Node* old, const std::shared_ptr<TreeArena>& destination, Node* replacement){
+    if(auto it = references.find(old); it != references.end()){
+      if(auto ref = it->second.lock()){
+        destination->references[replacement] = ref;
+        ref->owner = destination;
+        ref->node = replacement;
+      }
+      references.erase(it);
+    }
+  }
+  Node* node_of(const NodeRef& ref) const {
+    if(!ref.state || ref.state->owner.lock().get() != this) return nullptr;
+    return ref.state->node;
+  }
+  int index_of_node(Node*& root, Node* p){
+    if(!root || !p) return -1;
+    path.clear();
+    for(Node* q = p; q; q = q->pp) path.push_back(q);
+    if(path.back() != root) return -1;
+    for(auto it = path.rbegin(); it != path.rend(); ++it) Ops::push(*it);
+    int index = Ops::size(p->lp);
+    for(Node* q = p; q->pp; q = q->pp)
+      if(q == q->pp->rp) index += Ops::local_size(q->pp)+Ops::size(q->pp->lp);
+    if constexpr(requires {engine.access_pushed(root,p);}) engine.access_pushed(root,p);
+    else if constexpr(requires {engine.access_node(root,p);}) engine.access_node(root,p);
+    else engine.access(root,index);
+    return index;
+  }
+  int index_of(Node*& root, const NodeRef& ref){return index_of_node(root,node_of(ref));}
+  void insert_at(Node*& root, int k, Node* node){
+    if constexpr(requires {engine.insert_at(root,k,node);}) engine.insert_at(root,k,node);
+    else {
+      auto [a,b] = engine.split(root,k);
+      root = engine.join(engine.join(a,node),b);
+    }
+  }
+  void erase_at(Node*& root, int k){
+    if constexpr(requires {engine.erase_at(root,k);}) release(engine.erase_at(root,k));
+    else {
+      auto [a,bc] = engine.split(root,k);
+      auto [b,c] = engine.split(bc,1);
+      release(b);
+      root = engine.join(a,c);
+    }
+  }
+  template<bool Reverse> auto prod(Node*& root, int l, int r){
+    assert(0 <= l && l < r && r <= Ops::size(root));
+    auto sum = [](Node* p){return Reverse ? p->rsum : p->lsum;};
+    auto local = [](Node* p,int,int){return p->value;};
+    if constexpr(requires {engine.template with_range<false>(root,l,r,sum);}){
+      return engine.template with_range<false>(root,l,r,sum);
+    }else if constexpr(requires {engine.template fold_range<Reverse>(root,l,r,local,Ops::combine);}){
+      return engine.template fold_range<Reverse>(root,l,r,local,Ops::combine);
+    }else{
+      auto [a,bc] = engine.split(root,l);
+      auto [b,c] = engine.split(bc,r-l);
+      auto result = sum(b);
+      root = engine.join(engine.join(a,b),c);
+      return result;
+    }
+  }
+  template<class Function> static void visit_in_order(Node* p, Function visit, bool reverse = false){
+    std::vector<Node*> stack;
+    while(p || !stack.empty()){
+      while(p){Ops::push(p); stack.push_back(p); p = reverse ? p->rp : p->lp;}
+      p = stack.back(); stack.pop_back();
+      visit(p); p = reverse ? p->lp : p->rp;
+    }
+  }
 };
 
 }  // namespace soryuusi::internal

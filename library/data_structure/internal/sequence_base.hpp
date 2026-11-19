@@ -28,6 +28,8 @@ class SequenceBase {
   template<class Function> auto range(int l, int r, Function function){
     assert(0 <= l && l <= r && r <= size());
     if(l == r) return function(nullptr);
+    if constexpr(requires {arena->engine.with_range(root,l,r,function);})
+      return arena->engine.with_range(root,l,r,function);
     auto [a,bc] = arena->engine.split(root,l);
     auto [b,c] = arena->engine.split(bc,r-l);
     auto result = function(b);
@@ -36,6 +38,7 @@ class SequenceBase {
   }
 public:
   using value_type = T;
+  using NodeRef = typename Arena::NodeRef;
   SequenceBase(const SequenceBase&) = delete;
   SequenceBase& operator=(const SequenceBase&) = delete;
   SequenceBase(SequenceBase&& other) noexcept : arena(std::move(other.arena)), root(std::exchange(other.root,nullptr)){}
@@ -48,17 +51,18 @@ public:
   std::size_t allocated_nodes() const {return arena ? arena->pool.size() : 0;}
   void insert_at(int k, T value){
     assert(0 <= k && k <= size());
-    auto [a,b] = arena->engine.split(root,k);
-    root = arena->engine.join(arena->engine.join(a,make_node(value)),b);
+    arena->insert_at(root,k,make_node(value));
   }
   void erase_at(int k){
     assert(0 <= k && k < size());
-    auto [a,bc] = arena->engine.split(root,k);
-    auto [b,c] = arena->engine.split(bc,1);
-    arena->release(b);
-    root = arena->engine.join(a,c);
+    arena->erase_at(root,k);
   }
   T get(int k){assert(0 <= k && k < size()); return arena->engine.access(root,k)->value;}
+  [[nodiscard]] NodeRef ref_at(int k){
+    assert(0 <= k && k < size());
+    return arena->reference(arena,arena->engine.access(root,k));
+  }
+  int index_of(const NodeRef& ref){return arena ? arena->index_of(root,ref) : -1;}
   void set(int k, T value){
     assert(0 <= k && k < size());
     Node* p = arena->engine.access(root,k);
@@ -70,8 +74,14 @@ public:
   void apply(int l, int r, typename Ops::action_type f) requires Ops::has_action {
     range(l,r,[&](Node* p){Ops::apply(p,f); return 0;});
   }
-  T prod(int l, int r){return range(l,r,[](Node* p){return p ? p->lsum : Ops::identity();});}
-  T prodrev(int l, int r){return range(l,r,[](Node* p){return p ? p->rsum : Ops::identity();});}
+  T prod(int l, int r){
+    assert(0 <= l && l <= r && r <= size());
+    return l == r ? Ops::identity() : arena->template prod<false>(root,l,r);
+  }
+  T prodrev(int l, int r){
+    assert(0 <= l && l <= r && r <= size());
+    return l == r ? Ops::identity() : arena->template prod<true>(root,l,r);
+  }
   T prod_all() const {return root ? root->lsum : Ops::identity();}
   T prodrev_all() const {return root ? root->rsum : Ops::identity();}
   [[nodiscard]] std::pair<SequenceBase,SequenceBase> split(int k){
@@ -88,19 +98,23 @@ public:
     assert(arena && other.arena);
     if(!root && arena == other.arena){root = std::exchange(other.root,nullptr); return;}
     Node* tail = other.root;
-    if(arena != other.arena) tail = build(other.to_vector());
+    if(arena != other.arena){
+      std::vector<Node*> source;
+      source.reserve(other.size());
+      Arena::visit_in_order(other.root,[&](Node* p){source.push_back(p);});
+      tail = arena->engine.build(source.size(),[&](int i){
+        Node* p = make_node(source[i]->value);
+        other.arena->transfer_reference(source[i],arena,p);
+        return p;
+      });
+    }
     root = arena->engine.join(root,tail);
     other.root = nullptr;
   }
   std::vector<T> to_vector(){
     std::vector<T> result;
     result.reserve(size());
-    std::vector<Node*> stack;
-    Node* p = root;
-    while(p || !stack.empty()){
-      while(p){Ops::push(p); stack.push_back(p); p = p->lp;}
-      p = stack.back(); stack.pop_back(); result.push_back(p->value); p = p->rp;
-    }
+    Arena::visit_in_order(root,[&](Node* p){result.push_back(p->value);});
     return result;
   }
   [[nodiscard]] SequenceBase clone(){assert(arena); SequenceBase copy(arena); copy.root = copy.build(to_vector()); return copy;}
@@ -116,6 +130,7 @@ class SequenceArena {
   void ensure(){if(!arena) arena = std::make_shared<Storage>();}
 public:
   using Sequence = SequenceBase<Ops,Backend>;
+  using NodeRef = typename Sequence::NodeRef;
   SequenceArena() = default;
   SequenceArena(const SequenceArena&) = delete;
   SequenceArena& operator=(const SequenceArena&) = delete;

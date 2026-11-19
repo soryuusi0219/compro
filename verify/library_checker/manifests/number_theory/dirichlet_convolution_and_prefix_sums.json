@@ -1,0 +1,5 @@
+{
+  "name": "dirichlet_convolution_and_prefix_sums",
+  "problem": "number_theory/dirichlet_convolution_and_prefix_sums",
+  "source": "verify/library_checker/number_theory/dirichlet_convolution_and_prefix_sums.cpp"
+}

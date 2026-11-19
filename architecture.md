@@ -60,7 +60,10 @@ splay/treapの管理型はarenaを確保し、`new_sequence()` でmove-onlyの�
 明示キー版は `new_set()` で集合を作ります。ハンドルはarenaを共有所有し、管理型の破棄後も使用できます。
 cloneも同じarenaに独立したノードを作ります。異arenaへの複製は値を取り出して構築します。
 
-明示キー版のキーは固定し、集約と遅延作用は別に持つ値に適用します。
+従来の明示キー版はキーを固定し、集約と遅延作用を別に持つ値に適用します。
+Monotone版はExtraにキー作用を保持し、減少方向の更新を部分木反転と順逆集約の交換で扱います。
+LazyMonotone版はキー作用と値作用のタグを独立に持ち、既存のPolicyを組み合わせます。
+更新後の区間を元の境界へ結合できない場合はmeldで統合します。
 重複可否はテンプレート引数Multiで選びます。meldは同値キーでは連結先の要素を先に置き、
 重複不可では連結先の値を残します。順位区間とキー区間のAPIを区別します。
 
@@ -69,12 +72,16 @@ cloneも同じarenaに独立したノードを作ります。異arenaへの複�
 - [BinaryTreeOps](docs/reference/data_structure/internal/binary_tree_ops.md)：非所有の回転・重み付き位置探索。
 - [ReversibleMonoid](docs/reference/data_structure/internal/reversible_monoid.md)：順逆集約、反転、任意の遅延作用、必要なノード状態。
 - [SplayBase](docs/reference/data_structure/internal/splay_base.md) / [TreapBase](docs/reference/data_structure/internal/treap_base.md)：平衡化。ノードの確保・解放は行いません。
-- [TreeArena](docs/reference/data_structure/internal/tree_arena.md)：プール、再利用リスト、Backendの作業領域を共有。
+- [TreeArena](docs/reference/data_structure/internal/tree_arena.md)：プール、再利用リスト、Backendの作業領域と、取得された要素参照を管理。
 - [SequenceBase / SequenceArena](docs/reference/data_structure/internal/sequence_base.md)：列の生成と操作。新しい平衡化方式も同じBackendインターフェースで接続できます。
-- [ExplicitSet / ExplicitArena](docs/reference/data_structure/internal/explicit_base.md)：固定キーの集合と区間演算・meld。
+- [ExplicitSet / ExplicitArena](docs/reference/data_structure/internal/explicit_base.md)：明示キー集合と区間演算・単調キー作用・meld。
+- [SortableSequence / SortableArena](docs/reference/data_structure/internal/sortable_base.md)：Explicit木を区間とする重み付きSequence。既存のBackendで外側の列を分割・結合し、ソート時は対象区間の内側だけをmeld。
 - [LinkCutBase](docs/reference/data_structure/internal/link_cut_base.md)：preferred edgeとpath-parentを管理するLCT操作。固定配列を所有します。
 
 追加の平衡化方式には、`prepare`、`access(root&,k)`、`split`、`join`、`build` を実装します。
+探索済み経路を使うアクセス、単要素の挿入・削除、区間への直接アクセスはBackendで提供できます。
+Sortableの区間集約では区間構成を維持し、完全に含まれる部分木の保存済み集約を使います。
+実装と計測条件は [平衡二分木の性能比較](docs/reference/data_structure/internal/sequence_base.md#区間処理meldの高速化) を参照してください。
 ノードの追加情報はPolicyのExtraに保持でき、既存の列操作を複製する必要はありません。
 LCTの補助木にはpath-parentを維持するsplay相当の契約が必要です。
 
