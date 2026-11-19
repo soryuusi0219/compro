@@ -138,7 +138,7 @@
 | --- | --- |
 | [binomial_coefficient_prefix_sum.hpp](math/binomial_coefficient_prefix_sum.md) | 質問 (n,k) ごとに二項係数のprefix和 Σ(i=0..k) C(n,i) を一括計算する。 |
 | [bitmatrix.hpp](math/bitmatrix.md) | F₂上の独立したビットパック行列。 |
-| [convolution.hpp](math/convolution.md) | 静的modintまたは整数係数の通常畳み込み。 |
+| [convolution.hpp](math/convolution.md) | 通常畳み込み・二乗・middle product。 |
 | [convolution_bit_and.hpp](math/convolution_bit_and.md) | bit AND畳み込み。 |
 | [convolution_bit_or.hpp](math/convolution_bit_or.md) | bit OR畳み込み。 |
 | [convolution_bit_xor.hpp](math/convolution_bit_xor.md) | bit XOR畳み込み。 |
@@ -176,7 +176,7 @@
 | [modint_factorials.hpp](math/modint_factorials.md) | modintの逆元・階乗・逆階乗、順列・組合せ・Catalan・格子路。 |
 | [modint_traits.hpp](math/modint_traits.md) | modint互換型とNTT対応型を検出する型traits。 |
 | [nimber.hpp](math/nimber.md) | 64bit nim積に対応する体要素。 |
-| [ntt.hpp](math/ntt.md) | 静的modintのNTTエンジン。 |
+| [ntt.hpp](math/ntt.md) | 静的modintのNTTとスペクトル変換。 |
 | [number_of_increasing_sequence.hpp](math/number_of_increasing_sequence.md) | 各位置の上限制約下の増加列を畳み込みDPで数える。 |
 | [piecewise_linear_function.hpp](math/piecewise_linear_function.md) | 長さ・傾き・jumpの列で区分線形関数を表す。 |
 | [prime_factorization.hpp](math/prime_factorization.md) | 64bit整数のMiller–RabinとPollard rhoによる素因数分解・約数列挙。 |

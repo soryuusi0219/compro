@@ -135,6 +135,8 @@ vector<T> CompositionalPowerProjection(FormalPowerSeries<T> F, int n = -1, int m
 
 ## 計算量
 
+NTTが使えるサイズでは、`Bostan_Mori` が偶奇周波数から次の段のスペクトルを取り出し、周波数を再利用する。
+
 畳み込みを M(N) として基本積 O(M(N))、Newton系 O(M(N) log N) を上界とする。多点処理 O(M(N) log N) 程度。空間は操作依存。
 
 ## 依存関係
@@ -142,6 +144,7 @@ vector<T> CompositionalPowerProjection(FormalPowerSeries<T> F, int n = -1, int m
 - [convolution.hpp](convolution.md)
 - [modint_traits.hpp](modint_traits.md)
 - [modint_factorials.hpp](modint_factorials.md)
+- [ntt.hpp](ntt.md)
 - [convolution_mod.hpp](convolution_mod.md)
 - [convolution_semi_online.hpp](convolution_semi_online.md)
 - [convolution_online.hpp](convolution_online.md)

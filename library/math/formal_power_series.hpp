@@ -4,6 +4,7 @@
 #include <bit>
 #include <cassert>
 #include <cmath>
+#include <cstddef>
 #include <numeric>
 #include <queue>
 #include <random>
@@ -18,6 +19,7 @@
 #include "convolution_mod.hpp"
 #include "convolution_semi_online.hpp"
 #include "convolution_online.hpp"
+#include "ntt.hpp"
 
 namespace soryuusi {
 
@@ -72,6 +74,7 @@ struct FormalPowerSeries : vector<T>{
   }
   friend FPS operator*(const FPS& x, const FPS& y) {
     if constexpr (is_ntt_friendly_v<T>) {
+      if(&x == &y) return soryuusi::convolution_square(x);
       return soryuusi::convolution(x,y);
     }else{
       return convolution_mod(x,y);
@@ -79,7 +82,11 @@ struct FormalPowerSeries : vector<T>{
   }
   friend FPS& operator*=(FPS& x, const FPS& y) {
     if constexpr (is_ntt_friendly_v<T>) {
-      if(&x == &y) return x = x * y;
+      if(&x == &y){
+        vector<T> values;
+        values.swap(x);
+        return x = FPS(soryuusi::convolution_square(std::move(values)));
+      }
       vector<T> lhs;
       lhs.swap(x);
       vector<T> rhs(y.begin(), y.end());
@@ -99,6 +106,7 @@ struct FormalPowerSeries : vector<T>{
     assert(!this->empty() && this->front() != T(0));
     FPS g = {this->front().inv()};
     if constexpr (is_ntt_friendly_v<T>) {
+      using NTT = NTTEngine<T>;
       while((int)g.size() < N) {
         const int k = g.size();
         const int z = k << 1;
@@ -106,16 +114,18 @@ struct FormalPowerSeries : vector<T>{
         f_ntt.resize(z);
         FPS g_ntt(g);
         g_ntt.resize(z);
-        NTTEngine<T>::ntt(f_ntt);
-        NTTEngine<T>::ntt(g_ntt);
+        NTT::ntt(f_ntt);
+        NTT::ntt(g_ntt);
         for(int i = 0; i < z; ++i) f_ntt[i] *= g_ntt[i];
-        NTTEngine<T>::intt(f_ntt);
+        NTT::intt_unnormalized(f_ntt);
+        const T scale = -NTT::inverse_size(z);
         fill(f_ntt.begin(), f_ntt.begin() + k, T(0));
-        for(int i = k; i < z; ++i) f_ntt[i] = -f_ntt[i];
-        NTTEngine<T>::ntt(f_ntt);
+        for(int i = k; i < z; ++i) f_ntt[i] *= scale;
+        NTT::ntt(f_ntt);
         for(int i = 0; i < z; ++i) f_ntt[i] *= g_ntt[i];
-        NTTEngine<T>::intt(f_ntt);
+        NTT::intt_unnormalized(f_ntt);
         const int next = min(z, N);
+        NTT::normalize(f_ntt.begin() + k, f_ntt.begin() + next, z);
         g.reserve(next);
         g.insert(g.end(), f_ntt.begin() + k, f_ntt.begin() + next);
       }
@@ -567,6 +577,37 @@ struct FormalPowerSeries : vector<T>{
   }
   // return [X^k](F/G)
   static T Bostan_Mori(FPS F, FPS G, long long int k){
+    assert(k >= 0 && !G.empty() && G[0] != 0);
+    if(F.empty()) return 0;
+    if constexpr (is_ntt_friendly_v<T>) {
+      using NTT = NTTEngine<T>;
+      const size_t length = max(F.size(), G.size());
+      if(k > 0 && length > 60 && length <= (size_t{1} << (NTT::rank2 - 1))){
+        const int n = std::bit_ceil(length);
+        F.resize(2*n);
+        G.resize(2*n);
+        NTT::ntt(F);
+        NTT::ntt(G);
+        const T half = NTT::inverse_size(2);
+        while(true){
+          const bool odd = k&1;
+          T phase = half;
+          for(int i = 0; i < n; ++i){
+            const T left = F[2*i]*G[2*i+1], right = F[2*i+1]*G[2*i];
+            F[i] = odd ? (left-right)*phase : (left+right)*half;
+            G[i] = G[2*i]*G[2*i+1];
+            if(odd && i+1 < n) phase *= NTT::inv_rate2(std::countr_zero(~static_cast<unsigned int>(i)));
+          }
+          F.resize(n);
+          G.resize(n);
+          if(!(k >>= 1)) break;
+          NTT::ntt_double(F);
+          NTT::ntt_double(G);
+        }
+        // The inverse-transform constant is the mean of its evaluations.
+        return accumulate(F.begin(),F.end(),T(0)) / accumulate(G.begin(),G.end(),T(0));
+      }
+    }
     FPS G2(G.size());
     while(k){
       if(F.empty()) return 0;
@@ -584,7 +625,7 @@ struct FormalPowerSeries : vector<T>{
       }
       k >>= 1;
     }
-    return F[0]/G[0];
+    return F.empty() ? T(0) : F[0]/G[0];
   }
   //return (cx+d)^n f((ax+b)/(cx+d))
   FPS Mobius_Transform(T a, T b, T c, T d) const {
@@ -849,7 +890,7 @@ struct FormalPowerSeries : vector<T>{
       G <<= ((1 << n) - N);
       N = 1 << n;
       F.pred(N); G.pred(N);
-      int n2 = 0, N2 = 1;
+      int N2 = 1;
       T invN = T(N).inv(), invN2 = 1;
       vector<FPS> P = {G}, Q = {-F};
       while(N > 1){
@@ -861,14 +902,8 @@ struct FormalPowerSeries : vector<T>{
         vector<T> p(N2), q(N2);
         for(int j = 0; j < N; ++j){
           for(int i = 0; i < N2; ++i) p[i] = P[i][j], q[i] = Q[i][j];
-          NTTEngine<T>::intt_unnormalized(p); NTTEngine<T>::intt_unnormalized(q);
-          T e = 1;
-          for(int i = 0; i < N2; ++i){
-            p[i] *= e; q[i] *= e;
-            if(i + 1 != N2) e *= NTT::root(n2+1);
-          }
-          NTTEngine<T>::ntt(p); NTTEngine<T>::ntt(q);
-          for(int i = 0; i < N2; ++i) NP[i+N2][j] = p[i] * invN2, NQ[i+N2][j] = q[i] * invN2;
+          NTT::ntt_odd_extend(p); NTT::ntt_odd_extend(q);
+          for(int i = 0; i < N2; ++i) NP[i+N2][j] = p[i], NQ[i+N2][j] = q[i];
         }
         P = vector<FPS>(N2 << 1, FPS(N)); Q = vector<FPS>(N2 << 1, FPS(N));
         const T projection_scale = invN * T(inv2);
@@ -886,7 +921,7 @@ struct FormalPowerSeries : vector<T>{
           Q[i][0] -= 1;
         }
         N >>= 1; n--; invN *= 2;
-        N2 <<= 1; n2++; invN2 *= inv2;
+        N2 <<= 1; invN2 *= inv2;
       }
       FPS p(N2), q(N2);
       for(int i = 0; i < N2; ++i) p[i] = P[i][0]*invN2, q[i] = Q[i][0]*invN2;
@@ -939,14 +974,8 @@ struct FormalPowerSeries : vector<T>{
         vector<T> q(N2);
         for(int j = 0; j < N; ++j){
           for(int i = 0; i < N2; ++i) q[i] = Q[i][j];
-          NTTEngine<T>::intt_unnormalized(q);
-          T e = 1;
-          for(int i = 0; i < N2; ++i){
-            q[i] *= e;
-            if(i + 1 != N2) e *= NTT::root(n2+1);
-          }
-          NTTEngine<T>::ntt(q);
-          for(int i = 0; i < N2; ++i) NQ[n2][i+N2][j] = q[i] * invN2;
+          NTT::ntt_odd_extend(q);
+          for(int i = 0; i < N2; ++i) NQ[n2][i+N2][j] = q[i];
         }
         Q = vector<FPS>(N2 << 1, FPS(N));
         for(int i = 0; i < (N2 << 1); ++i){
@@ -1051,14 +1080,8 @@ struct static_composition<T, true> {
         vector<T> qt(N2);
         for(int j = 0; j < N; ++j){
           for(int i = 0; i < N2; ++i) qt[i] = Q[i][j];
-          NTTEngine<T>::intt_unnormalized(qt);
-          T e = 1;
-          for(int i = 0; i < N2; ++i){
-            qt[i] *= e;
-            if(i + 1 != N2) e *= NTT::root(n2+1);
-          }
-          NTTEngine<T>::ntt(qt);
-          for(int i = 0; i < N2; ++i) NQ[n2][i+N2][j] = qt[i] * invN2;
+          NTT::ntt_odd_extend(qt);
+          for(int i = 0; i < N2; ++i) NQ[n2][i+N2][j] = qt[i];
         }
         Q = vector<FormalPowerSeries<T>>(N2 << 1, FormalPowerSeries<T>(N));
         for(int i = 0; i < (N2 << 1); ++i){

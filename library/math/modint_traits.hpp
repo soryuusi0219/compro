@@ -38,6 +38,10 @@ inline constexpr bool is_static_modint_like_v = is_static_modint_like<T>::value;
 template <class T>
 using is_static_modint_like_t = std::enable_if_t<is_static_modint_like_v<T>>;
 
+// Opt-in only: the entire object representation is one canonical uint32_t.
+template <class T>
+inline constexpr bool has_native_ntt_residue = false;
+
 }  // namespace soryuusi::internal
 
 namespace soryuusi {

@@ -48,8 +48,8 @@ public:
         }
         return;
       }
-      auto a = convolution<mod1>(histogram,histogram);
-      auto b = convolution<mod2>(histogram,histogram);
+      auto a = convolution_square<mod1>(histogram);
+      auto b = convolution_square<mod2>(histogram);
       const int end = std::min<int>(a.size(),n-offset);
       for(int i = 0; i < end; ++i){
         sum1[i+offset] += sign*a[i];

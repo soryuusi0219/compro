@@ -71,9 +71,10 @@ struct semi_online_convolution {
     NTTEngine<T>::ntt(result);
     const vm& transformed_b = fixed_ntt(len);
     for (int i = 0; i < 2 * len; ++i) result[i] *= transformed_b[i];
-    NTTEngine<T>::intt(result);
+    NTTEngine<T>::intt_unnormalized(result);
     const int offset = la + len;
     const int count = min(2 * len - 1, limit - offset);
+    NTTEngine<T>::normalize(result.begin(), result.begin() + count, 2 * len);
     for (int i = 0; i < count; ++i) c[offset + i] += result[i];
   }
 
