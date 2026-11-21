@@ -208,10 +208,15 @@ template<class S, class T> istream &operator>>(istream &is, pair<S,T>& p);
 template<class S, class T> ostream &operator<<(ostream &os, pair<S,T> p);
 template<class... T> istream &operator>> (istream &is, tuple<T...>& p);
 template<class... T> ostream &operator<< (ostream &os, tuple<T...> p);
-template<class T> ostream &operator<<(ostream &os, set<T> s);
-template<class T> ostream &operator<<(ostream &os, multiset<T> s);
-template<class S, class T> ostream &operator<<(ostream &os, map<S,T> m);
-template<class S, class T> ostream &operator<<(ostream &os, multimap<S,T> m);
+template<class T, class... Args> ostream &operator<<(ostream &os, set<T,Args...> s);
+template<class T, class... Args> ostream &operator<<(ostream &os, multiset<T,Args...> s);
+template<class S, class T, class... Args> ostream &operator<<(ostream &os, map<S,T,Args...> m);
+template<class S, class T, class... Args> ostream &operator<<(ostream &os, multimap<S,T,Args...> m);
+template<class T> ostream &operator<<(ostream &os, deque<T> dq);
+template<class T, class... Args> ostream &operator<<(ostream &os, unordered_set<T,Args...> s);
+template<class T, class... Args> ostream &operator<<(ostream &os, unordered_multiset<T,Args...> s);
+template<class S, class T, class... Args> ostream &operator<<(ostream &os, unordered_map<S,T,Args...> m);
+template<class S, class T, class... Args> ostream &operator<<(ostream &os, unordered_multimap<S,T,Args...> m);
 template<class T> ostream &operator<<(ostream &os, queue<T> qu);
 template<class T> ostream &operator<<(ostream &os, stack<T> st);
 template<class T, class Container, class Compare> ostream &operator<<(ostream &os, priority_queue<T, Container, Compare> qu);
@@ -228,14 +233,15 @@ template<class Tuple, size_t ...I> array<int,sizeof...(I)>tuple_cin(istream &is,
 template<class... T> istream &operator>> (istream &is, tuple<T...>& p){tuple_cin(is, p, make_index_sequence<tuple_size<decay_t<tuple<T...>>>::value>{}); return is;}
 template<class Tuple, size_t ...I> array<int,sizeof...(I)>tuple_cout(ostream &os, Tuple&& t, index_sequence<I...>){if(&os == &cerr) return {{ (void(os << get<I>(t) << ","), 0)... }};return {{ (void(os << get<I>(t) << " "), 0)... }};}
 template<class... T> ostream &operator<< (ostream &os, tuple<T...> p){if(&os == &cerr) os << "("; tuple_cout(os, p, make_index_sequence<tuple_size<decay_t<tuple<T...>>>::value>{}); if(&os == &cerr) os << ")"; return os;}
-template<class T> ostream &operator<<(ostream &os, set<T> s){if(&os == &cerr) os << "set["; for(T x : s) os << x << " "; if(&os == &cerr) os << "]"; return os;}
-template<class T> ostream &operator<<(ostream &os, multiset<T> s){if(&os == &cerr) os << "multiset["; for(T x : s) os << x << " "; if(&os == &cerr) os << "]"; return os;}
-template<class T> ostream &operator<<(ostream &os, unordered_set<T> s){if(&os == &cerr) os << "unordered_set["; for(T x : s) os << x << " "; if(&os == &cerr) os << "]"; return os;}
-template<class T> ostream &operator<<(ostream &os, unordered_multiset<T> s){if(&os == &cerr) os << "unordered_multiset["; for(T x : s) os << x << " "; if(&os == &cerr) os << "]"; return os;}
-template<class S, class T> ostream &operator<<(ostream &os, map<S,T> m){if(&os == &cerr) os << "map["; for(auto [k, v] : m) os << "(" << k << "," << v << ") "; if(&os == &cerr) os << "]"; return os;}
-template<class S, class T> ostream &operator<<(ostream &os, multimap<S,T> m){if(&os == &cerr) os << "multimap["; for(auto [k, v] : m) os << "(" << k << "," << v << ") "; if(&os == &cerr) os << "]"; return os;}
-template<class S, class T> ostream &operator<<(ostream &os, unordered_map<S,T> m){if(&os == &cerr) os << "unordered_map["; for(auto [k, v] : m) os << "(" << k << "," << v << ") "; if(&os == &cerr) os << "]"; return os;}
-template<class S, class T> ostream &operator<<(ostream &os, unordered_multimap<S,T> m){if(&os == &cerr) os << "unordered_multimap["; for(auto [k, v] : m) os << "(" << k << "," << v << ") "; if(&os == &cerr) os << "]"; return os;}
+template<class T, class... Args> ostream &operator<<(ostream &os, set<T,Args...> s){if(&os == &cerr) os << "set["; for(T x : s) os << x << " "; if(&os == &cerr) os << "]"; return os;}
+template<class T, class... Args> ostream &operator<<(ostream &os, multiset<T,Args...> s){if(&os == &cerr) os << "multiset["; for(T x : s) os << x << " "; if(&os == &cerr) os << "]"; return os;}
+template<class T, class... Args> ostream &operator<<(ostream &os, unordered_set<T,Args...> s){if(&os == &cerr) os << "unordered_set["; for(T x : s) os << x << " "; if(&os == &cerr) os << "]"; return os;}
+template<class T, class... Args> ostream &operator<<(ostream &os, unordered_multiset<T,Args...> s){if(&os == &cerr) os << "unordered_multiset["; for(T x : s) os << x << " "; if(&os == &cerr) os << "]"; return os;}
+template<class S, class T, class... Args> ostream &operator<<(ostream &os, map<S,T,Args...> m){if(&os == &cerr) os << "map["; for(auto [k, v] : m) os << "(" << k << "," << v << ") "; if(&os == &cerr) os << "]"; return os;}
+template<class S, class T, class... Args> ostream &operator<<(ostream &os, multimap<S,T,Args...> m){if(&os == &cerr) os << "multimap["; for(auto [k, v] : m) os << "(" << k << "," << v << ") "; if(&os == &cerr) os << "]"; return os;}
+template<class S, class T, class... Args> ostream &operator<<(ostream &os, unordered_map<S,T,Args...> m){if(&os == &cerr) os << "unordered_map["; for(auto [k, v] : m) os << "(" << k << "," << v << ") "; if(&os == &cerr) os << "]"; return os;}
+template<class S, class T, class... Args> ostream &operator<<(ostream &os, unordered_multimap<S,T,Args...> m){if(&os == &cerr) os << "unordered_multimap["; for(auto [k, v] : m) os << "(" << k << "," << v << ") "; if(&os == &cerr) os << "]"; return os;}
+template<class T> ostream &operator<<(ostream &os, deque<T> dq){if(&os == &cerr) os << "deque["; for(T &x : dq) os << x << " "; if(&os == &cerr) os << "]"; return os;}
 template<class T> ostream &operator<<(ostream &os, queue<T> qu){if(&os == &cerr) os << "queue["; while(!qu.empty()){os << qu.front() << " ";qu.pop();} if(&os == &cerr) os << "]"; return os;}
 template<class T> ostream &operator<<(ostream &os, stack<T> st){if(&os == &cerr) os << "stack["; while(!st.empty()){os << st.top() << " ";st.pop();} if(&os == &cerr) os << "]"; return os;}
 template<class T, class Container, class Compare> ostream &operator<<(ostream &os, priority_queue<T, Container, Compare> qu){if(&os == &cerr) os << "prioroty_queue["; while (!qu.empty()){os << qu.top() << " ";qu.pop();} if(&os == &cerr) os << "]"; return os;}
@@ -248,13 +254,17 @@ template<class T> void out0(T a){cout<<a;}
 template<class T>void out(T a) {out0(a); cout << "\n";}
 template<class T, class... Ts>void out(T a, Ts... b) {out0(a); cout << " "; out(b...);}
 template<class... Ts>void outf(Ts... a) {out(a...); cout << flush;}
-
 void out0d(float a){cerr<<fixed<<setprecision(15)<<a;}
 void out0d(double a){cerr<<fixed<<setprecision(15)<<a;}
 void out0d(ld a){cerr<<fixed<<setprecision(15)<<a;}
+#if defined(_DEBUG)
 template<class T> void out0d(T a){cerr<<a;}
 template<class T>void outd(T a) {out0d(a); cerr << endl;}
 template<class T, class... Ts>void outd(T a, Ts... b) {out0d(a); cerr << " "; outd(b...);}
+#else
+template<class T> void out0d(T){}
+template<class T> void outd(T){}
+#endif
 //////////////////////////////////////////////////////////
 template<class T> vector<T> &operator++(vector<T>& v){for(T& x : v) x++; return v;}
 template<class T> vector<T> &operator--(vector<T>& v){for(T& x : v) x--; return v;}

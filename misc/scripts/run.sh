@@ -1,0 +1,1 @@
+./problem.exe <in.txt >out.txt
