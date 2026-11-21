@@ -270,6 +270,7 @@ template<class T, class... Ts>void outd(T a, Ts... b) {out0d(a); cerr << " "; ou
 #else
 template<class T> void out0d(T){}
 template<class T> void outd(T){}
+template<class T, class... Ts> void outd(T, Ts...) {}
 #endif
 //////////////////////////////////////////////////////////
 template<class T> vector<T> &operator++(vector<T>& v){for(T& x : v) x++; return v;}
