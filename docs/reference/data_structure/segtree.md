@@ -35,7 +35,7 @@ template<class F> int min_left(int r, F f) const;
 
 ## 依存関係
 
-標準ライブラリのみ。
+- [internal_bit.hpp](../math/internal/internal_bit.md)
 
 ## Verify・利用例
 

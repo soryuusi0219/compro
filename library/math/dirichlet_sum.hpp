@@ -1,7 +1,6 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/math/dirichlet_sum.hpp
 #pragma once
 #include <algorithm>
-#include <bit>
 #include <cassert>
 #include <cmath>
 #include <cstddef>
@@ -12,7 +11,8 @@
 #include <utility>
 #include <vector>
 
-#include "modint_traits.hpp"
+#include "internal/internal_bit.hpp"
+#include "internal/modint_traits.hpp"
 
 namespace soryuusi {
 
@@ -117,8 +117,7 @@ private:
 
   // Scatter products from the dense tables onto the quotient intervals above K.
   // In division, the terms containing a coefficient at index 1 are solved separately.
-  static void middle_products(vector<T>& result, const vector<T>& a, const vector<T>& b,
-                              const vector<T>& pa, const vector<T>& pb, long long limit, long long first){
+  static void middle_products(vector<T>& result, const vector<T>& a, const vector<T>& b, const vector<T>& pa, const vector<T>& pb, long long limit, long long first){
     for(long long i = first; i*i <= limit; ++i){
       const T x = a[i-1], y = b[i-1];
       const long long numerator = N/i;
@@ -389,12 +388,12 @@ public:
     assert(k >= 0);
     if(k == 0) return e();
     const uint64_t exponent = k;
-    const int degree = bit_width(static_cast<uint64_t>(max(N,K)))-1;
+    const int degree = soryuusi::bit_width(static_cast<uint64_t>(max(N,K)))-1;
     if constexpr (requires {al[0] == T(0);}){
       if(k > degree && al[0] == T(0)) return Dirichlet_Sum();
     }
-    const int bits = bit_width(exponent);
-    if(bits+popcount(exponent)-2 <= degree){
+    const int bits = soryuusi::bit_width(exponent);
+    if(bits+soryuusi::popcount(exponent)-2 <= degree){
       Dirichlet_Sum ret(*this);
       for(int i = bits-2; i >= 0; --i){
         ret = ret*ret;

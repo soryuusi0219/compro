@@ -28,11 +28,9 @@ inline std::uint64_t pollard_rho_wide(std::uint64_t n) {
         while (g == 1) {
             x = y;
             for (std::uint64_t i = 0; i < r; ++i) y = f(y);
-            for (std::uint64_t k = 0; k < r && g == 1;
-                 k += pollard_batch_size) {
+            for (std::uint64_t k = 0; k < r && g == 1; k += pollard_batch_size) {
                 ys = y;
-                const std::uint64_t limit =
-                    std::min<std::uint64_t>(pollard_batch_size, r - k);
+                const std::uint64_t limit = std::min<std::uint64_t>(pollard_batch_size, r - k);
                 for (std::uint64_t i = 0; i < limit; ++i) {
                     y = f(y);
                     const std::uint64_t diff = x > y ? x - y : y - x;
@@ -68,11 +66,9 @@ inline std::uint64_t pollard_rho(std::uint64_t n) {
         while (g == 1) {
             x = y;
             for (std::uint64_t i = 0; i < r; ++i) y = f(y);
-            for (std::uint64_t k = 0; k < r && g == 1;
-                 k += pollard_batch_size) {
+            for (std::uint64_t k = 0; k < r && g == 1; k += pollard_batch_size) {
                 ys = y;
-                const std::uint64_t limit =
-                    std::min<std::uint64_t>(pollard_batch_size, r - k);
+                const std::uint64_t limit = std::min<std::uint64_t>(pollard_batch_size, r - k);
                 for (std::uint64_t i = 0; i < limit; ++i) {
                     y = f(y);
                     q = reducer.mul(q, reducer.sub(x, y));
@@ -107,8 +103,7 @@ inline void factorize(std::uint64_t n, std::vector<std::uint64_t>& factors) {
 inline long long Pollard_Rho(long long n) {
     assert(1 < n);
     if (is_prime(n)) return n;
-    return static_cast<long long>(
-        internal::pollard_rho(static_cast<std::uint64_t>(n)));
+    return static_cast<long long>(internal::pollard_rho(static_cast<std::uint64_t>(n)));
 }
 
 inline std::vector<long long> prime_factorization(long long n) {
@@ -119,8 +114,7 @@ inline std::vector<long long> prime_factorization(long long n) {
     return std::vector<long long>(factors.begin(), factors.end());
 }
 
-inline std::vector<std::pair<long long, long long>> prime_factorization_paired(
-    long long n) {
+inline std::vector<std::pair<long long, long long>> prime_factorization_paired(long long n) {
     const auto factors = prime_factorization(n);
     std::vector<std::pair<long long, long long>> result;
     for (long long p : factors) {

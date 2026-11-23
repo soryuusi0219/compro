@@ -241,8 +241,7 @@ public:
     if(ordered(a,b) && ordered(b,c)) root = engine.join(engine.join(a,b),c);
     else root = unite(engine.join(a,c),b);
   }
-  void apply_keys_by_key(const Key& low, const Key& high, typename Ops::key_action_type f,
-                         bool decreasing = false) requires Ops::has_key_action {
+  void apply_keys_by_key(const Key& low, const Key& high, typename Ops::key_action_type f, bool decreasing = false) requires Ops::has_key_action {
     assert(!less(high,low));
     int l = lower_bound(low), r = lower_bound(high);
     apply_keys(l,r,f,decreasing);

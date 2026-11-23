@@ -7,6 +7,8 @@
 #include <utility>
 #include <vector>
 
+#include "../math/internal/internal_bit.hpp"
+
 namespace soryuusi {
 
 using namespace std;
@@ -85,12 +87,12 @@ struct LazyKDTree{
     }
 
     void set(int i, S x){
-      for(int k = 31 - __builtin_clz(i = ref[i])-1; k; --k) push(i >> k); 
+      for(int k = soryuusi::bit_width(static_cast<unsigned>(i = ref[i]))-2; k; --k) push(i >> k);
       for(data[i].val = x; i >>= 1;) upd(i);
     }
 
     S get(int i){
-      for(int k =  31 - __builtin_clz(i = ref[i])-1; k; --k) push(i >> k); 
+      for(int k = soryuusi::bit_width(static_cast<unsigned>(i = ref[i]))-2; k; --k) push(i >> k);
       return data[i].val;
     }
 

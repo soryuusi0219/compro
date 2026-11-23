@@ -25,6 +25,7 @@ void incrementalMSF(int n, const vector<pair<int,int>>& es, auto comp, auto add,
 ## 依存関係
 
 - [dsu_undo.hpp](../data_structure/dsu_undo.md)
+- [internal_bit.hpp](../math/internal/internal_bit.md)
 
 ## Verify・利用例
 

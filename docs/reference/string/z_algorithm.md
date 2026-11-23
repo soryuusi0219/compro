@@ -4,7 +4,7 @@
 
 ## 機能・前提条件
 
-列の各suffixと全体との最長共通prefix長。string以外にもsizeと添字比較を持つ列を渡せる。
+列の各suffixと全体との最長共通prefix長。string以外にも `const` で `size()` と添字アクセスができる列を渡せる。空列には空の結果を返す。
 
 ## インターフェース
 
@@ -16,12 +16,12 @@
 
 ```cpp
 template<class V>
-vector<int> z_algo(V s);
+vector<int> z_algo(const V& s);
 ```
 
 ## 計算量
 
-O(N) 時間・空間。引数は値渡しなので入力コピーも O(N)。
+O(N) 時間、出力に O(N) 領域、その他の作業領域は O(1)。
 
 ## 依存関係
 
@@ -30,3 +30,4 @@ O(N) 時間・空間。引数は値渡しなので入力コピーも O(N)。
 ## Verify・利用例
 
 - [`library_checker/z_algorithm`](../../../verify/library_checker/string/z_algorithm.cpp)
+- [`unit/string_algorithms`](../../../verify/unit/string_algorithms.cpp)

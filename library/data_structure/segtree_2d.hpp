@@ -1,9 +1,10 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/segtree_2d.hpp
 #pragma once
 #include <cassert>
-#include <bit>
 #include <type_traits>
 #include <vector>
+
+#include "../math/internal/internal_bit.hpp"
 
 namespace soryuusi {
 
@@ -22,8 +23,8 @@ struct Segtree2D{
     void _update_w(int i, int j) { data[id(i,j)] = op(data[id(i, j << 1)], data[id(i, j << 1 | 1)]); }
   public:
     Segtree2D() : Segtree2D(0,0) {}
-    Segtree2D(int h_, int w_) : h(h_), w(w_), hb(bit_ceil((unsigned)h)), wb(bit_ceil((unsigned)w)), data(hb * wb * 4, e()) {}
-    Segtree2D(const vector<vector<S>>& v) : h(v.size()), w(v[0].size()), hb(bit_ceil((unsigned)h)), wb(bit_ceil((unsigned)w)), data(hb * wb * 4, e()) {
+    Segtree2D(int h_, int w_) : h(h_), w(w_), hb(soryuusi::bit_ceil((unsigned)h)), wb(soryuusi::bit_ceil((unsigned)w)), data(hb * wb * 4, e()) {}
+    Segtree2D(const vector<vector<S>>& v) : h(v.size()), w(v[0].size()), hb(soryuusi::bit_ceil((unsigned)h)), wb(soryuusi::bit_ceil((unsigned)w)), data(hb * wb * 4, e()) {
       for(int i = 0; i < h; ++i) for(int j = 0; j < w; ++j) data[id(i + hb, j + wb)] = v[i][j];
       for(int i = hb - 1; i; --i) for(int j = 0; j < w; ++j) _update_h(i, j + wb);
       for(int i = 0; i < hb + h; ++i) for(int j = wb - 1; j; --j) _update_w(i, j);

@@ -1,8 +1,9 @@
-// https://github.com/soryuusi0219/compro/blob/main/library/data_structure/Segtree_dual.hpp
+// https://github.com/soryuusi0219/compro/blob/main/library/data_structure/segtree_dual.hpp
 #pragma once
-#include <bit>
 #include <type_traits>
 #include <vector>
+
+#include "../math/internal/internal_bit.hpp"
 namespace soryuusi {
 
 using namespace std;
@@ -26,15 +27,15 @@ struct Segtree_dual{
       lz[k] = id();
     }
     void prop(int l, int r) {
-      int il = __builtin_ctz(l), ir = __builtin_ctz(r);
+      int il = soryuusi::countr_zero(static_cast<unsigned>(l)), ir = soryuusi::countr_zero(static_cast<unsigned>(r));
       for(int i = h; i > il; i--) push(l >> i);
       for(int i = h; i > ir; i--) push((r - 1) >> i);
     }
   public:
     Segtree_dual(){}
-    Segtree_dual(int n_) : n(n_), h(bit_width(bit_ceil((unsigned)n))-1), b(bit_ceil((unsigned)n)), d(n), lz(b, id()){}
-    Segtree_dual(int n_, S x) : n(n_), h(bit_width(bit_ceil((unsigned)n))-1), b(bit_ceil((unsigned)n)), d(n,x), lz(b, id()){}
-    Segtree_dual(const vector<S>& v) : n(v.size()), h(bit_width(bit_ceil((unsigned)n))-1), b(bit_ceil((unsigned)n)), d(v), lz(b, id()){}
+    Segtree_dual(int n_) : n(n_), h(soryuusi::bit_width(soryuusi::bit_ceil((unsigned)n))-1), b(soryuusi::bit_ceil((unsigned)n)), d(n), lz(b, id()){}
+    Segtree_dual(int n_, S x) : n(n_), h(soryuusi::bit_width(soryuusi::bit_ceil((unsigned)n))-1), b(soryuusi::bit_ceil((unsigned)n)), d(n,x), lz(b, id()){}
+    Segtree_dual(const vector<S>& v) : n(v.size()), h(soryuusi::bit_width(soryuusi::bit_ceil((unsigned)n))-1), b(soryuusi::bit_ceil((unsigned)n)), d(v), lz(b, id()){}
     void set(int i, S a) {
       for(int k = h; k; --k) push((i+b) >> k);
       d[i] = a;

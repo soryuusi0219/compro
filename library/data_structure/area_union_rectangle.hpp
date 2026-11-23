@@ -1,9 +1,10 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/area_union_rectangle.hpp
 #pragma once
 #include <algorithm>
-#include <bit>
 #include <iostream>
 #include <vector>
+
+#include "../math/internal/internal_bit.hpp"
 
 namespace soryuusi {
 
@@ -35,13 +36,13 @@ struct Area_Union_Rectangle{
       public:
         T w;
         LazySegtree(const vector<T>& y) : n(y.size()-1), w(0) {
-          h = bit_width((unsigned)n - 1), b = 1 << h;
+          h = soryuusi::bit_width((unsigned)n - 1), b = 1 << h;
           data.assign(2 * b, {0,0}), lz.assign(b, 0);
           for(int i = 0; i < n; i++) data[b + i] = {0,y[i+1] - y[i]};
           for(int i = b-1; i; --i) upd(i);
         }
         void add(int l, int r) {
-          int il = __builtin_ctz(l += b), ir = __builtin_ctz(r += b);
+          int il = soryuusi::countr_zero(static_cast<unsigned>(l += b)), ir = soryuusi::countr_zero(static_cast<unsigned>(r += b));
           for(int i = h; i > il; --i) push(l >> i);
           for(int i = h; i > ir; --i) push((r - 1) >> i);
 
@@ -61,7 +62,7 @@ struct Area_Union_Rectangle{
           for(int i = ir + 1; i <= h; ++i) upd((r - 1) >> i);
         }
         void del(int l, int r) {
-          int il = __builtin_ctz(l += b), ir = __builtin_ctz(r += b);
+          int il = soryuusi::countr_zero(static_cast<unsigned>(l += b)), ir = soryuusi::countr_zero(static_cast<unsigned>(r += b));
           for(int i = h; i > il; --i) push(l >> i);
           for(int i = h; i > ir; --i) push((r - 1) >> i);
 

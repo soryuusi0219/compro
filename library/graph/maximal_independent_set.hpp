@@ -6,6 +6,8 @@
 #include <utility>
 #include <vector>
 
+#include "../math/internal/internal_bit.hpp"
+
 namespace soryuusi {
 
 using namespace std;
@@ -27,12 +29,12 @@ vector<long long> maximal_independent_set(vector<vector<long long>>& G){
       int ret = 0;
       ull rets = 0;
       while(y){
-        int v = __builtin_ctzll(y);
+        int v = soryuusi::countr_zero(y);
         y &= ~(1ull << v);
         if(!(nbh[v] & x)) ret++, x &= ~(1ull << v), rets |= (1ull << v);
-        int deg = __builtin_popcountll(nbh[v] & x);
+        int deg = soryuusi::popcount(nbh[v] & x);
         if(deg == 1) {
-          int w = __builtin_ctzll(nbh[v] & x);
+          int w = soryuusi::countr_zero(nbh[v] & x);
           auto [cret, crets] = self(self,x & ~(1ull << v) & ~(1ull << w));
           return make_pair(ret + cret + 1, rets | crets | (1ull << v));
         }
@@ -52,13 +54,13 @@ vector<long long> maximal_independent_set(vector<vector<long long>>& G){
           crets1 = crets2 | (1ull << vmax);
         }
       }
-      if(__builtin_popcountll(x) <= M) memo[x] = {cret1, crets1};
+      if(soryuusi::popcount(x) <= M) memo[x] = {cret1, crets1};
       return  make_pair(ret + cret1, rets + crets1);
     };
     auto [_, ansset] = rec(rec,n == 64 ? ~(0ull) : (1ull << n)-1);
     vector<long long> ret;
     while(ansset){
-      int v = __builtin_ctzll(ansset);
+      int v = soryuusi::countr_zero(ansset);
       ansset &= ~(1ull << v);
       ret.push_back(v);
     }
@@ -69,11 +71,11 @@ vector<long long> maximal_independent_set(vector<vector<long long>>& G){
     for(int i = 0; i < n; i++) for(auto j:G[i]) nbh[i] |= (((ulll)1) << j);
     map<ulll,pair<int,ulll>> memo;
     auto ctzint128 = [&](ulll x){
-      if((ull)x) return __builtin_ctzll((ull)x);
-      return __builtin_ctzll((ull)(x >> 64)) + 64;
+      if((ull)x) return soryuusi::countr_zero((ull)x);
+      return soryuusi::countr_zero((ull)(x >> 64)) + 64;
     };
     auto popcountint128 = [&](ulll x){
-      return __builtin_popcountll((ull)x) +  __builtin_popcountll((ull)(x >> 64));
+      return soryuusi::popcount((ull)x) +  soryuusi::popcount((ull)(x >> 64));
     };
     auto rec = [&](auto&& self, ulll x) -> pair<int,ulll> {
       int degmax = -1, vmax = -1;

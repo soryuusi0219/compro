@@ -1,6 +1,6 @@
-# Segtree_dual
+# segtree_dual
 
-[索引](../README.md) / [実装](../../../library/data_structure/Segtree_dual.hpp)
+[索引](../README.md) / [実装](../../../library/data_structure/segtree_dual.hpp)
 
 ## 機能・前提条件
 
@@ -9,7 +9,7 @@
 ## インターフェース
 
 ```cpp
-#include "library/data_structure/Segtree_dual.hpp"
+#include "library/data_structure/segtree_dual.hpp"
 ```
 
 主要な宣言（補助型・補助関数を含む抜粋）:
@@ -33,7 +33,7 @@ void all_apply(F f);
 
 ## 依存関係
 
-標準ライブラリのみ。
+- [internal_bit.hpp](../math/internal/internal_bit.md)
 
 ## Verify・利用例
 

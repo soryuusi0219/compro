@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <limits>
 #include <random>
 #include <string>
 #include <type_traits>
@@ -37,11 +38,21 @@ struct RolHashMint {
     return au * bu * 2 + midu + (midd << 31) + ad * bd;
   }
 
+private:
+  static constexpr u64 reduce_product(u128 x){
+    const u64 folded = (static_cast<u64>(x)&MASK61) + static_cast<u64>(x >> 61);
+    return folded >= MOD ? folded-MOD : folded;
+  }
+
+public:
   u64 v;
   constexpr RolHashMint() : v(0) {}
   template<class T, std::enable_if_t<std::is_integral_v<T>>* = nullptr>
   constexpr RolHashMint(T v_) {
-    if constexpr (std::is_signed_v<T>) {
+    if constexpr (std::numeric_limits<T>::digits < 61){
+      v = static_cast<u64>(v_);
+      if constexpr (std::is_signed_v<T>) if(v_ < 0) v += MOD;
+    }else if constexpr (std::is_signed_v<T>) {
       __int128_t x = static_cast<__int128_t>(v_) % static_cast<__int128_t>(MOD);
       if (x < 0) x += MOD;
       v = static_cast<u64>(x);
@@ -57,7 +68,7 @@ struct RolHashMint {
   constexpr mint operator--(int) {mint result = *this;--*this;return result;}
   constexpr mint& operator+=(const mint& rhs) {v += rhs.v; if (v >= MOD) v -= MOD; return *this;}
   constexpr mint& operator-=(const mint& rhs) {v += MOD-rhs.v; if (v >= MOD) v -= MOD; return *this;}
-  constexpr mint& operator*=(const mint& rhs) {v = take_mod(mul(v,rhs.v)); return *this;}
+  constexpr mint& operator*=(const mint& rhs) {v = reduce_product(u128(v)*rhs.v); return *this;}
   friend constexpr mint operator+(mint lhs, const mint& rhs) { return lhs += rhs; }
   friend constexpr mint operator-(mint lhs, const mint& rhs) { return lhs -= rhs; }
   friend constexpr mint operator*(mint lhs, const mint& rhs) { return lhs *= rhs; }
@@ -68,15 +79,14 @@ struct RolHashMint {
   friend constexpr bool operator<=(const mint& lhs, const mint& rhs) {return lhs.v <= rhs.v;}
   friend constexpr bool operator>=(const mint& lhs, const mint& rhs) {return lhs.v >= rhs.v;}
   static constexpr mint muladd(const mint a, const mint b, const mint c){
-    const u64 product = take_mod(mul(a.v,b.v));
-    return raw(product + c.v >= MOD ? product + c.v - MOD : product + c.v);
+    return raw(reduce_product(u128(a.v)*b.v+c.v));
   }
   static constexpr mint mulsub(const mint a, const mint b, const mint c){
-    const u64 product = take_mod(mul(a.v,b.v));
+    const u64 product = reduce_product(u128(a.v)*b.v);
     return raw(product >= c.v ? product - c.v : product + MOD - c.v);
   }
   static constexpr mint submul(const mint a, const mint b, const mint c){
-    const u64 product = take_mod(mul(b.v,c.v));
+    const u64 product = reduce_product(u128(b.v)*c.v);
     return raw(a.v >= product ? a.v - product : a.v + MOD - product);
   }
 };
@@ -133,6 +143,28 @@ struct RollingHash{
     int n;
     vector<Hash> base_pow;
     vector<Hash> data;
+    int common_prefix(int l1, int l2, const RollingHash& y) const {
+      const int limit = min(n-l1,y.n-l2);
+      if(limit == 0 || (this == &y && l1 == l2)) return limit;
+      auto matches = [&](int length){return get_hash(l1,l1+length) == y.get_hash(l2,l2+length);};
+      if(!matches(1)) return 0;
+      if(limit == 1 || matches(limit)) return limit;
+      int low = 1, high = limit;
+      while(low <= (high-1)/2){
+        const int probe = 2*low;
+        if(!matches(probe)){
+          high = probe;
+          break;
+        }
+        low = probe;
+      }
+      while(high-low > 1){
+        const int mid = low+(high-low)/2;
+        if(matches(mid)) low = mid;
+        else high = mid;
+      }
+      return low;
+    }
   public:
     RollingHash() : n(0), base_pow(1, Hash::raw(1)), data(1, Hash::raw(0)) {}
     template<class T>
@@ -162,23 +194,11 @@ struct RollingHash{
     }
     int lcp(int l1, int l2) const {
       assert(0 <= l1 && l1 <= n && 0 <= l2 && l2 <= n);
-      int ok = 0; int ng = min(n-l1, n-l2)+1;
-      while(ng - ok > 1){
-        int mid = (ok+ng)/2;
-        if(is_same(l1,l1+mid,l2,l2+mid)) ok = mid;
-        else ng = mid;
-      }
-      return ok;
+      return common_prefix(l1,l2,*this);
     }
     int lcp(int l1, int l2, const RollingHash& y) const {
       assert(0 <= l1 && l1 <= n && 0 <= l2 && l2 <= y.size());
-      int ok = 0; int ng = min(n-l1, y.size()-l2)+1;
-      while(ng - ok > 1){
-        int mid = (ok+ng)/2;
-        if(is_same(l1,l1+mid,l2,l2+mid,y)) ok = mid;
-        else ng = mid;
-      }
-      return ok;
+      return common_prefix(l1,l2,y);
     }
 };
 

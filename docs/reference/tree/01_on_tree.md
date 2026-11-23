@@ -26,6 +26,7 @@ O(N log N) 時間、O(N) 空間。比較時の積を保持できる型を使う�
 ## 依存関係
 
 - [dsu.hpp](../data_structure/dsu.md)
+- [internal_bit.hpp](../math/internal/internal_bit.md)
 
 ## Verify・利用例
 

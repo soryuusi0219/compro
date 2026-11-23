@@ -40,9 +40,10 @@ template<bool admit_negative = false> T nPk_inv(long long n, long long k);
 
 ## 依存関係
 
-- [internal_math.hpp](internal_math.md)
-- [modint_traits.hpp](modint_traits.md)
+- [internal_math.hpp](internal/internal_math.md)
+- [modint_traits.hpp](internal/modint_traits.md)
 - [prime_factorization.hpp](prime_factorization.md)
+- [internal_bit.hpp](internal/internal_bit.md)
 
 ## Verify・利用例
 

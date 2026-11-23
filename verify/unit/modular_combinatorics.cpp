@@ -8,7 +8,7 @@
 
 #include "library/math/binomial_coefficient.hpp"
 #include "library/math/binomial_coefficient_prefix_sum.hpp"
-#include "library/math/internal_math.hpp"
+#include "library/math/internal/internal_math.hpp"
 #include "library/math/modint.hpp"
 #include "library/math/modint_q_factorials.hpp"
 #include "library/math/prime_field_tables.hpp"

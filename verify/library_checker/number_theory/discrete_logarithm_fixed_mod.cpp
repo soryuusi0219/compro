@@ -1,6 +1,6 @@
 #include <cstdint>
 
-#include "library/math/internal_math.hpp"
+#include "library/math/internal/internal_math.hpp"
 #include "library/math/prime_field_tables.hpp"
 #include "library/utility/fastio.hpp"
 

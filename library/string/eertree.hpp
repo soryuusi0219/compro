@@ -1,8 +1,6 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/string/eertree.hpp
 #pragma once
-#include <algorithm>
 #include <array>
-#include <functional>
 #include <map>
 #include <string>
 #include <type_traits>
@@ -19,53 +17,54 @@ struct Eertree{
   using VC = conditional_t<is_same_v<C, char>, string, vector<C>>;
   using maptype = conditional_t<USE_MAP, map<C,int>, array<int,ALPHA>>;
   private:
-    int n;
     VC s;
     vector<int> p, sl, r, len, bk;
     vector<maptype> nxt;
-    inline int addNode(int par, int r0, int len0, C c){
+    int addNode(int par, int r0, int len0, int link, C c){
       p.push_back(par);
-      sl.push_back(-1);
+      sl.push_back(link);
       r.push_back(r0);
       len.push_back(len0);
       nxt.emplace_back();
-      if constexpr (!USE_MAP) fill(nxt.back().begin(),nxt.back().end(),-1);
-      return nxt[par][c-MIN_CHARCTER] = p.size() - 1;
+      const int id = p.size()-1;
+      if constexpr (USE_MAP) nxt[par].emplace(c,id);
+      else nxt[par][c-MIN_CHARCTER] = id;
+      return id;
+    }
+    int extendable_suffix(int pos, C c, int v) const {
+      while(len[v] >= pos || s[pos-len[v]-1] != c) v = sl[v];
+      return v;
     }
   public:
-    Eertree() : n(0), p(2,-1), sl(2,-1), r(2,0), len(2,-1), bk(1,1), nxt(2){
+    Eertree() : p(2,-1), sl(2,-1), r(2,0), len(2,-1), bk(1,1), nxt(2){
       len[1] = 0;
       sl[1] = 0;
-      if constexpr (!USE_MAP) {
-        fill(nxt[0].begin(),nxt[0].end(),-1);
-        fill(nxt[1].begin(),nxt[1].end(),-1);
-      }
     }
     Eertree(int n_) : Eertree(){s.reserve(n_), p.reserve(n_+2), sl.reserve(n_+2), r.reserve(n_+2), len.reserve(n_+2), bk.reserve(n_+2), nxt.reserve(n_+2);}
     Eertree(const VC& s) : Eertree(s.size()){for(auto c : s) push_back(c);}
     void push_back(C c){
+      const int pos = s.size();
       s.push_back(c);
-      int k = bk[n++];
-      while(len[k]+2 > n || s[n-len[k]-2] != c) k = sl[k];
-      if constexpr (USE_MAP){
-        if(nxt[k].count(c-MIN_CHARCTER)) {
-          bk.emplace_back(nxt[k][c-MIN_CHARCTER]);
-          return;
-        }
-      }else{
-        if(~nxt[k][c-MIN_CHARCTER]) {
-          bk.emplace_back(nxt[k][c-MIN_CHARCTER]);
-          return;
-        }
+      const int k = extendable_suffix(pos,c,bk.back());
+      int child = get_next(k,c);
+      if(child < 0){
+        const int link = k == 0 ? 1 : get_next(extendable_suffix(pos,c,sl[k]),c);
+        child = addNode(k,pos+1,len[k]+2,link,c);
       }
-      bk.emplace_back(addNode(k, n, len[k]+2, c));
-      do k = sl[k]; while(~k && s[n-len[k]-2] != c);
-      sl[bk.back()] = ~k ? nxt[k][c-MIN_CHARCTER] : 1;
+      bk.push_back(child);
     }
     inline int node_size() const {return p.size();}
     inline int suffix_link(int i) const {return sl[i];}
     inline int parent(int i) const {return p[i];}
-    inline int get_next(int i, C c) const {return nxt[i][c-MIN_CHARCTER];}
+    inline int get_next(int i, C c) const {
+      if constexpr (USE_MAP){
+        const auto it = nxt[i].find(c);
+        return it == nxt[i].end() ? -1 : it->second;
+      }else{
+        const int child = nxt[i][c-MIN_CHARCTER];
+        return child == 0 ? -1 : child;
+      }
+    }
     inline pair<int,int> ref(int i) const {return {r[i] - len[i], r[i]};}
     inline int length(int i) const {return len[i];}
     inline int maximal_suffix(int i) const {return bk[i+1];}

@@ -31,8 +31,9 @@ S prod(int u, int v);
 
 ## 依存関係
 
-標準ライブラリのみ。
+- [heavy_light_decomposition.hpp](heavy_light_decomposition.md)
 
 ## Verify・利用例
 
 - [`library_checker/vertex_add_path_sum`](../../../verify/library_checker/tree/vertex_add_path_sum.cpp)
+- [`unit/tree_algorithms`](../../../verify/unit/tree_algorithms.cpp)

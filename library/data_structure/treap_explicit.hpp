@@ -11,20 +11,10 @@ using TreapExplicit = internal::ExplicitArena<Key,internal::ExplicitMonoid<Key,S
 template<class Key, class S, auto op, auto e, class F, auto mapping, auto composition, auto id, bool Multi = true, class Compare = std::less<Key>>
 using LazyTreapExplicit = internal::ExplicitArena<Key,internal::ExplicitMonoid<Key,S,op,e,internal::TreeAction<F,mapping,composition,id>,internal::TreapPriority>,internal::TreapBase,Multi,Compare>;
 
-template<class Key, class S, auto op, auto e, class F, auto key_mapping, auto composition, auto id,
-         bool Multi = true, class Compare = std::less<Key>>
-using MonotoneTreapExplicit = internal::ExplicitArena<Key,
-    internal::ExplicitMonoid<Key,S,op,e,internal::NoTreeAction,internal::TreapPriority,
-                             internal::TreeAction<F,key_mapping,composition,id>>,
-    internal::TreapBase,Multi,Compare>;
+template<class Key, class S, auto op, auto e, class F, auto key_mapping, auto composition, auto id, bool Multi = true, class Compare = std::less<Key>>
+using MonotoneTreapExplicit = internal::ExplicitArena<Key, internal::ExplicitMonoid<Key,S,op,e,internal::NoTreeAction,internal::TreapPriority, internal::TreeAction<F,key_mapping,composition,id>>, internal::TreapBase,Multi,Compare>;
 
-template<class Key, class S, auto op, auto e,
-         class KF, auto key_mapping, auto key_composition, auto key_id,
-         class F, auto mapping, auto composition, auto id,
-         bool Multi = true, class Compare = std::less<Key>>
-using LazyMonotoneTreapExplicit = internal::ExplicitArena<Key,
-    internal::ExplicitMonoid<Key,S,op,e,internal::TreeAction<F,mapping,composition,id>,
-                             internal::TreapPriority,internal::TreeAction<KF,key_mapping,key_composition,key_id>>,
-    internal::TreapBase,Multi,Compare>;
+template<class Key, class S, auto op, auto e, class KF, auto key_mapping, auto key_composition, auto key_id, class F, auto mapping, auto composition, auto id, bool Multi = true, class Compare = std::less<Key>>
+using LazyMonotoneTreapExplicit = internal::ExplicitArena<Key, internal::ExplicitMonoid<Key,S,op,e,internal::TreeAction<F,mapping,composition,id>, internal::TreapPriority,internal::TreeAction<KF,key_mapping,key_composition,key_id>>, internal::TreapBase,Multi,Compare>;
 
 }  // namespace soryuusi

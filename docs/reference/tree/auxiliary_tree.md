@@ -26,7 +26,7 @@ tuple<vector<vector<pair<int,int>>>,vector<int>,int> auxiliary_tree_dist(vector<
 
 ## 計算量
 
-前処理 O(N log N) を上界とする。K頂点の補助木 O(K log K)、出力 O(K)、保持 O(N log N) を上界とする。
+前処理 O(N log N) を上界とする。K頂点の補助木 O(K log K)、出力 O(K)、保持 O(N log N) を上界とする。 `up(v,k)` は O(log N) 時間で、根までの距離以上を指定すると根を返す。
 
 ## 依存関係
 

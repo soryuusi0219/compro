@@ -25,7 +25,7 @@ pair<T, vector<long long>> maximal_weighted_independent_set(vector<vector<long l
 
 ## 依存関係
 
-標準ライブラリのみ。
+- [internal_bit.hpp](../math/internal/internal_bit.md)
 
 ## Verify・利用例
 

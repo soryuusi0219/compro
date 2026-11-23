@@ -16,7 +16,7 @@ Euler tourとRMQによるLCA・距離。型名は SimpleEularTour。無向木を
 
 ```cpp
 struct SimpleEularTour;
-struct StaticRMQ;
+using StaticRMQ = soryuusi::StaticRMQ<pair<int,int>,false,64,internal::euler_depth_inf>;
 StaticRMQ();
 StaticRMQ(vector<pair<int,int>> v);
 pair<int,int> naive_prod(int l, int r) const;
@@ -31,13 +31,17 @@ inline int dist(int u, int v) const;
 
 ## 計算量
 
+Euler tourは反復走査で構築する。RMQは64要素ごとの最小値で疎表を持ち、ブロック内はビットマスクを使う。
+
 前処理 O(N log N) 時間・空間を上界とし、LCA/距離 O(1)。
 
 ## 依存関係
 
 - [static_graph.hpp](../graph/static_graph.md)
+- [static_rmq.hpp](../data_structure/static_rmq.md)
 
 ## Verify・利用例
 
 - [`library_checker/lca_simple_euler_tour`](../../../verify/library_checker/tree/lca_simple_euler_tour.cpp)
 - [`unit/recursive_tree`](../../../verify/unit/recursive_tree.cpp)
+- [`unit/tree_algorithms`](../../../verify/unit/tree_algorithms.cpp)

@@ -1,6 +1,7 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/string/trie.hpp
 #pragma once
 #include <algorithm>
+#include <cassert>
 #include <iostream>
 #include <string>
 #include <type_traits>
@@ -44,47 +45,44 @@ struct Trie{
   }
   void insert(const VC& s) {
     int p = 0;
-    nodes[p].sz++;
-    for (C ch : s) {
-      int i = ch - MIN_CHARCTER;
-      if (nodes[p].next[i] == -1) {
-        nodes[p].next[i] = nodes.size();
-        nodes.emplace_back(p, ch);
-      }
-      p = nodes[p].next[i];
-      nodes[p].sz++;
+    auto it = s.begin();
+    const auto end = s.end();
+    for (; it != end; ++it) {
+      ++nodes[p].sz;
+      const int child = nodes[p].next[*it-MIN_CHARCTER];
+      if (child == -1) break;
+      p = child;
     }
-    nodes[p].z++;
+    if (it == end) ++nodes[p].sz;
+    // After the first missing edge, the entire remaining path is new.
+    for (; it != end; ++it) {
+      const C ch = *it;
+      const int child = nodes.size();
+      nodes[p].next[ch-MIN_CHARCTER] = child;
+      nodes.emplace_back(p, ch);
+      nodes.back().sz = 1;
+      p = child;
+    }
+    ++nodes[p].z;
   } 
   int count(const VC& s) const {
-    int p = 0;
-    for(C ch : s) {
-      int i = ch - MIN_CHARCTER;
-      if (nodes[p].next[i] == -1) return 0;
-      p = nodes[p].next[i];
-    }
-    return nodes[p].z;
+    const int p = node_index_of(s);
+    return p == -1 ? 0 : nodes[p].z;
   }
   int prefix_count(const VC& s) const {
-    int p = 0;
-    for(C ch : s) {
-      int i = ch - MIN_CHARCTER;
-      if (nodes[p].next[i] == -1) return 0;
-      p = nodes[p].next[i];
-    }
-    return nodes[p].sz;
+    const int p = node_index_of(s);
+    return p == -1 ? 0 : nodes[p].sz;
   }
   int size() const {
     return nodes[0].sz;
   }
   VC kth(int k) const {
+    assert(0 <= k && k < size());
     VC res;
     int p = 0;
     while (true) {
-      if (nodes[p].sz > 0) {
-        if (k < (int)nodes[p].z) return res;
-        k -= nodes[p].z;
-      }
+      if (k < nodes[p].z) return res;
+      k -= nodes[p].z;
       for (int c = 0; c < ALPHA; c++) {
         int nx = nodes[p].next[c];
         if (nx == -1) continue;
@@ -127,9 +125,8 @@ struct Trie{
   int node_index_of(const VC& s) const {
     int p = 0;
     for (C ch : s) {
-      int i = ch - MIN_CHARCTER;
-      if (nodes[p].next[i] == -1) return -1;
-      p = nodes[p].next[i];
+      p = nodes[p].next[ch-MIN_CHARCTER];
+      if (p == -1) return -1;
     }
     return p;
   }

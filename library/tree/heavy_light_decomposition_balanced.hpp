@@ -1,9 +1,10 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/tree/heavy_light_decomposition_balanced.hpp
 #pragma once
 #include <algorithm>
-#include <numeric>
 #include <type_traits>
 #include <vector>
+
+#include "heavy_light_decomposition.hpp"
 
 namespace soryuusi {
 
@@ -16,7 +17,7 @@ struct HLdecomposition_Balanced{
 
   private:
     int n;
-    vector<int> par, deg, sz, hd, in, rev, lp, rp, pp, dep;
+    vector<int> par, deg, hd, in, lp, rp, pp, dep;
     vector<S> lsum, rsum;
     inline void calc(int i){lsum[i] = op(lsum[rp[i]],lsum[lp[i]]), rsum[i] = op(rsum[lp[i]],rsum[rp[i]]);}
     S lprod(int i){
@@ -47,7 +48,7 @@ struct HLdecomposition_Balanced{
           j = pp[j];
         }
       }
-      return op(ls,rs);
+      return op(rs,ls);
     }
     S rprod(int i, int j){
       if(i == j) return rsum[i];
@@ -61,37 +62,21 @@ struct HLdecomposition_Balanced{
           j = pp[j];
         }
       }
-      return op(rs,ls);
+      return op(ls,rs);
     }
   public:
-    HLdecomposition_Balanced(int n_) : n(n_), par(n,0), deg(n,0), sz(n*2,1), hd(n,-1), in(n), rev(n), lp(n*2,-1), rp(n*2,-1), pp(n*2,-1), dep(2*n,0), lsum(n*2,e()), rsum(n*2,e()){}
+    HLdecomposition_Balanced(int n_) : n(n_), par(n,0), deg(n,0), hd(n,-1), in(n), lp(n*2,-1), rp(n*2,-1), pp(n*2,-1), dep(2*n,0), lsum(n*2,e()), rsum(n*2,e()){}
     void add_edge(int u, int v){
       par[u] ^= v, par[v] ^= u, ++deg[u], ++deg[v];
     }
     void build(int root = 0, const vector<S>& data = {}){
-      deg[root] = 0;
-      vector<int> nxt(n,-1), mxsz(n,0), bk(n,-1);
-      iota(bk.begin(),bk.end(),0);
-      for(int i = 0, u = 0, v; i < n; u = ++i) while(deg[u] == 1){
-        v = par[u];
-        par[v] ^= u;
-        --deg[u], --deg[v];
-        sz[v] += sz[u];
-        if(sz[u] > mxsz[v]){
-          mxsz[v] = sz[u];
-          nxt[bk[u]] = nxt[v];
-          nxt[v] = u;
-          if(bk[v] == v) bk[v] = bk[u];
-        }else{
-          nxt[bk[v]] = u;
-          bk[v] = bk[u];
-        }
-        u = v;
-      }
+      vector<int> sz(n,1);
+      auto nxt = internal::heavy_preorder(par,deg,sz,root);
       if(!data.empty()) copy(data.begin(), data.end(), lsum.begin()), copy(data.begin(), data.end(), rsum.begin());
       vector<int> st;
       st.reserve(n);
       int cur = n;
+      vector<int> rev(n);
       for(int x = root, i = 0, h = root; ~x; x = nxt[x], ++i) {
         hd[x] = h, in[x] = i, rev[i] = x;
         if(sz[x] == 1) h = nxt[x];

@@ -34,7 +34,7 @@ void merge(int l, int r, int x, F f);
 
 ## 依存関係
 
-- [internal_bit.hpp](../math/internal_bit.md)
+- [internal_bit.hpp](../math/internal/internal_bit.md)
 - [dsu.hpp](dsu.md)
 
 ## Verify・利用例

@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <vector>
 
+#include "../math/internal/internal_bit.hpp"
+
 namespace soryuusi {
 
 using namespace std;
@@ -32,7 +34,7 @@ struct BIT{
     int lower_bound(T k) const {
       if(k < 0) return -1;
       int x = 0;
-      for(int i = 1 << __lg(n); i; i /= 2) {
+      for(int i = soryuusi::bit_floor(static_cast<unsigned>(n)); i; i /= 2) {
           if(x + i <= n && s[x + i] <= k) {
             x += i;
             k -= s[x];

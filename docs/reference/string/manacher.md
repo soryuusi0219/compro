@@ -4,7 +4,7 @@
 
 ## 機能・前提条件
 
-空でない列の各中心に対する最長回文の長さを返す。戻り値は長さ `2*N-1`。添字 `2*i` は文字i中心、`2*i+1` は文字iとi+1の間を中心とする。string版とvector版は同じ表現。
+列の各中心に対する最長回文の長さを返す。空列には空の結果を返す。それ以外の戻り値は長さ `2*N-1`。添字 `2*i` は文字i中心、`2*i+1` は文字iとi+1の間を中心とする。string版とvector版は同じ表現。
 
 ## インターフェース
 
@@ -31,3 +31,4 @@ O(N) 時間・空間。
 ## Verify・利用例
 
 - [`library_checker/enumerate_palindromes_manacher`](../../../verify/library_checker/string/enumerate_palindromes_manacher.cpp)
+- [`unit/string_algorithms`](../../../verify/unit/string_algorithms.cpp)

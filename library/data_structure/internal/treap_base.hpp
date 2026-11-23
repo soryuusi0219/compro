@@ -230,11 +230,7 @@ public:
     return root;
   }
   template<class Factory> Node* build(int n, Factory at){
-    return build_cartesian<Node*>(n,nullptr,at,
-      [](Node* a, Node* b){return Ops::priority(a) > Ops::priority(b);},
-      [](Node* p, Node* l){p->lp = l; if(l) l->pp = p;},
-      [](Node* p, Node* r){p->rp = r; if(r) r->pp = p;},
-      [](Node* p){Ops::pull(p);});
+    return build_cartesian<Node*>(n,nullptr,at, [](Node* a, Node* b){return Ops::priority(a) > Ops::priority(b);}, [](Node* p, Node* l){p->lp = l; if(l) l->pp = p;}, [](Node* p, Node* r){p->rp = r; if(r) r->pp = p;}, [](Node* p){Ops::pull(p);});
   }
 };
 

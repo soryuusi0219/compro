@@ -7,16 +7,15 @@
 #include <vector>
 
 #include "convolution.hpp"
-#include "internal_math.hpp"
-#include "modint_traits.hpp"
+#include "internal/internal_math.hpp"
+#include "internal/modint_traits.hpp"
 
 namespace soryuusi {
 
 namespace internal {
 
 template <std::uint64_t StaticMod, class T, class Out, bool Middle = false, class Read, class Write>
-std::vector<Out> convolution_mod_impl(const std::vector<T>& a, const std::vector<T>& b,
-                                      std::uint64_t modulus, Read read, Write write) {
+std::vector<Out> convolution_mod_impl(const std::vector<T>& a, const std::vector<T>& b, std::uint64_t modulus, Read read, Write write) {
     if (a.empty() || b.empty() || (Middle && a.size() < b.size())) return {};
     const std::uint64_t mod = StaticMod ? StaticMod : modulus;
     assert(mod > 0);
@@ -80,8 +79,7 @@ std::vector<Mint> convolution_mod_mint(const std::vector<Mint>& a, const std::ve
 }  // namespace internal
 
 template <long long Mod = 1000000007>
-std::vector<long long> convolution_mod(const std::vector<long long>& a,
-                                       const std::vector<long long>& b) {
+std::vector<long long> convolution_mod(const std::vector<long long>& a, const std::vector<long long>& b) {
     static_assert(Mod > 0);
     auto read = [](long long x) {
         if (0 <= x && x < Mod) return static_cast<std::uint64_t>(x);

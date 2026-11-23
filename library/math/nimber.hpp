@@ -1,7 +1,6 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/math/nimber.hpp
 #pragma once
 #include <array>
-#include <bit>
 #include <cassert>
 #include <cmath>
 #include <cstdint>
@@ -12,6 +11,8 @@
 #include <emmintrin.h>
 #include <smmintrin.h>
 #include <wmmintrin.h>
+
+#include "internal/internal_bit.hpp"
 #pragma GCC target("pclmul")
 #endif
 
@@ -34,11 +35,11 @@ struct Nimber{
     static constexpr auto iconv = make_block_table(ibase);
 
     static constexpr u64 N2P(u64 x){
-      auto X = bit_cast<array<uint8_t,8>>(x);
+      auto X = soryuusi::bit_cast<array<uint8_t,8>>(x);
       return conv[0][X[0]]^conv[1][X[1]]^conv[2][X[2]]^conv[3][X[3]]^conv[4][X[4]]^conv[5][X[5]]^conv[6][X[6]]^conv[7][X[7]];
     }
     static constexpr u64 P2N(u64 x){
-      auto X = bit_cast<array<uint8_t,8>>(x);
+      auto X = soryuusi::bit_cast<array<uint8_t,8>>(x);
       return iconv[0][X[0]]^iconv[1][X[1]]^iconv[2][X[2]]^iconv[3][X[3]]^iconv[4][X[4]]^iconv[5][X[5]]^iconv[6][X[6]]^iconv[7][X[7]];
     }
   public:

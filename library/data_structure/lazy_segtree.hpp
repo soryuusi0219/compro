@@ -1,8 +1,9 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/lazy_segtree.hpp
 #pragma once
-#include <bit>
 #include <type_traits>
 #include <vector>
+
+#include "../math/internal/internal_bit.hpp"
 
 namespace soryuusi {
 
@@ -30,12 +31,12 @@ struct LazySegtree{
       lz[k] = id();
     }
     void prop(int l, int r) {
-      int il = __builtin_ctz(l), ir = __builtin_ctz(r);
+      int il = soryuusi::countr_zero(static_cast<unsigned>(l)), ir = soryuusi::countr_zero(static_cast<unsigned>(r));
       for(int i = h; i > il; i--) push(l >> i);
       for(int i = h; i > ir; i--) push((r - 1) >> i);
     }
     void build(int l, int r) {
-      int il = __builtin_ctz(l), ir = __builtin_ctz(r);
+      int il = soryuusi::countr_zero(static_cast<unsigned>(l)), ir = soryuusi::countr_zero(static_cast<unsigned>(r));
       for(int i = il + 1; i <= h; i++) upd(l >> i);
       for(int i = ir + 1; i <= h; i++) upd((r - 1) >> i);
     }
@@ -43,7 +44,7 @@ struct LazySegtree{
   public:
     LazySegtree(int n_ = 0) : LazySegtree(vector<S>(n_, e())) {}
     LazySegtree(const vector<S>& v) : n((int)v.size()) {
-      h = bit_width((unsigned)n), b = 1 << h;
+      h = soryuusi::bit_width((unsigned)n), b = 1 << h;
       d.assign(2 * b, e()), lz.assign(b, id());
       for(int i = 0; i < n; i++) d[b + i] = v[i];
       for(int i = b - 1; i > 0; i--) upd(i);

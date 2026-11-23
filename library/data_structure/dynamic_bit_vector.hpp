@@ -1,12 +1,12 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/dynamic_bit_vector.hpp
 #pragma once
 #include <algorithm>
-#include <bit>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <utility>
 #include <vector>
+#include "../math/internal/internal_bit.hpp"
 #include "internal/binary_tree_ops.hpp"
 #include "internal/node_pool.hpp"
 #include "internal/treap_base.hpp"
@@ -23,7 +23,7 @@ class DynamicBitVector {
     Word bits;
     int pop, total_pop, length, total_length;
     std::uint32_t priority = 0;
-    Node(Word value, int len) : bits(value), pop(std::popcount(value)), total_pop(pop), length(len), total_length(len){}
+    Node(Word value, int len) : bits(value), pop(soryuusi::popcount(value)), total_pop(pop), length(len), total_length(len){}
   };
   struct Ops {
     static int size(const Node* p){return p ? p->total_length : 0;}
@@ -85,7 +85,7 @@ public:
     assert(0 <= i && i < size());
     auto [p,k] = Links::locate(root,i);
     p->bits = (p->bits & ~(Word(1)<<k)) | (Word(value)<<k);
-    p->pop = std::popcount(p->bits); update_path(p);
+    p->pop = soryuusi::popcount(p->bits); update_path(p);
   }
   // Number of ones in [0,k).
   int rank(int k) const {
@@ -95,7 +95,7 @@ public:
       int left = Ops::size(p->lp);
       if(k < left){p = p->lp; continue;}
       result += Ops::ones(p->lp); k -= left;
-      if(k <= p->length) return result+std::popcount(p->bits & mask(k));
+      if(k <= p->length) return result+soryuusi::popcount(p->bits & mask(k));
       k -= p->length; result += p->pop; p = p->rp;
     }
     return result;
@@ -106,10 +106,10 @@ public:
     if(!root){root = make_node(Word(value),1); return;}
     auto [p,k] = Links::locate(root,i,true);
     p->bits = (p->bits & mask(k)) | ((p->bits & ~mask(k))<<1) | (Word(value)<<k);
-    ++p->length; p->pop = std::popcount(p->bits);
+    ++p->length; p->pop = soryuusi::popcount(p->bits);
     if(p->length == 64){
       Node* next = make_node(p->bits>>block_bits,block_bits);
-      p->bits &= mask(block_bits); p->length = block_bits; p->pop = std::popcount(p->bits);
+      p->bits &= mask(block_bits); p->length = block_bits; p->pop = soryuusi::popcount(p->bits);
       update_path(p);
       Node* parent = p;
       if(!p->rp) p->rp = next;
@@ -123,7 +123,7 @@ public:
     assert(0 <= i && i < size());
     auto [p,k] = Links::locate(root,i);
     p->bits = (p->bits & mask(k)) | (k == 63 ? 0 : (p->bits>>(k+1))<<k);
-    --p->length; p->pop = std::popcount(p->bits);
+    --p->length; p->pop = soryuusi::popcount(p->bits);
     if(p->length){update_path(p); return;}
     Node* parent = p->pp;
     Node* replacement = engine.join(p->lp,p->rp);

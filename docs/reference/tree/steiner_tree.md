@@ -4,7 +4,7 @@
 
 ## 機能・前提条件
 
-少数のterminalを結ぶ最小Steiner木。重み非負グラフに部分集合DP＋Dijkstraを使い辺を復元する。
+少数のterminalを結ぶ最小Steiner木。重み非負グラフに部分集合DP＋Dijkstraを使い辺を復元する。各部分集合で二分割をまとめて評価し、Dijkstraのヒープ領域を使い回す。すべてのterminalを結べない場合は `{infty,{}}` を返す。コスト型は番兵を含むDPの加算を表現できるように選ぶ。
 
 ## インターフェース
 
@@ -30,6 +30,7 @@ terminal数Kに O(3^K V+2^K(V+E) log V) 時間、O(2^K V+E) 空間。
 ## 依存関係
 
 - [static_graph.hpp](../graph/static_graph.md)
+- [internal_bit.hpp](../math/internal/internal_bit.md)
 
 ## Verify・利用例
 

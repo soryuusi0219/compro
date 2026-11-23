@@ -1,6 +1,6 @@
 # internal_fps_composition
 
-[索引](../README.md) / [実装](../../../library/math/internal_fps_composition.hpp)
+[索引](../../README.md) / [実装](../../../../library/math/internal/internal_fps_composition.hpp)
 
 ## 機能・前提条件
 
@@ -28,13 +28,14 @@ auto projections = decltype(f)::PowerProjection(g, f, n, m);
 
 ## 依存関係
 
-- [convolution.hpp](convolution.md)
-- [convolution_mod.hpp](convolution_mod.md)
+- [convolution.hpp](../convolution.md)
+- [convolution_mod.hpp](../convolution_mod.md)
 - [modint_traits.hpp](modint_traits.md)
-- [ntt.hpp](ntt.md)
+- [ntt.hpp](../ntt.md)
+- [internal_bit.hpp](internal_bit.md)
 
 ## Verify・利用例
 
-- [`unit/formal_power_series`](../../../verify/unit/formal_power_series.cpp)
-- [`library_checker/composition_of_formal_power_series_crt`](../../../verify/library_checker/polynomial/composition_of_formal_power_series_crt.cpp)
+- [`unit/formal_power_series`](../../../../verify/unit/formal_power_series.cpp)
+- [`library_checker/composition_of_formal_power_series_crt`](../../../../verify/library_checker/polynomial/composition_of_formal_power_series_crt.cpp)
 - [Kinoshita and Li, Power Series Composition in Near-Linear Time](https://arxiv.org/abs/2404.05177)

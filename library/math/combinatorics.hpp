@@ -1,7 +1,6 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/math/combinatorics.hpp
 #pragma once
 #include <algorithm>
-#include <bit>
 #include <cassert>
 #include <cmath>
 #include <concepts>
@@ -11,12 +10,13 @@
 #include <utility>
 #include <vector>
 
+#include "internal/internal_bit.hpp"
 #include "formal_power_series.hpp"
-#include "internal_fps_composition.hpp"
-#include "internal_math.hpp"
+#include "internal/internal_fps_composition.hpp"
+#include "internal/internal_math.hpp"
 #include "linear_sieve.hpp"
 #include "modint_factorials.hpp"
-#include "modint_traits.hpp"
+#include "internal/modint_traits.hpp"
 
 namespace soryuusi {
 
@@ -170,7 +170,7 @@ std::vector<T> many_factorials(const std::vector<Index>& queries){
   if(prime && max_n > (1<<16) && max_n/32 > order.size() && mod <= std::numeric_limits<int>::max()){
     // Balance the number of block samples with the short products at queries.
     const auto target = std::sqrt(double(max_n)/(8.0+order.size()/56.0));
-    block = std::bit_ceil(std::max<std::uint64_t>(1,static_cast<std::uint64_t>(target)));
+    block = soryuusi::bit_ceil(std::max<std::uint64_t>(1,static_cast<std::uint64_t>(target)));
     prefix = internal::factorial_blocks<T>(block,max_n/block);
   }
   std::uint64_t current = 0;

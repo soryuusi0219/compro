@@ -6,7 +6,6 @@
 #include <utility>
 #include <vector>
 
-#include "library/data_structure/Segtree_dual.hpp"
 #include "library/data_structure/bit_2d.hpp"
 #include "library/data_structure/bit_sparse.hpp"
 #include "library/data_structure/bit_vector.hpp"
@@ -17,6 +16,7 @@
 #include "library/data_structure/persistent_dynamic_segtree.hpp"
 #include "library/data_structure/segtree_2d.hpp"
 #include "library/data_structure/segtree_2d_sparse.hpp"
+#include "library/data_structure/segtree_dual.hpp"
 #include "library/data_structure/segtree_sparse.hpp"
 
 namespace {

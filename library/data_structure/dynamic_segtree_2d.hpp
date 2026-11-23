@@ -97,10 +97,7 @@ struct Dynamic_Segtree2D{
     node2D* root;
     void calc(node2D* p, int j){
       if(!p) return;
-      _set1D(p->tree, 0, w, j, op(
-        p->lp ? _get1D(p->lp->tree,0,w,j) : e(), 
-        p->rp ? _get1D(p->rp->tree,0,w,j) : e()
-      ));
+      _set1D(p->tree, 0, w, j, op(p->lp ? _get1D(p->lp->tree,0,w,j) : e(), p->rp ? _get1D(p->rp->tree,0,w,j) : e() ));
     }
     void _add2D(node2D*& p, int l, int r, int i, int j, S x){
       if(!p) p = pool2.create();

@@ -1,7 +1,6 @@
-// https://github.com/soryuusi0219/compro/blob/main/library/math/internal_fps_composition.hpp
+// https://github.com/soryuusi0219/compro/blob/main/library/math/internal/internal_fps_composition.hpp
 #pragma once
 #include <algorithm>
-#include <bit>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -11,10 +10,11 @@
 #include <utility>
 #include <vector>
 
-#include "convolution.hpp"
-#include "convolution_mod.hpp"
+#include "internal_bit.hpp"
+#include "../convolution.hpp"
+#include "../convolution_mod.hpp"
 #include "modint_traits.hpp"
-#include "ntt.hpp"
+#include "../ntt.hpp"
 
 namespace soryuusi::internal {
 
@@ -142,7 +142,7 @@ public:
   void init(const FPS& g, int m){
     precision = m;
     if(m == 0) return;
-    width = std::bit_ceil(static_cast<unsigned int>(m));
+    width = soryuusi::bit_ceil(static_cast<unsigned int>(m));
     zero_constant = g.empty() || g[0] == T(0);
     auto q = initial_denominator(g,width,2);
     int rows = 2;
@@ -178,7 +178,7 @@ public:
     if(m == 0 || n == 0 || g.empty()) return FPS(m,0);
     const bool zero_constant = f.empty() || f[0] == T(0);
     const int count = zero_constant ? std::min(n,m) : m;
-    const int w0 = std::bit_ceil(static_cast<unsigned int>(n));
+    const int w0 = soryuusi::bit_ceil(static_cast<unsigned int>(n));
     int p_rows = 1, q_rows = std::min(2,count);
     auto q = initial_denominator(f,w0,q_rows);
     std::vector<T> p(w0);
@@ -209,12 +209,12 @@ public:
   void init(const FPS& g, int m){
     precision = m;
     if(m < 2) return;
-    padded_size = std::bit_ceil(static_cast<unsigned int>(m));
+    padded_size = soryuusi::bit_ceil(static_cast<unsigned int>(m));
     FPS initial = -g;
     initial.resize(padded_size);
     std::vector<FPS> current;
     current.push_back(std::move(initial));
-    denominators.reserve(std::countr_zero(static_cast<unsigned int>(padded_size)));
+    denominators.reserve(soryuusi::countr_zero(static_cast<unsigned int>(padded_size)));
     for(int width = padded_size, rows = 1; width > 1; width /= 2, rows *= 2){
       auto& layer = denominators.emplace_back(2*rows);
       for(int i = rows; i < 2*rows; ++i) layer[i].resize(2*width);
@@ -270,7 +270,7 @@ public:
       std::vector<T> phase(width);
       phase[0] = NTT::inverse_size(2*width);
       for(int i = 1; i < width; ++i)
-        phase[i] = phase[i-1]*NTT::inv_rate2(std::countr_zero(static_cast<unsigned int>(i)));
+        phase[i] = phase[i-1]*NTT::inv_rate2(soryuusi::countr_zero(static_cast<unsigned int>(i)));
       for(int i = 0; i < 2*rows; ++i){
         p[i].resize(width);
         std::reverse(p[i].begin()+1,p[i].end());

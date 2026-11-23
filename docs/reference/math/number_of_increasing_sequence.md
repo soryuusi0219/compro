@@ -27,6 +27,7 @@ L=n+m、畳み込みが O(L log L) の範囲で O(L log² L) を上界とする�
 
 - [convolution.hpp](convolution.md)
 - [modint_factorials.hpp](modint_factorials.md)
+- [internal_bit.hpp](internal/internal_bit.md)
 
 ## Verify・利用例
 

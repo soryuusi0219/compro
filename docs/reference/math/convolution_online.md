@@ -32,8 +32,9 @@ NTT範囲で N push 合計 O(N log² N)、空間 O(N log N) を上界とする�
 ## 依存関係
 
 - [convolution_mod.hpp](convolution_mod.md)
-- [modint_traits.hpp](modint_traits.md)
+- [modint_traits.hpp](internal/modint_traits.md)
 - [ntt.hpp](ntt.md)
+- [internal_bit.hpp](internal/internal_bit.md)
 
 ## Verify・利用例
 

@@ -27,8 +27,9 @@ std::uint32_t nCk(long long n, long long k) const;
 
 ## 依存関係
 
-- [internal_math.hpp](internal_math.md)
+- [internal_math.hpp](internal/internal_math.md)
 - [prime_factorization.hpp](prime_factorization.md)
+- [internal_bit.hpp](internal/internal_bit.md)
 
 ## Verify・利用例
 

@@ -1,11 +1,12 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/math/convolution_min_plus_concave_arbitrary.hpp
 #pragma once
 #include <algorithm>
-#include <bit>
 #include <functional>
 #include <limits>
 #include <utility>
 #include <vector>
+
+#include "internal/internal_bit.hpp"
 
 namespace soryuusi {
 
@@ -26,13 +27,13 @@ vector<T> min_plus_convolution_conc_arb(const vector<T> A, const vector<T> B, co
     for(int i = 0; i < n; ++i) c[i] = A[i] + B[0];
     return c;
   }
-  int k = bit_floor((unsigned)h) << 1;
-  int mn = k >> (bit_width((unsigned)(n-1)));
+  int k = soryuusi::bit_floor((unsigned)h) << 1;
+  int mn = k >> (soryuusi::bit_width((unsigned)(n-1)));
   vector<int> seg(k,-1);
   for(int l = 0; l < m; ++l){
     int r = l + n;
-    r &= -bit_floor((unsigned)(l^r));
-    int s = bit_width((unsigned)(r-l-1));
+    r &= -soryuusi::bit_floor((unsigned)(l^r));
+    int s = soryuusi::bit_width((unsigned)(r-l-1));
     int i = (k + l) >> s;
     int f = l;
     while(s && ~f){
@@ -51,9 +52,9 @@ vector<T> min_plus_convolution_conc_arb(const vector<T> A, const vector<T> B, co
   fill(seg.begin(), seg.end(),-1);
   for(int r = h; r >= n;){
     int f = r - n;
-    int l = r & -bit_floor((unsigned)(f^r));
+    int l = r & -soryuusi::bit_floor((unsigned)(f^r));
     if(l != r){
-      int s = bit_width((unsigned)(r-l-1));
+      int s = soryuusi::bit_width((unsigned)(r-l-1));
       int i = (k + l) >> s;
       while(s && ~f){
         int m = ((i << 1 | 1) << --s) - k;

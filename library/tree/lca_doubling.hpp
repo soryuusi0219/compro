@@ -3,6 +3,8 @@
 #include <utility>
 #include <vector>
 
+#include "../math/internal/internal_bit.hpp"
+
 namespace soryuusi {
 
 using namespace std;
@@ -33,24 +35,19 @@ struct lca_doubling{
     ancs[0].push_back(-1);
     for(int j = (int)ord.size()-1; j >= 0; j--){
       int v = ord[j], p = par[v], dep = depth[p]+1;
-      ancs[v].push_back(p);
-      int d = dep >> 1;
-      int i = 0;
-      while(d){
-        ancs[v].push_back(ancs[ancs[v][i]][i]);
-        i++;
-        d >>= 1;
+      auto& row = ancs[v];
+      const int length = soryuusi::bit_width(static_cast<unsigned>(dep));
+      row.reserve(length);
+      row.push_back(p);
+      for(int i = 0; i+1 < length; ++i){
+        row.push_back(ancs[row[i]][i]);
       }
       depth[v] = dep;
     }
   }
   int up(int u, int n) const {
-    int i = 0;
-    while(n){
-      if(n&1) u = ancs[u][i];
-      i++;
-      n/=2;
-    }
+    if(n > depth[u]) return -1;
+    for(unsigned k = n; k; k &= k-1) u = ancs[u][soryuusi::countr_zero(k)];
     return u;
   }
   int lca(int u, int v) const {
@@ -71,6 +68,7 @@ struct lca_doubling{
     return depth[u] + depth[v] - 2 * depth[lca(u,v)];
   }
   int jump(int u, int v, int k) const {
+    if(k == 0) return u;
     int w = lca(u,v);
     int d = depth[u] + depth[v] - 2 * depth[w];
     if(k > d) return -1;

@@ -43,21 +43,23 @@ struct Auxiliary_Tree : SimpleEularTour{
       if(!st.empty()) par[i] = st.back();
       st.push_back(i);
     }
-    return {s,par};
+    return {std::move(s),std::move(par)};
   }
 
   tuple<vector<vector<int>>,vector<int>,int> auxiliary_tree(vector<int> s){
-    auto [ind,par] = auxiliary_tree_parent(s);
+    auto [ind,par] = auxiliary_tree_parent(std::move(s));
     vector<vector<int>> retg(ind.size());
     for(int i = 1; i < (int)ind.size(); i++) retg[par[i]].push_back(i);
-    return {retg,ind,ind.empty() ? -1 : 0};
+    const int root_index = ind.empty() ? -1 : 0;
+    return {std::move(retg),std::move(ind),root_index};
   }
 
   tuple<vector<vector<pair<int,int>>>,vector<int>,int> auxiliary_tree_dist(vector<int> s){
-    auto [ind,par] = auxiliary_tree_parent(s);
+    auto [ind,par] = auxiliary_tree_parent(std::move(s));
     vector<vector<pair<int,int>>> retg(ind.size());
     for(int i = 1; i < (int)ind.size(); i++) retg[par[i]].push_back({i,get_depth(ind[i])-get_depth(ind[par[i]])});
-    return {retg,ind,ind.empty() ? -1 : 0};
+    const int root_index = ind.empty() ? -1 : 0;
+    return {std::move(retg),std::move(ind),root_index};
   }
 };
 

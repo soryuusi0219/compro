@@ -5,6 +5,8 @@
 #include <iterator>
 #include <vector>
 
+#include "../math/internal/internal_bit.hpp"
+
 namespace soryuusi {
 
 using namespace std;
@@ -53,10 +55,10 @@ struct BitSetSet{
           x = (x >> 6) + 1;
           continue;
         }
-        x += __builtin_ctzll(y);
+        x += soryuusi::countr_zero(y);
         for(int j = i-1; j >= 0; j--){
           x <<= 6;
-          x += __builtin_ctzll(data[j][x >> 6]);
+          x += soryuusi::countr_zero(data[j][x >> 6]);
         }
         return x;
       }
@@ -71,10 +73,10 @@ struct BitSetSet{
           x = (x >> 6) - 1;
           continue;
         }
-        x -= __builtin_clzll(y);
+        x -= soryuusi::countl_zero(y);
         for(int j = i-1; j >= 0; j--){
           x <<= 6;
-          x += mask - __builtin_clzll(data[j][x >> 6]);
+          x += mask - soryuusi::countl_zero(data[j][x >> 6]);
         }
         return x;
       }

@@ -93,7 +93,7 @@ apply(l, r, f) は半開区間 [l, r)、apply(p, f) は1点、all_apply(f) は�
 
 ## 依存関係
 
-標準ライブラリのみ。
+- [internal_bit.hpp](../math/internal/internal_bit.md)
 
 ## Verify・利用例
 

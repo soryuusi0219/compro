@@ -29,9 +29,7 @@ template<bool Enabled> struct TreeIndex {};
 template<> struct TreeIndex<true> {int index = -1;};
 
 // Node layout and augmentation are independent of balancing and allocation.
-template<class T, auto op, auto e, class Action = NoTreeAction,
-         bool Counted = true, bool Indexed = false, class Extra = EmptyTreeState,
-         bool Reversible = true>
+template<class T, auto op, auto e, class Action = NoTreeAction, bool Counted = true, bool Indexed = false, class Extra = EmptyTreeState, bool Reversible = true>
 struct ReversibleMonoid {
   static_assert(std::is_invocable_r_v<T,decltype(op),T,T>);
   static_assert(std::is_invocable_r_v<T,decltype(e)>);

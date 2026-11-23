@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <vector>
 
-#include "../math/internal_bit.hpp"
+#include "../math/internal/internal_bit.hpp"
 #include "dsu.hpp"
 
 namespace soryuusi {
@@ -14,7 +14,7 @@ struct Range_Parallel_Unionfind{
   int n;
   int m;
   vector<DSU> d;
-  Range_Parallel_Unionfind(int n_) : n(n_), m(bit_width((unsigned)n)), d(m, DSU(n)){}
+  Range_Parallel_Unionfind(int n_) : n(n_), m(soryuusi::bit_width((unsigned)n)), d(m, DSU(n)){}
   int leader(int u){return d[0].leader(u);}
   bool same(int u, int v){return d[0].same(u, v);}
   vector<vector<int>> groups(){return d[0].groups();} 

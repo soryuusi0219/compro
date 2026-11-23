@@ -1,10 +1,10 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/graph/incremental_msf.hpp
 #pragma once
 #include <algorithm>
-#include <bit>
 #include <utility>
 #include <vector>
 
+#include "../math/internal/internal_bit.hpp"
 #include "../data_structure/dsu_undo.hpp"
 
 namespace soryuusi {
@@ -13,7 +13,7 @@ using namespace std;
 
 void incrementalMSF(int n, const vector<pair<int,int>>& es, auto comp, auto add, auto snapshot, auto rollback, auto solve){
   int M = es.size();
-  int B = bit_ceil((unsigned)(M+1));
+  int B = soryuusi::bit_ceil((unsigned)(M+1));
   vector<int> now;
   now.reserve(M);
   dsu_undo d(n);

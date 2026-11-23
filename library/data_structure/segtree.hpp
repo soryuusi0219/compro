@@ -1,8 +1,9 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/segtree.hpp
 #pragma once
-#include <bit>
 #include <type_traits>
 #include <vector>
+
+#include "../math/internal/internal_bit.hpp"
 
 namespace soryuusi {
 
@@ -18,8 +19,8 @@ struct Segtree{
     void _update(int i){data[i] = op(data[i << 1],data[i << 1 | 1]);}
   public:
     Segtree(){}
-    Segtree(int n_) : n(n_), b(1<<bit_width((unsigned)n)), data(b*2,e()){}
-    Segtree(vector<S> v) : n(v.size()), b(1<<bit_width((unsigned)n)), data(b*2,e()){
+    Segtree(int n_) : n(n_), b(1<<soryuusi::bit_width((unsigned)n)), data(b*2,e()){}
+    Segtree(vector<S> v) : n(v.size()), b(1<<soryuusi::bit_width((unsigned)n)), data(b*2,e()){
       for(int i = 0; i < n; ++i) data[b+i] = v[i];
       for(int i = b-1; i; --i) _update(i);
     }

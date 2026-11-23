@@ -21,13 +21,12 @@ struct CentroidDecomposition{
   }
   void build(){
     G.build();
-    vector<bool> seen(n,0);
-    struct Frame {int vertex; static_graph<>::edge_iterator next, end;};
+    vector<unsigned char> seen(n,0);
+    struct Frame {int vertex, next;};
     vector<Frame> dfs;
     auto enter = [&](int v){
       sz[v] = 1;
-      auto edges = G.edges(v);
-      dfs.push_back({v,edges.begin(),edges.end()});
+      dfs.push_back({v,G.start[v]});
     };
     vector<int> st = {0};
     st.reserve(n);
@@ -40,8 +39,8 @@ struct CentroidDecomposition{
         auto& frame = dfs.back();
         int v = frame.vertex;
         int p = dfs.size() > 1 ? dfs[dfs.size()-2].vertex : -1;
-        if(frame.next != frame.end){
-          int to = (frame.next++)->to;
+        if(frame.next != G.start[v+1]){
+          int to = G.es[frame.next++].to;
           if(to != p && !seen[to]) enter(to);
           continue;
         }

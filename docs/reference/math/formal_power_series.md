@@ -153,7 +153,7 @@ vector<T> CompositionalPowerProjection(FormalPowerSeries<T> F, int n = -1, int m
 
 畳み込み時間を $M(N)$ とする。標準的な $M(N)=O(N\log N)$ の場合、逆数・指数・対数・平方根は $O(M(N))$ 時間。NTT版の指数は逆数をNewton段間で引き継ぐ。多点評価は $O(M(N)\log N)$ 時間。
 
-同程度のサイズ $N$ での合成・逆合成・power projectionは $O(M(N)\log N)$ 時間。合成の事前計算は $O(N\log N)$ 領域を使い、固定した内側の級数に再利用できる。係数型と各パラメータによる詳細は[内部実装](internal_fps_composition.md)を参照。
+同程度のサイズ $N$ での合成・逆合成・power projectionは $O(M(N)\log N)$ 時間。合成の事前計算は $O(N\log N)$ 領域を使い、固定した内側の級数に再利用できる。係数型と各パラメータによる詳細は[内部実装](internal/internal_fps_composition.md)を参照。
 
 `CompositionalPowerProjection` が反復合成を使う場合、精度 $N$、出力数 $m$ に対して $O(mM(N)\log N)$ 時間。
 
@@ -165,14 +165,15 @@ vector<T> CompositionalPowerProjection(FormalPowerSeries<T> F, int n = -1, int m
 ## 依存関係
 
 - [convolution.hpp](convolution.md)
-- [internal_fps_composition.hpp](internal_fps_composition.md)
-- [internal_math.hpp](internal_math.md)
-- [modint_traits.hpp](modint_traits.md)
+- [internal_fps_composition.hpp](internal/internal_fps_composition.md)
+- [internal_math.hpp](internal/internal_math.md)
+- [modint_traits.hpp](internal/modint_traits.md)
 - [modint_factorials.hpp](modint_factorials.md)
 - [ntt.hpp](ntt.md)
 - [convolution_mod.hpp](convolution_mod.md)
 - [convolution_semi_online.hpp](convolution_semi_online.md)
 - [convolution_online.hpp](convolution_online.md)
+- [internal_bit.hpp](internal/internal_bit.md)
 
 ## Verify・利用例
 

@@ -125,8 +125,7 @@ class SortableSequence {
   }
   std::pair<Node*,Node*> cut_block(Node* block, int offset){
     int length = Blocks::local_size(block);
-    auto [first,second] = arena->entries.arena->engine.split(
-        block->inner,block->descending ? length-offset : offset);
+    auto [first,second] = arena->entries.arena->engine.split(block->inner,block->descending ? length-offset : offset);
     if(block->descending) std::swap(first,second);
     attach(block,first);
     return {block,make_block(second,block->descending)};
@@ -163,8 +162,7 @@ class SortableSequence {
     auto& engine = arena->blocks.engine;
     if constexpr(requires {engine.access_pushed(root,block);}) engine.access_pushed(root,block);
     else engine.access_node(root,block);
-    Inner* node = arena->entries.arena->engine.access(
-        block->inner,block->descending ? Blocks::local_size(block)-1-offset : offset);
+    Inner* node = arena->entries.arena->engine.access(block->inner,block->descending ? Blocks::local_size(block)-1-offset : offset);
     attach(block,block->inner);
     return {block,node};
   }

@@ -4,7 +4,7 @@
 
 ## 機能・前提条件
 
-文字を末尾追加し異なる回文をノード化する回文木。suffix_link/ref/length/maximal_suffixを参照する。
+文字を末尾追加し異なる回文をノード化する回文木。suffix_link/ref/length/maximal_suffixを参照する。固定文字集合版では文字を指定範囲に収める。map版は入力の文字をそのままキーに使う。`get_next(i,c)` は遷移がなければ `-1` を返す。
 
 ## インターフェース
 
@@ -43,3 +43,4 @@ inline int maximal_suffix(int i) const;
 ## Verify・利用例
 
 - [`library_checker/eertree`](../../../verify/library_checker/string/eertree.cpp)
+- [`unit/string_algorithms`](../../../verify/unit/string_algorithms.cpp)

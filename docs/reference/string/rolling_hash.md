@@ -86,7 +86,7 @@ int lcp(int l1, int l2, const RollingHash& y) const;
 
 ## 計算量
 
-base数B、構築 O(NB)、部分hash・連結 O(B)、二分探索LCP O(B log N)、空間 O(NB)。
+base数を $B$ とする。構築 $O(NB)$、部分hash・連結 $O(B)$、空間 $O(NB)$。LCPは短い長さから指数探索し、上限を絞って二分探索する。共通prefix長を $L$ とすると $O(B\log(L+2))$ 時間。短い方のsuffix全体が一致する場合は $O(B)$ 時間。
 
 ## 依存関係
 

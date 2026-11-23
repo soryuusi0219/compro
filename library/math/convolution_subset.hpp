@@ -2,7 +2,6 @@
 #pragma once
 #include <algorithm>
 #include <array>
-#include <bit>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -10,7 +9,8 @@
 #include <span>
 #include <vector>
 
-#include "modint_traits.hpp"
+#include "internal/internal_bit.hpp"
+#include "internal/modint_traits.hpp"
 
 namespace soryuusi {
 
@@ -84,7 +84,7 @@ class SubsetConvolution {
   void butterflies(Block apply) const {
     // Run the low-bit passes while their rows still fit in cache.
     constexpr std::size_t cache_bytes = 128*1024;
-    const auto chunk = std::min(size,std::bit_floor(std::max<std::size_t>(1,cache_bytes/((dim+1)*sizeof(T)))));
+    const auto chunk = std::min(size,soryuusi::bit_floor(std::max<std::size_t>(1,cache_bytes/((dim+1)*sizeof(T)))));
     for(std::size_t first = 0; first < size; first += chunk)
       for(std::size_t bit = 1; bit < chunk; bit <<= 1)
         for(std::size_t block = first; block < first+chunk; block += 2*bit) apply(block,bit);
@@ -150,8 +150,8 @@ class SubsetConvolution {
   }
 
 public:
-  explicit SubsetConvolution(std::size_t n) : size(n), dim(std::countr_zero(n)){
-    assert(std::has_single_bit(n));
+  explicit SubsetConvolution(std::size_t n) : size(n), dim(soryuusi::countr_zero(n)){
+    assert(soryuusi::has_single_bit(n));
     if constexpr (small_modint){
       const std::uint64_t bound = T::mod()-1;
       narrow_terms = bound == 0 ? direct_limit :
@@ -198,7 +198,7 @@ public:
 template<class T>
 std::vector<T> convolution_subset(const std::vector<T>& a, const std::vector<T>& b){
   if(a.empty() || b.empty()) return {};
-  const auto size = std::bit_ceil(std::max(a.size(),b.size()));
+  const auto size = soryuusi::bit_ceil(std::max(a.size(),b.size()));
   std::vector<T> result(size);
   if(a.size() == 1){
     std::transform(b.begin(),b.end(),result.begin(),[&](const T& value){return a[0]*value;});

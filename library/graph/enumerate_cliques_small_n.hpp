@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <vector>
 
+#include "../math/internal/internal_bit.hpp"
+
 namespace soryuusi {
 
 using namespace std;
@@ -11,7 +13,7 @@ struct EnumerateCliques{
   using bit = __uint128_t;
   int n;
   vector<bit> G;
-  static inline int ctz(bit x) {return (uint64_t)x ? __builtin_ctzll(x) : 64 + __builtin_ctzll(x >> 64);}
+  static inline int ctz(bit x) {return static_cast<uint64_t>(x) ? soryuusi::countr_zero(static_cast<uint64_t>(x)) : 64+soryuusi::countr_zero(static_cast<uint64_t>(x>>64));}
   EnumerateCliques(int n_) : n(n_), G(n,0) {}
   void add_edge(int u, int v){
     G[u] |= (bit)1 << v;

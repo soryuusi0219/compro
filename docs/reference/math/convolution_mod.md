@@ -28,8 +28,8 @@ L=N+M に対し通常 O(L log L) 時間、O(L) 空間。
 ## 依存関係
 
 - [convolution.hpp](convolution.md)
-- [internal_math.hpp](internal_math.md)
-- [modint_traits.hpp](modint_traits.md)
+- [internal_math.hpp](internal/internal_math.md)
+- [modint_traits.hpp](internal/modint_traits.md)
 
 ## Verify・利用例
 

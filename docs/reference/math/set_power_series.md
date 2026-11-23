@@ -65,6 +65,7 @@ SetPowerSeries<T> composition(const vector<T>& F, const SetPowerSeries<T>& f);
 
 - [convolution_subset.hpp](convolution_subset.md)
 - [modint_factorials.hpp](modint_factorials.md)
+- [internal_bit.hpp](internal/internal_bit.md)
 
 ## Verify・利用例
 

@@ -72,8 +72,9 @@ $N$ を入力スペクトルの長さとし、2倍長を扱う操作は $2N$ が
 
 ## 依存関係
 
-- [internal_math.hpp](internal_math.md)
-- [modint_traits.hpp](modint_traits.md)
+- [internal_math.hpp](internal/internal_math.md)
+- [modint_traits.hpp](internal/modint_traits.md)
+- [internal_bit.hpp](internal/internal_bit.md)
 
 ## Verify・利用例
 

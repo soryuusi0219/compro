@@ -25,7 +25,7 @@ B bit、基底長 B に対し O(B) 時間・空間。
 
 ## 依存関係
 
-標準ライブラリのみ。
+- [internal_bit.hpp](../math/internal/internal_bit.md)
 
 ## Verify・利用例
 

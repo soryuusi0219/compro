@@ -49,8 +49,8 @@ T Narayana(int n, int k);
 
 ## 依存関係
 
-- [internal_math.hpp](internal_math.md)
-- [modint_traits.hpp](modint_traits.md)
+- [internal_math.hpp](internal/internal_math.md)
+- [modint_traits.hpp](internal/modint_traits.md)
 
 ## Verify・利用例
 

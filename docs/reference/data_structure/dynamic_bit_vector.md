@@ -44,6 +44,7 @@ get/set/insert/erase/rankは期待 O(log(K+1))、最悪 O(K)。build/to_vector/c
 - [internal/binary_tree_ops.hpp](internal/binary_tree_ops.md)
 - [internal/node_pool.hpp](internal/node_pool.md)
 - [internal/treap_base.hpp](internal/treap_base.md)
+- [internal_bit.hpp](../math/internal/internal_bit.md)
 
 ## Verify・利用例
 

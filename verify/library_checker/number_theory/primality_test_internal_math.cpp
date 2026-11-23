@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <iostream>
 
-#include "library/math/internal_math.hpp"
+#include "library/math/internal/internal_math.hpp"
 
 int main() {
     int q;

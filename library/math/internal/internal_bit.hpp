@@ -1,4 +1,4 @@
-// https://github.com/soryuusi0219/compro/blob/main/library/math/internal_bit.hpp
+// https://github.com/soryuusi0219/compro/blob/main/library/math/internal/internal_bit.hpp
 #pragma once
 
 #include <cassert>
@@ -80,14 +80,10 @@ enum class endian {
 #endif
 
 template <class To, class From>
-SORYUUSI_INTERNAL_BIT_CONSTEXPR_BIT_CAST To bit_cast(
-    const From& from) noexcept {
-  static_assert(sizeof(To) == sizeof(From),
-                "bit_cast requires source and destination of equal size");
-  static_assert(std::is_trivially_copyable<To>::value,
-                "bit_cast destination must be trivially copyable");
-  static_assert(std::is_trivially_copyable<From>::value,
-                "bit_cast source must be trivially copyable");
+SORYUUSI_INTERNAL_BIT_CONSTEXPR_BIT_CAST To bit_cast(const From& from) noexcept {
+  static_assert(sizeof(To) == sizeof(From), "bit_cast requires source and destination of equal size");
+  static_assert(std::is_trivially_copyable<To>::value, "bit_cast destination must be trivially copyable");
+  static_assert(std::is_trivially_copyable<From>::value, "bit_cast source must be trivially copyable");
 #if defined(SORYUUSI_INTERNAL_BIT_USE_STD_BIT_CAST)
   return std::bit_cast<To>(from);
 #elif defined(SORYUUSI_INTERNAL_BIT_USE_BUILTIN_BIT_CAST)
@@ -103,37 +99,24 @@ namespace internal_bit_detail {
 
 template <class T>
 struct remove_cvref {
-  typedef typename std::remove_cv<
-      typename std::remove_reference<T>::type>::type type;
+  typedef typename std::remove_cv<typename std::remove_reference<T>::type>::type type;
 };
 
 template <class T>
-struct is_unsigned_integer
-    : std::integral_constant<
-          bool,
-          std::is_integral<typename remove_cvref<T>::type>::value &&
-              std::is_unsigned<typename remove_cvref<T>::type>::value &&
-              !std::is_same<typename remove_cvref<T>::type, bool>::value> {};
+struct is_unsigned_integer : std::integral_constant<bool, std::is_integral<typename remove_cvref<T>::type>::value && std::is_unsigned<typename remove_cvref<T>::type>::value && !std::is_same<typename remove_cvref<T>::type, bool>::value> {};
 
 template <class T>
-struct is_nonbool_integer
-    : std::integral_constant<
-          bool,
-          std::is_integral<typename remove_cvref<T>::type>::value &&
-              !std::is_same<typename remove_cvref<T>::type, bool>::value> {};
+struct is_nonbool_integer : std::integral_constant<bool, std::is_integral<typename remove_cvref<T>::type>::value && !std::is_same<typename remove_cvref<T>::type, bool>::value> {};
 
 template <class T>
-using enable_unsigned =
-    typename std::enable_if<is_unsigned_integer<T>::value, int>::type;
+using enable_unsigned = typename std::enable_if<is_unsigned_integer<T>::value, int>::type;
 
 template <class T>
-using enable_integer =
-    typename std::enable_if<is_nonbool_integer<T>::value, int>::type;
+using enable_integer = typename std::enable_if<is_nonbool_integer<T>::value, int>::type;
 
 template <class T>
 SORYUUSI_INTERNAL_BIT_CONSTEXPR14 int bit_width_fallback(T x) noexcept {
-  static_assert(std::numeric_limits<T>::digits <= 64,
-                "internal_bit supports integer types up to 64 bits");
+  static_assert(std::numeric_limits<T>::digits <= 64, "internal_bit supports integer types up to 64 bits");
   std::uint64_t value = static_cast<std::uint64_t>(x);
   int result = 0;
   if (value >> 32) value >>= 32, result += 32;
@@ -147,20 +130,17 @@ SORYUUSI_INTERNAL_BIT_CONSTEXPR14 int bit_width_fallback(T x) noexcept {
 
 template <class T>
 SORYUUSI_INTERNAL_BIT_CONSTEXPR14 int popcount_fallback(T x) noexcept {
-  static_assert(std::numeric_limits<T>::digits <= 64,
-                "internal_bit supports integer types up to 64 bits");
+  static_assert(std::numeric_limits<T>::digits <= 64, "internal_bit supports integer types up to 64 bits");
   std::uint64_t value = static_cast<std::uint64_t>(x);
   value -= (value >> 1) & UINT64_C(0x5555555555555555);
-  value = (value & UINT64_C(0x3333333333333333)) +
-          ((value >> 2) & UINT64_C(0x3333333333333333));
+  value = (value & UINT64_C(0x3333333333333333)) + ((value >> 2) & UINT64_C(0x3333333333333333));
   value = (value + (value >> 4)) & UINT64_C(0x0f0f0f0f0f0f0f0f);
   return static_cast<int>((value * UINT64_C(0x0101010101010101)) >> 56);
 }
 
 template <class T>
 SORYUUSI_INTERNAL_BIT_CONSTEXPR14 T bit_reverse_fallback(T x) noexcept {
-  static_assert(std::numeric_limits<T>::digits <= 64,
-                "internal_bit supports integer types up to 64 bits");
+  static_assert(std::numeric_limits<T>::digits <= 64, "internal_bit supports integer types up to 64 bits");
   const int digits = std::numeric_limits<T>::digits;
   if ((digits & (digits - 1)) != 0) {
     T result = 0;
@@ -173,19 +153,15 @@ SORYUUSI_INTERNAL_BIT_CONSTEXPR14 T bit_reverse_fallback(T x) noexcept {
   T mask = static_cast<T>(~T(0));
   for (int shift = digits >> 1; shift != 0; shift >>= 1) {
     mask = static_cast<T>(mask ^ static_cast<T>(mask << shift));
-    x = static_cast<T>(((x >> shift) & mask) |
-                       (static_cast<T>(x << shift) & static_cast<T>(~mask)));
+    x = static_cast<T>(((x >> shift) & mask) | (static_cast<T>(x << shift) & static_cast<T>(~mask)));
   }
   return x;
 }
 
 template <class T>
-SORYUUSI_INTERNAL_BIT_CONSTEXPR14 T bit_compress_fallback(T x,
-                                                          T mask) noexcept {
-  static_assert(std::numeric_limits<T>::digits <= 64,
-                "internal_bit supports integer types up to 64 bits");
-  if ((std::numeric_limits<T>::digits &
-       (std::numeric_limits<T>::digits - 1)) != 0) {
+SORYUUSI_INTERNAL_BIT_CONSTEXPR14 T bit_compress_fallback(T x, T mask) noexcept {
+  static_assert(std::numeric_limits<T>::digits <= 64, "internal_bit supports integer types up to 64 bits");
+  if ((std::numeric_limits<T>::digits & (std::numeric_limits<T>::digits - 1)) != 0) {
     T result = 0;
     T output_bit = 1;
     while (mask != 0) {
@@ -199,10 +175,8 @@ SORYUUSI_INTERNAL_BIT_CONSTEXPR14 T bit_compress_fallback(T x,
   x = static_cast<T>(x & mask);
   T moving_mask = static_cast<T>(static_cast<T>(~mask) << 1);
   for (int shift = 1; shift < std::numeric_limits<T>::digits; shift <<= 1) {
-    T prefix = static_cast<T>(moving_mask ^
-                              static_cast<T>(moving_mask << 1));
-    for (int distance = 2; distance < std::numeric_limits<T>::digits;
-         distance <<= 1) {
+    T prefix = static_cast<T>(moving_mask ^ static_cast<T>(moving_mask << 1));
+    for (int distance = 2; distance < std::numeric_limits<T>::digits; distance <<= 1) {
       prefix = static_cast<T>(prefix ^ static_cast<T>(prefix << distance));
     }
     const T move = static_cast<T>(prefix & mask);
@@ -215,12 +189,9 @@ SORYUUSI_INTERNAL_BIT_CONSTEXPR14 T bit_compress_fallback(T x,
 }
 
 template <class T>
-SORYUUSI_INTERNAL_BIT_CONSTEXPR14 T bit_expand_fallback(T x,
-                                                        T mask) noexcept {
-  static_assert(std::numeric_limits<T>::digits <= 64,
-                "internal_bit supports integer types up to 64 bits");
-  if ((std::numeric_limits<T>::digits &
-       (std::numeric_limits<T>::digits - 1)) != 0) {
+SORYUUSI_INTERNAL_BIT_CONSTEXPR14 T bit_expand_fallback(T x, T mask) noexcept {
+  static_assert(std::numeric_limits<T>::digits <= 64, "internal_bit supports integer types up to 64 bits");
+  if ((std::numeric_limits<T>::digits & (std::numeric_limits<T>::digits - 1)) != 0) {
     T result = 0;
     T input_bit = 1;
     while (mask != 0) {
@@ -231,18 +202,14 @@ SORYUUSI_INTERNAL_BIT_CONSTEXPR14 T bit_expand_fallback(T x,
     }
     return result;
   }
-  const int levels = bit_width_fallback(
-      static_cast<unsigned>(std::numeric_limits<T>::digits - 1));
+  const int levels = bit_width_fallback(static_cast<unsigned>(std::numeric_limits<T>::digits - 1));
   T moves[6] = {};
   const T original_mask = mask;
   T moving_mask = static_cast<T>(static_cast<T>(~mask) << 1);
   int level = 0;
-  for (int shift = 1; shift < std::numeric_limits<T>::digits;
-       shift <<= 1, ++level) {
-    T prefix = static_cast<T>(moving_mask ^
-                              static_cast<T>(moving_mask << 1));
-    for (int distance = 2; distance < std::numeric_limits<T>::digits;
-         distance <<= 1) {
+  for (int shift = 1; shift < std::numeric_limits<T>::digits; shift <<= 1, ++level) {
+    T prefix = static_cast<T>(moving_mask ^ static_cast<T>(moving_mask << 1));
+    for (int distance = 2; distance < std::numeric_limits<T>::digits; distance <<= 1) {
       prefix = static_cast<T>(prefix ^ static_cast<T>(prefix << distance));
     }
     moves[level] = static_cast<T>(prefix & mask);
@@ -253,8 +220,7 @@ SORYUUSI_INTERNAL_BIT_CONSTEXPR14 T bit_expand_fallback(T x,
   for (int index = levels; index-- > 0;) {
     const int shift = 1 << index;
     const T move = moves[index];
-    x = static_cast<T>((x & static_cast<T>(~(move >> shift))) |
-                       (static_cast<T>(x << shift) & move));
+    x = static_cast<T>((x & static_cast<T>(~(move >> shift))) | (static_cast<T>(x << shift) & move));
   }
   return static_cast<T>(x & original_mask);
 }
@@ -273,8 +239,7 @@ shift_magnitude(S shift) noexcept {
 }
 
 template <class T, class S>
-SORYUUSI_INTERNAL_BIT_CONSTEXPR14 T shift_left_positive(T x,
-                                                        S shift) noexcept {
+SORYUUSI_INTERNAL_BIT_CONSTEXPR14 T shift_left_positive(T x, S shift) noexcept {
   typedef typename std::make_unsigned<T>::type U;
   const int digits = std::numeric_limits<U>::digits;
   if (shift >= static_cast<S>(digits)) return T(0);
@@ -282,8 +247,7 @@ SORYUUSI_INTERNAL_BIT_CONSTEXPR14 T shift_left_positive(T x,
 }
 
 template <class T, class S>
-SORYUUSI_INTERNAL_BIT_CONSTEXPR14 T shift_right_positive(T x,
-                                                         S shift) noexcept {
+SORYUUSI_INTERNAL_BIT_CONSTEXPR14 T shift_right_positive(T x, S shift) noexcept {
   typedef typename std::make_unsigned<T>::type U;
   const int digits = std::numeric_limits<U>::digits;
   const bool negative = is_negative(x);
@@ -291,9 +255,7 @@ SORYUUSI_INTERNAL_BIT_CONSTEXPR14 T shift_right_positive(T x,
   const int amount = static_cast<int>(shift);
   U result = static_cast<U>(x) >> amount;
   if (negative && amount != 0) {
-    result = static_cast<U>(result |
-                            static_cast<U>(static_cast<U>(~U(0))
-                                           << (digits - amount)));
+    result = static_cast<U>(result | static_cast<U>(static_cast<U>(~U(0)) << (digits - amount)));
   }
   return static_cast<T>(result);
 }
@@ -308,14 +270,11 @@ SORYUUSI_INTERNAL_BIT_CONSTEXPR14 int countl_zero(T x) noexcept {
   const int digits = std::numeric_limits<T>::digits;
   if (x == 0) return digits;
   if (sizeof(T) <= sizeof(unsigned int)) {
-    return __builtin_clz(static_cast<unsigned int>(x)) -
-           (std::numeric_limits<unsigned int>::digits - digits);
+    return __builtin_clz(static_cast<unsigned int>(x)) - (std::numeric_limits<unsigned int>::digits - digits);
   }
-  return __builtin_clzll(static_cast<unsigned long long>(x)) -
-         (std::numeric_limits<unsigned long long>::digits - digits);
+  return __builtin_clzll(static_cast<unsigned long long>(x)) - (std::numeric_limits<unsigned long long>::digits - digits);
 #else
-  return std::numeric_limits<T>::digits -
-         internal_bit_detail::bit_width_fallback(x);
+  return std::numeric_limits<T>::digits - internal_bit_detail::bit_width_fallback(x);
 #endif
 }
 
@@ -339,8 +298,7 @@ SORYUUSI_INTERNAL_BIT_CONSTEXPR14 int countr_zero(T x) noexcept {
   }
   return __builtin_ctzll(static_cast<unsigned long long>(x));
 #else
-  return internal_bit_detail::bit_width_fallback(
-      static_cast<T>((x & static_cast<T>(-x)) - 1));
+  return internal_bit_detail::bit_width_fallback(static_cast<T>((x & static_cast<T>(-x)) - 1));
 #endif
 }
 
@@ -390,7 +348,7 @@ SORYUUSI_INTERNAL_BIT_CONSTEXPR14 T bit_floor(T x) noexcept {
 #if defined(__cpp_lib_int_pow2) && __cpp_lib_int_pow2 >= 202002L
   return std::bit_floor(x);
 #else
-  return x == 0 ? T(0) : static_cast<T>(T(1) << (bit_width(x) - 1));
+  return x == 0 ? T(0) : static_cast<T>(T(1) << (soryuusi::bit_width(x) - 1));
 #endif
 }
 
@@ -399,8 +357,7 @@ SORYUUSI_INTERNAL_BIT_CONSTEXPR14 T bit_ceil(T x) {
 #if defined(__cpp_lib_int_pow2) && __cpp_lib_int_pow2 >= 202002L
   return std::bit_ceil(x);
 #else
-  return x <= 1 ? T(1)
-                : static_cast<T>(T(1) << bit_width(static_cast<T>(x - 1)));
+  return x <= 1 ? T(1) : static_cast<T>(T(1) << soryuusi::bit_width(static_cast<T>(x - 1)));
 #endif
 }
 
@@ -412,10 +369,7 @@ SORYUUSI_INTERNAL_BIT_CONSTEXPR14 T rotl(T x, int shift) noexcept {
   const int digits = std::numeric_limits<T>::digits;
   int amount = shift % digits;
   if (amount < 0) amount += digits;
-  return amount == 0
-             ? x
-             : static_cast<T>(static_cast<T>(x << amount) |
-                              static_cast<T>(x >> (digits - amount)));
+  return amount == 0 ? x : static_cast<T>(static_cast<T>(x << amount) | static_cast<T>(x >> (digits - amount)));
 #endif
 }
 
@@ -427,10 +381,7 @@ SORYUUSI_INTERNAL_BIT_CONSTEXPR14 T rotr(T x, int shift) noexcept {
   const int digits = std::numeric_limits<T>::digits;
   int amount = shift % digits;
   if (amount < 0) amount += digits;
-  return amount == 0
-             ? x
-             : static_cast<T>(static_cast<T>(x >> amount) |
-                              static_cast<T>(x << (digits - amount)));
+  return amount == 0 ? x : static_cast<T>(static_cast<T>(x >> amount) | static_cast<T>(x << (digits - amount)));
 #endif
 }
 
@@ -455,8 +406,7 @@ SORYUUSI_INTERNAL_BIT_CONSTEXPR14 T byteswap(T value) noexcept {
 #endif
   U result = 0;
   for (std::size_t index = 0; index < sizeof(T); ++index) {
-    result = static_cast<U>(static_cast<U>(result << CHAR_BIT) |
-                            static_cast<U>(x & UCHAR_MAX));
+    result = static_cast<U>(static_cast<U>(result << CHAR_BIT) | static_cast<U>(x & UCHAR_MAX));
     x = static_cast<U>(x >> CHAR_BIT);
   }
   return static_cast<T>(result);
@@ -469,13 +419,10 @@ SORYUUSI_INTERNAL_BIT_CONSTEXPR14 T bit_reverse(T x) noexcept {
   return std::bit_reverse(x);
 #elif __has_builtin(__builtin_bitreverse32)
   if (sizeof(T) <= sizeof(std::uint32_t)) {
-    const std::uint32_t reversed =
-        __builtin_bitreverse32(static_cast<std::uint32_t>(x));
-    return static_cast<T>(reversed >>
-                          (32 - std::numeric_limits<T>::digits));
+    const std::uint32_t reversed = __builtin_bitreverse32(static_cast<std::uint32_t>(x));
+    return static_cast<T>(reversed >> (32 - std::numeric_limits<T>::digits));
   }
-  return static_cast<T>(
-      __builtin_bitreverse64(static_cast<std::uint64_t>(x)));
+  return static_cast<T>(__builtin_bitreverse64(static_cast<std::uint64_t>(x)));
 #else
   return internal_bit_detail::bit_reverse_fallback(x);
 #endif
@@ -489,8 +436,7 @@ SORYUUSI_INTERNAL_BIT_CONSTEXPR14 T bit_repeat(T x, int length) {
   assert(length > 0);
   const int digits = std::numeric_limits<T>::digits;
   if (length >= digits) return x;
-  x = static_cast<T>(
-      x & static_cast<T>(static_cast<T>(~T(0)) >> (digits - length)));
+  x = static_cast<T>(x & static_cast<T>(static_cast<T>(~T(0)) >> (digits - length)));
   int filled = length;
   while (filled < digits) {
     x = static_cast<T>(x | static_cast<T>(x << filled));
@@ -512,11 +458,9 @@ SORYUUSI_INTERNAL_BIT_CONSTEXPR14 T bit_compress(T x, T mask) noexcept {
   if (!__builtin_is_constant_evaluated()) {
 #endif
     if (sizeof(T) <= sizeof(std::uint32_t)) {
-      return static_cast<T>(_pext_u32(static_cast<std::uint32_t>(x),
-                                      static_cast<std::uint32_t>(mask)));
+      return static_cast<T>(_pext_u32(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(mask)));
     }
-    return static_cast<T>(_pext_u64(static_cast<std::uint64_t>(x),
-                                    static_cast<std::uint64_t>(mask)));
+    return static_cast<T>(_pext_u64(static_cast<std::uint64_t>(x), static_cast<std::uint64_t>(mask)));
 #if SORYUUSI_INTERNAL_BIT_CPLUSPLUS >= 201402L
   }
   return internal_bit_detail::bit_compress_fallback(x, mask);
@@ -537,11 +481,9 @@ SORYUUSI_INTERNAL_BIT_CONSTEXPR14 T bit_expand(T x, T mask) noexcept {
   if (!__builtin_is_constant_evaluated()) {
 #endif
     if (sizeof(T) <= sizeof(std::uint32_t)) {
-      return static_cast<T>(_pdep_u32(static_cast<std::uint32_t>(x),
-                                      static_cast<std::uint32_t>(mask)));
+      return static_cast<T>(_pdep_u32(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(mask)));
     }
-    return static_cast<T>(_pdep_u64(static_cast<std::uint64_t>(x),
-                                    static_cast<std::uint64_t>(mask)));
+    return static_cast<T>(_pdep_u64(static_cast<std::uint64_t>(x), static_cast<std::uint64_t>(mask)));
 #if SORYUUSI_INTERNAL_BIT_CPLUSPLUS >= 201402L
   }
   return internal_bit_detail::bit_expand_fallback(x, mask);
@@ -551,37 +493,25 @@ SORYUUSI_INTERNAL_BIT_CONSTEXPR14 T bit_expand(T x, T mask) noexcept {
 #endif
 }
 
-template <class T, class S,
-          typename std::enable_if<
-              internal_bit_detail::is_nonbool_integer<T>::value &&
-                  internal_bit_detail::is_nonbool_integer<S>::value,
-              int>::type = 0>
+template <class T, class S, typename std::enable_if<internal_bit_detail::is_nonbool_integer<T>::value && internal_bit_detail::is_nonbool_integer<S>::value, int>::type = 0>
 SORYUUSI_INTERNAL_BIT_CONSTEXPR14 T shl(T x, S shift) noexcept {
 #if defined(__cpp_lib_bitops) && __cpp_lib_bitops >= 202607L
   return std::shl(x, shift);
 #else
   typedef typename std::make_unsigned<S>::type US;
   const US magnitude = internal_bit_detail::shift_magnitude(shift);
-  return internal_bit_detail::is_negative(shift)
-             ? internal_bit_detail::shift_right_positive(x, magnitude)
-             : internal_bit_detail::shift_left_positive(x, magnitude);
+  return internal_bit_detail::is_negative(shift) ? internal_bit_detail::shift_right_positive(x, magnitude) : internal_bit_detail::shift_left_positive(x, magnitude);
 #endif
 }
 
-template <class T, class S,
-          typename std::enable_if<
-              internal_bit_detail::is_nonbool_integer<T>::value &&
-                  internal_bit_detail::is_nonbool_integer<S>::value,
-              int>::type = 0>
+template <class T, class S, typename std::enable_if<internal_bit_detail::is_nonbool_integer<T>::value && internal_bit_detail::is_nonbool_integer<S>::value, int>::type = 0>
 SORYUUSI_INTERNAL_BIT_CONSTEXPR14 T shr(T x, S shift) noexcept {
 #if defined(__cpp_lib_bitops) && __cpp_lib_bitops >= 202607L
   return std::shr(x, shift);
 #else
   typedef typename std::make_unsigned<S>::type US;
   const US magnitude = internal_bit_detail::shift_magnitude(shift);
-  return internal_bit_detail::is_negative(shift)
-             ? internal_bit_detail::shift_left_positive(x, magnitude)
-             : internal_bit_detail::shift_right_positive(x, magnitude);
+  return internal_bit_detail::is_negative(shift) ? internal_bit_detail::shift_left_positive(x, magnitude) : internal_bit_detail::shift_right_positive(x, magnitude);
 #endif
 }
 

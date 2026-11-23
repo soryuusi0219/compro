@@ -91,23 +91,15 @@ struct MergeSortTree_Segtree{
     S res = e();
     for(int k = (b-1)*n, K = 1; l < r; k -= n, K <<= 1) {
       if(l & K) {
-        int mn = mn_inclusive
-          ? lower_bound(key.begin() + l + k, key.begin() + (l + K + k), lo, Compare()) - key.begin()
-          : upper_bound(key.begin() + l + k, key.begin() + (l + K + k), lo, Compare()) - key.begin();
-        int mx = mx_inclusive
-          ? upper_bound(key.begin() + l + k, key.begin() + (l + K + k), up, Compare()) - key.begin()
-          : lower_bound(key.begin() + l + k, key.begin() + (l + K + k), up, Compare()) - key.begin();
+        int mn = mn_inclusive ? lower_bound(key.begin() + l + k, key.begin() + (l + K + k), lo, Compare()) - key.begin() : upper_bound(key.begin() + l + k, key.begin() + (l + K + k), lo, Compare()) - key.begin();
+        int mx = mx_inclusive ? upper_bound(key.begin() + l + k, key.begin() + (l + K + k), up, Compare()) - key.begin() : lower_bound(key.begin() + l + k, key.begin() + (l + K + k), up, Compare()) - key.begin();
         res = op(res, data.prod(mn,mx));
         l += K;
       }
       if(r & K) {
         r -= K;
-        int mn = mn_inclusive
-          ? lower_bound(key.begin() + r + k, key.begin() + (r + K + k), lo, Compare()) - key.begin()
-          : upper_bound(key.begin() + r + k, key.begin() + (r + K + k), lo, Compare()) - key.begin();
-        int mx = mx_inclusive
-          ? upper_bound(key.begin() + r + k, key.begin() + (r + K + k), up, Compare()) - key.begin()
-          : lower_bound(key.begin() + r + k, key.begin() + (r + K + k), up, Compare()) - key.begin();
+        int mn = mn_inclusive ? lower_bound(key.begin() + r + k, key.begin() + (r + K + k), lo, Compare()) - key.begin() : upper_bound(key.begin() + r + k, key.begin() + (r + K + k), lo, Compare()) - key.begin();
+        int mx = mx_inclusive ? upper_bound(key.begin() + r + k, key.begin() + (r + K + k), up, Compare()) - key.begin() : lower_bound(key.begin() + r + k, key.begin() + (r + K + k), up, Compare()) - key.begin();
         res = op(res, data.prod(mn,mx));
       }
     }
