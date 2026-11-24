@@ -29,12 +29,14 @@ S sum_lt(int l, int r, Key x) const;
 
 ## 計算量
 
-構築 O(N log N)、条件付き和・個数 O(log² N)、空間 O(N log N)。
+構築・空間は `O(N log(N+1))`、条件付き和・個数は `O(log(N+1))`、無条件の `prod` は `O(1)`。長い区間は根で求めたキー境界をrankで子に写す。短区間は各ブロックを直接二分探索する。
 
 ## 依存関係
 
-標準ライブラリのみ。
+- [internal_bit.hpp](../math/internal/internal_bit.md)
+- [merge_sort_tree_rank.hpp](internal/merge_sort_tree_rank.md)
 
 ## Verify・利用例
 
+- [`unit/static_rank_and_order_statistics`](../../../verify/unit/static_rank_and_order_statistics.cpp)
 - [`library_checker/static_range_sum_with_upper_bound_merge_sort_tree`](../../../verify/library_checker/data_structure/static_range_sum_with_upper_bound_merge_sort_tree.cpp)

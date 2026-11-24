@@ -21,16 +21,17 @@ class LinkCutBase {
     Node* last = nullptr;
     for(Node* q = p; q; q = q->pp){
       engine.splay(q);
-      // The detached right child's parent remains a path-parent.
-      q->rp = last;
-      if(last) last->pp = q;
-      Ops::pull(q);
+      // last already points to q as its path-parent, and the old right child keeps q.
+      if(q->rp != last){
+        q->rp = last;
+        Ops::pull(q);
+      }
       last = q;
     }
-    engine.splay(p);
+    if(last != p) engine.splay(p);
     return last;
   }
-  void make_root(Node* p){access(p); Ops::toggle(p); Ops::push(p);}
+  void make_root(Node* p){access(p); if(p->lp) Ops::toggle(p);}
 public:
   explicit LinkCutBase(int n) : LinkCutBase(n,Ops::identity()){}
   LinkCutBase(int n, T initial){
@@ -57,16 +58,23 @@ public:
     return result;
   }
   int find_root(int i){
-    check(i); Node* p = &tree[i]; access(p); Ops::push(p);
+    check(i);
+    Node* root = &tree[i];
+    access(root);
+    Node* p = root;
     while(p->lp){p = p->lp; Ops::push(p);}
-    engine.splay(p); return p->label.index;
+    if(p != root){
+      if constexpr(requires {engine.access_pushed(root,p);}) engine.access_pushed(root,p);
+      else engine.splay(p);
+    }
+    return p->label.index;
   }
   bool connected(int i, int j){return find_root(i) == find_root(j);}
   bool same(int i, int j){return connected(i,j);}
   void link(int i, int j){
     check(i); check(j); assert(i != j && !connected(i,j));
-    make_root(&tree[j]); access(&tree[i]);
-    tree[j].pp = &tree[i]; tree[i].rp = &tree[j]; Ops::pull(&tree[i]);
+    make_root(&tree[j]);
+    tree[j].pp = &tree[i]; // The new edge becomes preferred on its first access.
   }
   void cut(int i, int j){
     check(i); check(j); assert(i != j);
@@ -76,8 +84,8 @@ public:
   }
   void expose(int i){check(i); access(&tree[i]);}
   void evert(int i){check(i); make_root(&tree[i]);}
-  void set(int i, T value){check(i); access(&tree[i]); tree[i].value = value; Ops::pull(&tree[i]);}
-  T get(int i){check(i); access(&tree[i]); return tree[i].value;}
+  void set(int i, T value){check(i); engine.splay(&tree[i]); tree[i].value = value; Ops::pull(&tree[i]);}
+  T get(int i){check(i); engine.splay(&tree[i]); return tree[i].value;}
   T prod(int i){check(i); access(&tree[i]); return tree[i].rsum;}
   T prod(int i, int j){check(j); make_root(&tree[j]); return prod(i);}
   void apply(int i, typename Ops::action_type f) requires Ops::has_action {check(i); access(&tree[i]); Ops::apply(&tree[i],f);}

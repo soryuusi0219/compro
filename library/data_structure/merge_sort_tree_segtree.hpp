@@ -8,6 +8,9 @@
 #include <utility>
 #include <vector>
 
+#include "../math/internal/internal_bit.hpp"
+#include "internal/merge_sort_tree_rank.hpp"
+
 #include "segtree.hpp"
 
 namespace soryuusi {
@@ -31,11 +34,13 @@ struct MergeSortTree_Segtree{
 
   void build(const vector<Key>& a, const vector<S>& v) {
     n = (int)a.size();
-    base = 1, b++; while(base < n) base <<= 1, b++;
+    b = n ? soryuusi::bit_width(static_cast<unsigned>(n-1))+1 : 1;
+    base = 1 << (b-1);
+    ranks.build(n,b-1);
     key.resize(b*n);
     vector<S> _data(b*n);
     idx.assign(n, vector<int>(b,0));
-    vector<int> ids(n);
+    vector<int> ids(n), nids(n);
     iota(ids.begin(),ids.end(),0);
     for(int i = 0; i < n; ++i) {
       key[(b-1)*n + i] = a[i];
@@ -45,7 +50,7 @@ struct MergeSortTree_Segtree{
     for(int j = 0; j < b-1; ++j){
       int off_from = (b-j-1)*n, off_to = (b-j-2)*n;
       int k = 0;
-      vector<int> nids(n);
+
       for(int i = 0; (i << j) < n; i += 2){
         int l = i << j;
         int r = min((i+1) << j, n);
@@ -59,6 +64,7 @@ struct MergeSortTree_Segtree{
             idx[ids[l]][j+1] = off_to + k;
             ++l;
           }else{
+            ranks.set_right(j,k);
             key[off_to + k] = key[off_from + r];
             _data[off_to + k] = _data[off_from + r];
             nids[k] = ids[r];
@@ -68,9 +74,10 @@ struct MergeSortTree_Segtree{
           ++k;
         }
       }
+      ranks.finish(j);
       ids.swap(nids);
     }
-    data = Segtree<S,op,e>(_data);
+    data = Segtree<S,op,e>(std::move(_data));
   }
   
   void set(int i, S x){
@@ -83,28 +90,25 @@ struct MergeSortTree_Segtree{
   }
   S prod(int l, int r){
     assert(0 <= l && l <= r && r <= n);
-    return data.prod(idx[l][0], idx[r][0]);
+    if(l == r) return e();
+    return data.prod((b-1)*n+l,(b-1)*n+r);
   }
 
   S prod_interval(int l, int r, S lo, S up, bool mn_inclusive = true, bool mx_inclusive = false){
     assert(0 <= l && l <= r && r <= n);
+    auto bounds = [&](int a,int b) {
+      auto begin = key.begin();
+      int first = (mn_inclusive ? lower_bound(begin+a,begin+b,lo,Compare()) : upper_bound(begin+a,begin+b,lo,Compare()))-begin;
+      int last = (mx_inclusive ? upper_bound(begin+a,begin+b,up,Compare()) : lower_bound(begin+a,begin+b,up,Compare()))-begin;
+      return pair{first,last};
+    };
     S res = e();
-    for(int k = (b-1)*n, K = 1; l < r; k -= n, K <<= 1) {
-      if(l & K) {
-        int mn = mn_inclusive ? lower_bound(key.begin() + l + k, key.begin() + (l + K + k), lo, Compare()) - key.begin() : upper_bound(key.begin() + l + k, key.begin() + (l + K + k), lo, Compare()) - key.begin();
-        int mx = mx_inclusive ? upper_bound(key.begin() + l + k, key.begin() + (l + K + k), up, Compare()) - key.begin() : lower_bound(key.begin() + l + k, key.begin() + (l + K + k), up, Compare()) - key.begin();
-        res = op(res, data.prod(mn,mx));
-        l += K;
-      }
-      if(r & K) {
-        r -= K;
-        int mn = mn_inclusive ? lower_bound(key.begin() + r + k, key.begin() + (r + K + k), lo, Compare()) - key.begin() : upper_bound(key.begin() + r + k, key.begin() + (r + K + k), lo, Compare()) - key.begin();
-        int mx = mx_inclusive ? upper_bound(key.begin() + r + k, key.begin() + (r + K + k), up, Compare()) - key.begin() : lower_bound(key.begin() + r + k, key.begin() + (r + K + k), up, Compare()) - key.begin();
-        res = op(res, data.prod(mn,mx));
-      }
-    }
+    ranks.visit(n,l,r,bounds,[&](int a,int b){ res = op(res,data.prod(a,b)); });
     return res;
   }
+
+private:
+  internal::MergeSortTreeRank ranks;
 };
 
 }  // namespace soryuusi

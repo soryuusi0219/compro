@@ -23,7 +23,7 @@ Backendはtemplate<class Node,class Ops>の型で、次の操作を実装しま�
 | join(left,right) | inorder順に結合し、親がnullの根を返す |
 | build(n,factory) | 各factory(i)を1度呼び、集約済みの木を構築 |
 
-Nodeはpp/lp/rp、value/lsum/rsumを持ちます。OpsはNode/value_type/action_type/has_action、size/identity/push/pull/toggle、作用付きならapplyを提供します。setはaccess後に対象から親へpullします。構造変更に必要な平衡化はBackendが担当します。高さなどの追加状態はPolicyのExtraに保持できます。
+Nodeはpp/lp/rp、value/lsum/rsumを持ちます。OpsはNode/value_type/action_type/has_action、size/identity/push/pull/toggle、作用付きならapplyを提供します。setはaccess後に対象から親へpullします。1要素の区間積はBackendの位置アクセスで取得します。構造変更に必要な平衡化はBackendが担当します。高さなどの追加状態はPolicyのExtraに保持できます。
 
 同一arenaではBackendの作業領域を共有するので、callback内から同一arenaへ再入しないでください。例外を投げる演算について強い例外保証は提供しません。
 

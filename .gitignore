@@ -9,6 +9,9 @@
 /.verify-helper/
 /work/
 
+# Completed local work plans
+/docs/archive/
+
 # Compiler output
 *.o
 *.obj

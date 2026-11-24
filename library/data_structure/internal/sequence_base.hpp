@@ -76,11 +76,15 @@ public:
   }
   T prod(int l, int r){
     assert(0 <= l && l <= r && r <= size());
-    return l == r ? Ops::identity() : arena->template prod<false>(root,l,r);
+    if(l == r) return Ops::identity();
+    if(r-l == 1) return arena->engine.access(root,l)->value;
+    return arena->template prod<false>(root,l,r);
   }
   T prodrev(int l, int r){
     assert(0 <= l && l <= r && r <= size());
-    return l == r ? Ops::identity() : arena->template prod<true>(root,l,r);
+    if(l == r) return Ops::identity();
+    if(r-l == 1) return arena->engine.access(root,l)->value;
+    return arena->template prod<true>(root,l,r);
   }
   T prod_all() const {return root ? root->lsum : Ops::identity();}
   T prodrev_all() const {return root ? root->rsum : Ops::identity();}

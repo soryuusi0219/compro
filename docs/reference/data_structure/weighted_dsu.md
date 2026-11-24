@@ -8,6 +8,8 @@
 
 `weight(i,j)` は `op(w[j],inv(w[i]))`。加法版ではjのポテンシャル−iのポテンシャルです。`merge(i,j,a)` はこの値がaとなる制約を追加し、新しい代表元を返します。既存制約と矛盾する場合は `-1` を返します。
 
+`weight(i,j)` は同じ成分の2頂点に対し、それぞれの根までのポテンシャルを確定してから差を求める。事前の `same(i,j)` 呼び出しは不要。
+
 ## インターフェース
 
 ```cpp
@@ -44,7 +46,7 @@ using Weighted_dsu_bool = Weighted_dsu_xor<bool>;
 
 ## 計算量
 
-構築 O(N)、通常操作 償却 O(α(N))、空間 O(N)。群演算を O(1) とする。
+群演算を `O(1)` とすると、構築・空間は `O(N)`、通常操作は償却 `O(α(N))`、1操作の最悪は `O(log(N+1))`。
 
 ## 依存関係
 
@@ -52,5 +54,6 @@ using Weighted_dsu_bool = Weighted_dsu_xor<bool>;
 
 ## Verify・利用例
 
+- [`unit/unionfind_hash`](../../../verify/unit/unionfind_hash.cpp)
 - [`library_checker/unionfind_with_potential`](../../../verify/library_checker/data_structure/unionfind_with_potential.cpp)
 - [`library_checker/unionfind_with_potential_non_commutative_group`](../../../verify/library_checker/data_structure/unionfind_with_potential_non_commutative_group.cpp)

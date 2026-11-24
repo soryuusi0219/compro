@@ -4,7 +4,7 @@
 
 ## 機能・前提条件
 
-静的配列の区間転倒数。構築時のqで想定クエリ数を指定できる。
+静的配列の半開区間 `[l,r)` の転倒数。Compareが `a[j] < a[i]` と判定する `l <= i < j < r` を数えます。比較で等価な要素間には転倒がありません。構築時のqは想定クエリ数で、省略時は配列長、0なら作業表を使う場合に全体を1ブロックにします。
 
 ## インターフェース
 
@@ -24,12 +24,15 @@ long long query(int x, int y);
 
 ## 計算量
 
-ブロック長 L に対し構築 O(N log N+N²/L)、query O(L)、空間 O(N²/L)。既定Lは概ね√N。
+ブロック長Lに対し構築は O(N log(N+1)+N²/L)、queryは最悪 O(L)、空間は O(N²/L)。既定Lは概ね√Nです。短区間は直接数え、境界から始まる問い合わせは集計表を使います。入力がCompare順で単調非減少または狭義単調減少の場合、構築は O(N)、queryと追加領域は O(1) です。
+
+隣の境界との差分が32bitに収まる場合、集計表を32bitで保持し、必要ならブロック境界間の64bit集計から復元します。差分に64bitが必要な場合は表も64bitにします。戻り値はいずれも64bitです。
 
 ## 依存関係
 
-標準ライブラリのみ。
+- [bit.hpp](bit.md)
 
 ## Verify・利用例
 
 - [`library_checker/static_range_inversions`](../../../verify/library_checker/data_structure/static_range_inversions.cpp)
+- [`unit/data_structure_misc`](../../../verify/unit/data_structure_misc.cpp)

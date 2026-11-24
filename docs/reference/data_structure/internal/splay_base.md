@@ -4,7 +4,7 @@
 
 ## 機能・前提条件
 
-所有権を持たないsplayの平衡化コア。Nodeはpp/lp/rpを持ち、Opsがpush/pullを提供します。祖先を補助木の根まで集め、上からpushしてから回転します。LCTのpath-parentも維持します。
+所有権を持たないsplayの平衡化コア。Nodeはpp/lp/rpを持ち、Opsがpush/pullを提供します。祖先を補助木の根まで集め、上からpushしてから回転します。対象が既に補助木の根なら、そのノードをpushするだけです。LCTのpath-parentも維持します。
 
 ## インターフェース
 

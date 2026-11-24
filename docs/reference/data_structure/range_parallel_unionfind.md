@@ -4,7 +4,7 @@
 
 ## 機能・前提条件
 
-同じ長さの二つの区間を位置ごとに併合するUnion-Find。実際に併合された要素にcallbackを呼べる。
+同じ長さの二つの半開区間 `[l,l+x)` と `[r,r+x)` を、先頭から対応する位置ごとに併合するUnion-Find。`x = 0` では何も起こらない。コールバックは実際に異なる成分が併合されたときに、併合前の2つの代表元と併合後の代表元を受け取る。`N = 0` の `groups()` は空列を返す。
 
 ## インターフェース
 
@@ -30,7 +30,7 @@ void merge(int l, int r, int x, F f);
 
 ## 計算量
 
-初期化 O(N log N)、全区間併合で O(N log N α(N)+Q α(N)) を上界とする。空間 O(N log N)。
+構築・空間は `O(N log(N+1))`。区間長の立っているビットごとに対応する階層を探索し、その階層で新たに併合した場合だけ子へ進む。`Q` 回の区間併合の合計は `O((N+Q) log(N+1) α(N))`、長さ `x` の併合1回の最悪は `O(x log(N+1))`。コールバックの実行時間は別に数える。
 
 ## 依存関係
 
@@ -39,4 +39,5 @@ void merge(int l, int r, int x, F f);
 
 ## Verify・利用例
 
+- [`unit/unionfind_hash`](../../../verify/unit/unionfind_hash.cpp)
 - [`library_checker/range_parallel_unionfind`](../../../verify/library_checker/data_structure/range_parallel_unionfind.cpp)

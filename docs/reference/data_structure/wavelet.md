@@ -8,6 +8,8 @@
 
 `range_kth(l,r,k)` のkは0始まり。キーは `[0,2^B)`、位置区間は `[l,r)` です。
 
+整数型の検索値はキーの範囲外でも指定できる。`rank(l,r,x)` は範囲外の値に0を返し、`count_lt` は検索値が0以下なら0、上端以上なら区間長を返す。
+
 ## インターフェース
 
 ```cpp
@@ -36,9 +38,11 @@ T prev(int l, int r, T x, T default_value = -1);
 ## 依存関係
 
 - [static_bit_vector.hpp](static_bit_vector.md)
+- [wavelet_partition.hpp](internal/wavelet_partition.md)
 
 ## Verify・利用例
 
+- [`unit/static_rank_and_order_statistics`](../../../verify/unit/static_rank_and_order_statistics.cpp)
 - [`library_checker/range_kth_smallest`](../../../verify/library_checker/data_structure/range_kth_smallest.cpp)
 - [`library_checker/range_kth_smallest_wavelet_legacy`](../../../verify/library_checker/data_structure/range_kth_smallest_wavelet_legacy.cpp)
 - [`library_checker/static_range_frequency_wavelet`](../../../verify/library_checker/data_structure/static_range_frequency_wavelet.cpp)

@@ -6,11 +6,11 @@ namespace soryuusi {
 template<class T>
 struct Line {
   T a, b;
-  T get(T x) { return a * x + b; }
+  constexpr T get(T x) { return a * x + b; }
 };
 
 template<class T, T infinity>
-Line<T> INF_Line() {
+constexpr Line<T> INF_Line() {
   return {0, infinity};
 }
 

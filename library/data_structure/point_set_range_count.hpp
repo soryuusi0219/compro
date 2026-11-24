@@ -2,13 +2,14 @@
 #pragma once
 #include <cstddef>
 #include <utility>
-#include <algorithm>
 #include <cassert>
-#include <chrono>
 #include <cstdint>
+#include <stdexcept>
 #include <type_traits>
 #include <vector>
 
+#include "hash_table.hpp"
+#include "internal/hash_table_storage.hpp"
 #include "internal/node_pool.hpp"
 
 namespace soryuusi {
@@ -21,44 +22,22 @@ struct PointSetRangeCount{
 
   private:
     struct Compressor{
-      using u32 = uint32_t;
-      using u64 = uint64_t;
-      private:
-        vector<T> key;
-        vector<int> val;
-        u32 mask;
-        u32 index(T x) const {
-          static const u32 R = []() -> u64 {
-            u64 x = chrono::steady_clock::now().time_since_epoch().count();
-            for(int i = 0; i < 8; i++) {
-                x ^= x << 13;
-                x ^= x >> 7;
-                x ^= x << 17;
-            }
-            return x | 1;
-          }() & mask;
-          u64 i = hash(x) & mask;
-          for(; ~val[i] && key[i] != x; i = (i+R) & mask);
-          return i;
-        }
-        int mx = 0;
-      public:
-        Compressor(int n){
-          int s = 1; while(s < n * 2) s <<= 1;
-          key.resize(s);
-          val.assign(s,-1);
-          mask = s-1;
-        }
-        int add(const T &k){
-          u32 id = index(k);
-          if(!~val[id]) key[id] = k, val[id] = mx++;
-          return val[id];
+      // lookup() does not change the table. Keep the public count() const.
+      mutable internal::HashTableStorage<T,int,hash> values;
+      int size = 0, limit;
 
-        }
-        inline int get(const T &k) const {
-          u32 id = index(k);
-          return ~val[id] ? val[id] : -1;
-        }
+      explicit Compressor(int m) : values(m), limit(m) {}
+      int add(const T& key){
+        auto i = values.insert(key,[&]{
+          if(size == limit) throw length_error("PointSetRangeCount value capacity exceeded");
+          return size++;
+        });
+        return values.value(i);
+      }
+      int get(const T& key) const {
+        auto i = values.lookup(key);
+        return i == values.end() ? -1 : values.value(i);
+      }
     } compressor;
     struct node{
       int pos, sum;
@@ -75,7 +54,7 @@ struct PointSetRangeCount{
     void __add(node* p, int i){
       int l = 0, r = n;
       while(p->pos != i){
-        int m = (l+r) >> 1;
+        int m = l+(r-l)/2;
         if(i < m){
           if(i > p->pos) {
             swap(p->pos,i);
@@ -101,14 +80,14 @@ struct PointSetRangeCount{
       int l = 0, r = n;
       while(p->pos != i){
         --p->sum;
-        int m = (l+r) >> 1;
+        int m = l+(r-l)/2;
         if(i < m) r = m, p = p->lp;
         else l = m, p = p->rp;
       }
       --(p->sum);
     }
 
-    int _count(node* p, int i) const {
+    int _count(const node* p, int i) const {
       int res = 0;
       while(p && p->pos != i){
         if(i < p->pos) p = p->lp;
@@ -121,7 +100,17 @@ struct PointSetRangeCount{
       return res;
     }
 
-    inline int _count(node* p, int l, int r) const { return _count(p,r) - _count(p,l);}
+    int _count(const node* p, int l, int r) const {
+      while(p && p->sum){
+        if(r <= p->pos) p = p->lp;
+        else if(p->pos < l) p = p->rp;
+        else {
+          int taken = p->sum - (p->rp ? p->rp->sum : 0);
+          return taken-_count(p->lp,l)+_count(p->rp,r);
+        }
+      }
+      return 0;
+    }
     int n;
     vector<int> v;
     vector<node*> inst;
@@ -161,35 +150,18 @@ struct PointSetRangeCount{
     }
     void set(int i, const T& k){
       assert(0 <= i && i < n);
-      if(~v[i]) _del(inst[v[i]],i);
       int value = compressor.add(k);
-      assert(value < (int)inst.size());
-      _add(inst[v[i]=value],i);
+      if(value == v[i]) return;
+      _add(inst[value],i);
+      if(~v[i]) _del(inst[v[i]],i);
+      v[i] = value;
     }
     int count(int l, int r, const T& k) const {
       assert(0 <= l && l <= r && r <= n);
-      if(n == 0) return 0;
+      if(l == r) return 0;
       int id = compressor.get(k);
       if(!~id) return 0;
       return _count(inst[id],l,r);
     }
 };
-template<class T>
-uint64_t hash_int(T x){
-  static const uint64_t R = []() -> uint64_t {
-    uint64_t x = chrono::steady_clock::now().time_since_epoch().count();
-    for(int i = 0; i < 8; i++) {
-        x ^= x << 13;
-        x ^= x >> 7;
-        x ^= x << 17;
-    }
-    return x;
-  }();
-  uint64_t res = static_cast<uint64_t>(x);
-  res += R;
-  res = (res ^ (res >> 30)) * 0xbf58476d1ce4e5b9;
-  res = (res ^ (res >> 27)) * 0x94d049bb133111eb;
-  return (res ^ (res >> 31));
-}
-
 }  // namespace soryuusi

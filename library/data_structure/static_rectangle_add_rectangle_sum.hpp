@@ -10,48 +10,93 @@ using namespace std;
 template<class S, class X = int, class Y = int>
 struct StaticRectangleAddRectangleSum{
   private:
-    struct Query{X x; int idx; Y yl, yr; S w;};
-    vector<Query> query;
-    vector<Y> vy;
-    int q = 0;
+    struct Rectangle { X xl, xr; Y yl, yr; };
+    struct Update { Rectangle bounds; S w; };
+    struct Event { X x; int index; };
+    struct Range { int l, r; };
+    struct Coefficients { S xy, y, x, constant; };
+    vector<Update> updates;
+    vector<Rectangle> queries;
+    vector<Y> ys;
   public:
     StaticRectangleAddRectangleSum() {}
-    StaticRectangleAddRectangleSum(int n, int q_) {query.reserve(n*2+q_*2), vy.reserve(n*2);}
+    StaticRectangleAddRectangleSum(int n, int q) {updates.reserve(n); queries.reserve(q); ys.reserve(n*2);}
     void add_rectangle(X xl, X xr, Y yl, Y yr, S w){
-      query.emplace_back(xl,-1,yl,yr,-w);
-      query.emplace_back(xr,-1,yl,yr,w);
-      vy.push_back(yl);
-      vy.push_back(yr);
+      if(!(xl < xr) || !(yl < yr)) return;
+      ys.push_back(yl);
+      ys.push_back(yr);
+      updates.push_back({{xl,xr,yl,yr},w});
     }
     void add_query(X xl, X xr, Y yl, Y yr){
-      query.emplace_back(xl, q << 1, yl, yr, 0);
-      query.emplace_back(xr, q << 1 | 1, yl, yr, 0);
-      ++q;
+      queries.push_back({xl,xr,yl,yr});
     }
     vector<S> solve(){
-      sort(query.begin(),query.end(),[](const Query& l, const Query& r){return l.x < r.x;});
-      sort(vy.begin(),vy.end());
-      vy.erase(unique(vy.begin(),vy.end()),vy.end());
-      int m = vy.size();
-      vector<S> s(m+1, 0), sx(m+1, 0), sy(m+1, 0), sxy(m+1, 0), ans(q,0);
-      for(const auto& [x, idx, yl, yr, w] : query){
-        if(~idx){
-          int qid = idx >> 1;
-          bool f = idx & 1;
-          int pl = lower_bound(vy.begin(),vy.end(),yl) - vy.begin();
-          int pr = lower_bound(vy.begin(),vy.end(),yr) - vy.begin();
-          if(f){
-            for(; pl; pl -= pl & -pl) ans[qid] -= (s[pl]*yl-sy[pl])*x - sx[pl]*yl + sxy[pl];
-            for(; pr; pr -= pr & -pr) ans[qid] += (s[pr]*yr-sy[pr])*x - sx[pr]*yr + sxy[pr];
-          }else{
-            for(; pl; pl -= pl & -pl) ans[qid] += (s[pl]*yl-sy[pl])*x - sx[pl]*yl + sxy[pl];
-            for(; pr; pr -= pr & -pr) ans[qid] -= (s[pr]*yr-sy[pr])*x - sx[pr]*yr + sxy[pr];
-          }
-        }else{
-          int pl = lower_bound(vy.begin(),vy.end(),yl) - vy.begin();
-          int pr = lower_bound(vy.begin(),vy.end(),yr) - vy.begin();
-          for(++pl; pl <= m; pl += pl & -pl) s[pl] -= w, sx[pl] -= w*x, sy[pl] -= w*yl, sxy[pl] -= w*x*yl;
-          for(++pr; pr <= m; pr += pr & -pr) s[pr] += w, sx[pr] += w*x, sy[pr] += w*yr, sxy[pr] += w*x*yr;
+      vector<S> ans(queries.size(),0);
+      if(updates.empty() || queries.empty()) return ans;
+      sort(ys.begin(),ys.end());
+      ys.erase(unique(ys.begin(),ys.end()),ys.end());
+      vector<Event> events;
+      vector<Range> update_y, query_y;
+      events.reserve((updates.size()+queries.size())*2);
+      update_y.reserve(updates.size());
+      query_y.reserve(queries.size());
+      auto compress = [&](const Rectangle& rect){
+        int l = lower_bound(ys.begin(),ys.end(),rect.yl)-ys.begin();
+        int r = lower_bound(ys.begin(),ys.end(),rect.yr)-ys.begin();
+        return Range{l,r};
+      };
+      for(int i = 0; i < static_cast<int>(updates.size()); ++i) {
+        const auto& rect = updates[i].bounds;
+        update_y.push_back(compress(rect));
+        events.push_back({rect.xl,~(i*2)});
+        events.push_back({rect.xr,~(i*2+1)});
+      }
+      for(int i = 0; i < static_cast<int>(queries.size()); ++i) {
+        const auto& rect = queries[i];
+        query_y.push_back(compress(rect));
+        if(rect.xl < rect.xr && rect.yl < rect.yr) {
+          events.push_back({rect.xl,i*2});
+          events.push_back({rect.xr,i*2+1});
+        }
+      }
+      sort(events.begin(),events.end(),[](const Event& l,const Event& r){ return l.x < r.x; });
+      const int m = ys.size();
+      vector<Coefficients> tree(m+1,{0,0,0,0});
+      auto add = [&](int p, S w, const X& x, const Y& y) {
+        const S wx = w*x, wy = w*y, wxy = wx*y;
+        for(++p; p <= m; p += p & -p) {
+          auto& c = tree[p];
+          c.xy += w;
+          c.y += wx;
+          c.x += wy;
+          c.constant += wxy;
+        }
+      };
+      auto evaluate = [&](int p, const X& x, const Y& y) -> S {
+        Coefficients sum{0,0,0,0};
+        for(; p; p -= p & -p) {
+          const auto& c = tree[p];
+          sum.xy += c.xy;
+          sum.y += c.y;
+          sum.x += c.x;
+          sum.constant += c.constant;
+        }
+        return (sum.xy*y - sum.x)*x - sum.y*y + sum.constant;
+      };
+      for(const auto& [x,index] : events) {
+        if(index < 0) {
+          int key = ~index;
+          const auto& update = updates[key>>1];
+          auto [l,r] = update_y[key>>1];
+          S w = (key & 1) ? -update.w : update.w;
+          add(l,w,x,update.bounds.yl);
+          add(r,-w,x,update.bounds.yr);
+        } else {
+          int q = index>>1;
+          auto [l,r] = query_y[q];
+          S value = evaluate(r,x,queries[q].yr)-evaluate(l,x,queries[q].yl);
+          if(index & 1) ans[q] += value;
+          else ans[q] -= value;
         }
       }
       return ans;

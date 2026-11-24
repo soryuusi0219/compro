@@ -10,9 +10,9 @@
 
 `LinkCutBase<Ops,Auxiliary=SplayBase>`。Ops::Nodeはpp/lp/rp、value/lsum/rsum、label.indexを保持します。Opsはidentity/push/pull/toggleを提供し、作用付きではhas_action/action_type/applyも必要です。
 
-Auxiliary<Node,Ops>はsplay(node)を実装し、補助木の根を越えて回転しないこと、path-parentを引き継ぐこと、祖先からpushすることが必須です。一般の列Backendをそのまま指定することはできません。
+Auxiliary<Node,Ops>はsplay(node)を実装し、補助木の根を越えて回転しないこと、path-parentを引き継ぐこと、祖先からpushすることが必須です。親がnullの根からpush済みの経路については、`access_pushed(root,node)` があれば再利用します。一般の列Backendをそのまま指定することはできません。
 
-公開APIは既存のlinkcuttree/lazy_linkcuttreeと同じです。exposeで外した右の子のppはpath-parentとして残します。link/cut/evertなどの意味と不正操作の条件は各公開referenceを参照してください。
+公開APIは既存のlinkcuttree/lazy_linkcuttreeと同じです。linkで追加する辺はpath-parentで接続し、その経路をexposeするときに優先辺へ切り替えます。exposeで外した右の子のppはpath-parentとして残します。右の子が同じなら再集約を省きます。一点get/setは対象を補助木内でsplayします。link/cut/evertなどの意味と不正操作の条件は各公開referenceを参照してください。
 
 prod(i,j)/get_path(i,j)はiからjの向き。prod(i)はiから現在の根。2頂点操作は第2引数の頂点へevertします。LCAは現在の根に対する値です。
 

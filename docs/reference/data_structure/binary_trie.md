@@ -6,6 +6,8 @@
 
 非負B bit整数の**集合**。同じ値へのinsertは冪等で、eraseはその値を削除します（多重集合ではありません）。全体xor、昇順k番目、最小値・最大値を扱います。BはTの利用可能なbit幅以下にしてください。
 
+全体xorは木にマスクを一つ保持します。検索ではマスクの各ビットに従って子を選び、ノードを書き換えません。空の木は挿入時に初めてノードを確保します。
+
 コピー禁止、move可能。移動元の木は空になり、再利用できます。`clone()` はノードを共有しない独立複製です。ノードはオブジェクトのプールが所有し、個別に解放しません。 mergeは集合和で、otherを空にします。両方の遅延xorを反映した値を統合し、ノードの所有権は混在させません。
 
 ## インターフェース
@@ -28,7 +30,7 @@ std::size_t allocated_nodes() const;
 
 ## 計算量
 
-insert/erase/kth/min/maxは O(B)、sizeと全体xorは O(1)。確保済みノード数Kに対して空間 O(K)、cloneは O(K)。消費元ノード数M・要素数Lに対してmergeは O(M+LB)、最大 O(LB) ノード追加。削除済みノードもプールに保持します。
+insert/erase/kth/min/maxは `O(B)`、sizeと全体xorは `O(1)`。確保済みノード数Kに対して空間 `O(K)`、cloneは `O(K)`。mergeは消費元の到達ノード数をMとして `O(M)` 時間、最大 `O(M)` ノード追加。受取側に根がなければ消費元のプールを移し、受取側の旧領域があればその解放時間を要します。削除済みノードはプールに保持します。
 
 ## 依存関係
 
@@ -36,5 +38,6 @@ insert/erase/kth/min/maxは O(B)、sizeと全体xorは O(1)。確保済みノー
 
 ## Verify・利用例
 
+- [`unit/sparse_structures`](../../../verify/unit/sparse_structures.cpp)
 - [unit/pointer_structures](../../../verify/unit/pointer_structures.cpp)
 - [library_checker/set_xor_min](../../../verify/library_checker/data_structure/set_xor_min.cpp)

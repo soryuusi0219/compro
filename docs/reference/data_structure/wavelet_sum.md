@@ -6,6 +6,8 @@
 
 キーと重みが固定のwavelet matrix。累積和で値域に含まれる重みを集計する。
 
+キーは `[0,2^B)`、位置区間は `[l,r)`。整数型ではキーの範囲外の検索値も使える。値域の上下端は数値どおりに比較する。
+
 ## インターフェース
 
 ```cpp
@@ -32,14 +34,16 @@ T prev(int l, int r, T x, T default_value = -1);
 
 ## 計算量
 
-構築 O(NB)、問い合わせ O(B)、空間 O(NB)。
+構築は最悪 `O(NB)`、問い合わせは `O(B)`。重みの並びが変わらない階層は累積和を共有する。保持する累積和の行数を `D <= B` とすると、空間は `O(ND + B(N/64+1))` ワード。
 
 ## 依存関係
 
 - [static_bit_vector.hpp](static_bit_vector.md)
+- [wavelet_partition.hpp](internal/wavelet_partition.md)
 
 ## Verify・利用例
 
+- [`unit/static_rank_and_order_statistics`](../../../verify/unit/static_rank_and_order_statistics.cpp)
 - [`library_checker/rectangle_sum_wavelet_sum`](../../../verify/library_checker/data_structure/rectangle_sum_wavelet_sum.cpp)
 - [`library_checker/static_range_frequency_wavelet_sum`](../../../verify/library_checker/data_structure/static_range_frequency_wavelet_sum.cpp)
 - [`library_checker/static_range_sum_with_upper_bound_wavelet`](../../../verify/library_checker/data_structure/static_range_sum_with_upper_bound_wavelet.cpp)

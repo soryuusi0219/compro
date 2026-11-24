@@ -32,12 +32,15 @@ S sum_lt(int l, int r, Key x) const;
 
 ## 計算量
 
-構築 O(N log N)、更新・条件付き和 O(log² N)、空間 O(N log N)。
+構築・空間は `O(N log(N+1))`、個数・無条件の区間和は `O(log(N+1))`、更新・条件付き和は `O(log²(N+1))`。位置区間の右端には `N` を指定でき、空区間の和は0。
 
 ## 依存関係
 
+- [internal_bit.hpp](../math/internal/internal_bit.md)
+- [merge_sort_tree_rank.hpp](internal/merge_sort_tree_rank.md)
 - [bit.hpp](bit.md)
 
 ## Verify・利用例
 
+- [`unit/static_rank_and_order_statistics`](../../../verify/unit/static_rank_and_order_statistics.cpp)
 - [`library_checker/point_add_rectangle_sum_merge_sort_tree_bit`](../../../verify/library_checker/data_structure/point_add_rectangle_sum_merge_sort_tree_bit.cpp)

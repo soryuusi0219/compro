@@ -26,21 +26,33 @@ class TreapBase {
     Ops::push(r); r->lp = merge_nodes(l,r->lp); r->lp->pp = r;
     Ops::pull(r); return r;
   }
+  // Result roots may retain old parents until the public split detaches them.
   std::pair<Node*,Node*> split_nodes(Node* p, int k){
-    if(!p) return {nullptr,nullptr};
     Ops::push(p);
-    int left = Ops::size(p->lp), own = Ops::local_size(p);
-    if(k <= left){
-      auto [l,r] = split_nodes(p->lp,k);
-      p->lp = r; if(r) r->pp = p;
-      p->pp = nullptr; if(l) l->pp = nullptr;
-      Ops::pull(p); return {l,p};
+    int left = Ops::size(p->lp), end = left+Ops::local_size(p);
+    if(k == left){
+      Node* detached = std::exchange(p->lp,nullptr);
+      Ops::pull(p);
+      return {detached,p};
     }
-    assert(k >= left+own); // Block interiors require a payload-specific split.
-    auto [l,r] = split_nodes(p->rp,k-left-own);
-    p->rp = l; if(l) l->pp = p;
-    p->pp = nullptr; if(r) r->pp = nullptr;
-    Ops::pull(p); return {p,r};
+    if(k == end){
+      Node* detached = std::exchange(p->rp,nullptr);
+      Ops::pull(p);
+      return {p,detached};
+    }
+    if(k < left){
+      auto [l,r] = split_nodes(p->lp,k);
+      p->lp = r;
+      if(r) r->pp = p;
+      Ops::pull(p);
+      return {l,p};
+    }
+    assert(k > end); // Block interiors require a payload-specific split.
+    auto [l,r] = split_nodes(p->rp,k-end);
+    p->rp = l;
+    if(l) l->pp = p;
+    Ops::pull(p);
+    return {p,r};
   }
   struct BlockSplit {Node* left; Node* right; Node* block; int offset;};
   BlockSplit split_block(Node* p, int k){
@@ -180,7 +192,9 @@ public:
     assert(0 <= k && k <= Ops::size(p));
     if(k == 0) return {nullptr,p};
     if(k == Ops::size(p)) return {p,nullptr};
-    return split_nodes(p,k);
+    auto [l,r] = split_nodes(p,k);
+    l->pp = r->pp = nullptr;
+    return {l,r};
   }
   template<class Cut> std::pair<Node*,Node*> split_weighted(Node* root, int k, Cut cut){
     if(k == 0) return {nullptr,root};
@@ -230,7 +244,7 @@ public:
     return root;
   }
   template<class Factory> Node* build(int n, Factory at){
-    return build_cartesian<Node*>(n,nullptr,at, [](Node* a, Node* b){return Ops::priority(a) > Ops::priority(b);}, [](Node* p, Node* l){p->lp = l; if(l) l->pp = p;}, [](Node* p, Node* r){p->rp = r; if(r) r->pp = p;}, [](Node* p){Ops::pull(p);});
+    return build_cartesian<Node*>(n,nullptr,at, [](Node* a, Node* b){return Ops::priority(a) > Ops::priority(b);}, [](Node* p, Node* l){p->lp = l; if(l) l->pp = p;}, [](Node* p, Node* r){p->rp = r; if(r) r->pp = p;}, [](Node* p){Ops::pull(p);}, [](Node* p){return p->pp;});
   }
 };
 

@@ -6,6 +6,8 @@
 
 同じ値の区間代入とモノイド集約。任意の結合的opと単位元eを使う。
 
+区間は半開区間。内部の葉数は `max(1,n)` 以上の最小の2冪で、長さによる同値の積を遅延タグに対応づける。全区間を代入すると以前の積の履歴を破棄する。`max_right` と `min_left` の述語は単調で、`e()` に対して真を返す必要がある。
+
 ## インターフェース
 
 ```cpp
@@ -30,12 +32,14 @@ int min_left(int r, auto g);
 
 ## 計算量
 
-構築 O(N)、区間代入・問い合わせ O(log N) を基本とし、内部全再構築時は O(N)。空間 O(N)。
+各モノイド演算を定数時間とすると、構築は `O(N)`、一点・区間問い合わせと境界探索は最悪 `O(log(N+1))`、`all_prod` は `O(1)`。区間代入は償却 `O(log(N+1))`、履歴をまとめて伝播する回は最悪 `O(N)`。空間は `O(N)`。
 
 ## 依存関係
 
+- [segtree_ops.hpp](internal/segtree_ops.md)
 - [internal_bit.hpp](../math/internal/internal_bit.md)
 
 ## Verify・利用例
 
+- [`unit/linear_segment_trees`](../../../verify/unit/linear_segment_trees.cpp)
 - [`library_checker/range_set_range_composite`](../../../verify/library_checker/data_structure/range_set_range_composite.cpp)

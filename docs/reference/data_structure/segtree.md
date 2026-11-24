@@ -6,6 +6,8 @@
 
 モノイド上の一点代入・区間集約・境界探索。区間は半開区間、探索述語は単調かつ e に対して true。
 
+`Segtree(n)` の初期値は各要素とも `e()`。`n = 0` では `all_prod()` と `prod(0,0)` は `e()` を返す。内部の葉数は `max(1,n)` 以上の最小の2冪。
+
 ## インターフェース
 
 ```cpp
@@ -39,5 +41,6 @@ template<class F> int min_left(int r, F f) const;
 
 ## Verify・利用例
 
+- [`unit/linear_segment_trees`](../../../verify/unit/linear_segment_trees.cpp)
 - [`library_checker/point_set_range_composite`](../../../verify/library_checker/data_structure/point_set_range_composite.cpp)
 - [`library_checker/vertex_set_path_composite`](../../../verify/library_checker/tree/vertex_set_path_composite.cpp)

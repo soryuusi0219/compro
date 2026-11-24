@@ -6,6 +6,8 @@
 
 巨大な添字領域 `[0,n)` の一点代入・区間作用・集約。`default_prod(l,r)` は未設定区間の集約で、省略時は `e()` です。空区間では単位元を返し、区間の分割と `op` に整合させてください。長さ依存の作用では S に長さを含めます。`composition(f,g)` は f∘g、mappingはモノイド集約と適合する必要があります。
 
+空区間の `apply` はノードを作らず、空区間の `prod` は `e()` を返します。作用型に恒等作用との比較がない場合は内部の保留フラグで伝播を管理します。
+
 コピー禁止、move可能。移動元の木は空になり、再利用できます。`clone()` はノードを共有しない独立複製です。ノードはオブジェクトのプールが所有し、個別に解放しません。 読み取りはconstで、遅延タグを伝播させず、ノードを確保しません。
 
 ## インターフェース
@@ -36,5 +38,6 @@ std::size_t allocated_nodes() const;
 
 ## Verify・利用例
 
+- [`unit/sparse_structures`](../../../verify/unit/sparse_structures.cpp)
 - [unit/pointer_structures](../../../verify/unit/pointer_structures.cpp)
 - [library_checker/range_affine_range_sum_large_array](../../../verify/library_checker/data_structure/range_affine_range_sum_large_array.cpp)

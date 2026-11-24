@@ -4,7 +4,7 @@
 
 ## 機能・前提条件
 
-重み付き点と長方形質問を登録するオフライン二次元範囲和。solveは質問登録順の答えを返す。
+重み付き点と長方形質問を登録するオフライン二次元範囲和。位置は半開区間で、`solve()` は質問登録順の答えを返す。点と質問の境界を別々に整列し、境界よりもX座標が厳密に小さい点を追加してから和を取る。質問のY境界は左右のXイベントで再利用する。
 
 ## インターフェース
 
@@ -34,4 +34,5 @@ vector<S> solve();
 
 ## Verify・利用例
 
+- [`unit/rectangle_queries`](../../../verify/unit/rectangle_queries.cpp)
 - [`library_checker/rectangle_sum_static`](../../../verify/library_checker/data_structure/rectangle_sum_static.cpp)

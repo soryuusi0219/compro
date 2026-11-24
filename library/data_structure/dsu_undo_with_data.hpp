@@ -37,7 +37,7 @@ struct dsu_undo_data {
       history.emplace(y,data[y],val[y]);
       data[x] += data[y];
       data[y] = x;
-      val[x] = op(val[x], val[y]); 
+      val[x] = op(val[x], val[y]);
       return x;
   }
   void apply(int a, T v) {
@@ -67,25 +67,25 @@ struct dsu_undo_data {
       return val[leader(a)];
   }
   vector<vector<long long>> groups() {
-      vector<int> leader_buf(n), group_size(n);
-      for (int i = 0; i < n; i++) {
-        leader_buf[i] = leader(i);
-        group_size[leader_buf[i]]++;
-      }
-      vector<vector<long long>> result(n);
-      for (int i = 0; i < n; i++) result[i].reserve(group_size[i]);
-      for (int i = 0; i < n; i++) result[leader_buf[i]].push_back(i);
-      result.erase(remove_if(result.begin(), result.end(),[&](const vector<long long>& v) { return v.empty(); }),result.end());
-      return result;
+    int count = data.size();
+    vector<vector<long long>> result(count);
+    for(int i = 0; i < count; ++i) {
+      if(data[i] < 0) result[i].reserve(-data[i]);
+    }
+    for(int i = 0; i < count; ++i) result[leader(i)].push_back(i);
+    result.erase(remove_if(result.begin(),result.end(),[](const auto& group){ return group.empty(); }),result.end());
+    return result;
   }
   int get_state(){return block.size();}
   void snapshot(){state_snap = get_state();}
   void undo(){
     assert(!block.empty());
     while((int)history.size() > block.top()){
-      auto [x,s,v] = history.top(); history.pop();
+      auto& [x,s,v] = history.top();
       data[x] = s;
-      val[x] = v;
+      if constexpr(is_nothrow_move_assignable_v<T>) val[x] = std::move(v);
+      else val[x] = v;
+      history.pop();
     }
     block.pop();
   }

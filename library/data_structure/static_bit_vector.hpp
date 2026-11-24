@@ -33,7 +33,9 @@ struct StaticBitVector {
   bool get(int i) const { return (bits[i >> 6] >> (i & 63)) & 1; }
 
   int rank1(int i) const {
-    return prefix[i >> 6] + soryuusi::popcount(bits[i >> 6] & ~(~0ULL << (i & 63)));
+    u64 partial = bits[i >> 6] & ~(~u64{0} << (i & 63));
+    // Inline the portable count on the rank hot path.
+    return prefix[i >> 6] + soryuusi::internal_bit_detail::popcount_fallback(partial);
   }
 
   int rank0(int i) const { return i - rank1(i); }

@@ -21,7 +21,7 @@ tuple<vector<int>,vector<int>,vector<int>,int> cartesian_tree(const vector<T>& v
 
 ## 計算量
 
-O(N) 時間・空間。
+O(N) 時間、返却する3配列が O(N) 空間。構築中は親配列をたどるため、追加の作業スタックは O(1) 空間です。
 
 ## 依存関係
 

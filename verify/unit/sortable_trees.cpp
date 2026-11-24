@@ -156,6 +156,72 @@ template<class Manager> void references_and_tags(){
   dest.insert_at(0,1,"a");
   assert(dest.index_of(removed)==-1);
 }
+
+template<class Manager> void sort_with_pending_tags(){
+  Manager arena;
+  for(int n : {16,17,128,129,257}){
+    std::vector<Entry> expected;
+    for(int i = 0; i < n; ++i) expected.emplace_back(i*37%n,std::string(1,'a'+i%26));
+    auto seq = arena.new_sequence(expected);
+    auto tracked = seq.ref_at(n/2);
+    const int tracked_key = 1000-expected[n/2].first;
+    auto less = [](const Entry& a,const Entry& b){return a.first < b.first;};
+    if(n == 257){
+      seq.sort_inc(0,n/2);
+      seq.sort_inc(n/2,n);
+      std::sort(expected.begin(),expected.begin()+n/2,less);
+      std::sort(expected.begin()+n/2,expected.end(),less);
+    }
+    seq.apply(0,n,3);
+    seq.apply_keys(0,n,{-1,1000},true);
+    seq.flip_all();
+    for(auto& [key,value] : expected){key = 1000-key; value = map_value(3,value);}
+    std::reverse(expected.begin(),expected.end());
+    seq.sort_inc(0,n);
+    std::sort(expected.begin(),expected.end(),less);
+    auto nodes = arena.allocated_nodes();
+    seq.sort_inc(2,n-2);
+    assert(arena.allocated_nodes() == nodes && seq.to_vector() == expected);
+    seq.sort_dec(1,n-1);
+    std::reverse(expected.begin()+1,expected.end()-1);
+    seq.sort_inc(2,9);
+    std::sort(expected.begin()+2,expected.begin()+9,less);
+    assert(seq.to_vector() == expected && seq.prodrev(0,n) == product(expected,0,n,true));
+    int rank = seq.index_of(tracked);
+    assert(rank >= 0 && seq.get(rank).first == tracked_key);
+  }
+}
+
+struct Direction {
+  bool descending;
+  bool operator()(int a,int b) const {return descending ? a>b : a<b;}
+};
+
+template<class Manager> void copy_sorted_blocks(){
+  Manager arena(Direction{false});
+  for(bool descending : {false,true}){
+    auto dest = arena.new_sequence();
+    typename Manager::NodeRef tracked;
+    std::vector<Entry> expected;
+    {
+      Manager donor(Direction{descending});
+      auto seq = donor.new_sequence({{3,"a"},{2,"b"},{2,"c"},{1,"d"}});
+      tracked = seq.ref_at(0);
+      seq.sort_inc(0,4);
+      seq.flip_all();
+      expected = seq.to_vector();
+      auto copy = seq.clone();
+      assert(copy.to_vector() == expected && copy.index_of(tracked) == -1);
+      dest.concat(std::move(seq));
+      assert(seq.empty());
+    }
+    assert(dest.to_vector() == expected);
+    dest.sort_inc(0,4);
+    int rank = dest.index_of(tracked);
+    assert(rank == 3 && dest.get(rank) == (Entry{3,"a"}));
+    for(int i = 0; i < 3; ++i) assert(dest.get(i).first <= dest.get(i+1).first);
+  }
+}
 }
 
 int main(){
@@ -179,5 +245,9 @@ int main(){
   random_operations<BothTreap>();
   references_and_tags<BothSplay>();
   references_and_tags<BothTreap>();
+  sort_with_pending_tags<BothSplay>();
+  sort_with_pending_tags<BothTreap>();
+  copy_sorted_blocks<SplaySortable<int,std::string,op,identity,Direction>>();
+  copy_sorted_blocks<TreapSortable<int,std::string,op,identity,Direction>>();
   std::cout<<"sortable_trees: all tests passed\n";
 }

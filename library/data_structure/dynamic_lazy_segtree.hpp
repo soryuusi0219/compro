@@ -22,15 +22,28 @@ struct Dynamic_LazySegtree{
   static_assert(is_invocable_r_v<F, decltype(id)>, "id must be callable with no arguments and return a value convertible to F");
 
   private:
+    static constexpr bool comparable_tag = requires(const F& f) { static_cast<bool>(f != id()); };
+    struct Empty {};
+    struct Pending { bool value = false; };
     struct node{
       S val;
       F lz;
       node* lp;
       node* rp;
+      [[no_unique_address]] conditional_t<comparable_tag,Empty,Pending> pending;
       node(S val_) : val(val_), lz(id()), lp(nullptr), rp(nullptr){}
       void act(F f){
         val = mapping(f, val);
         lz = composition(f,lz);
+        if constexpr(!comparable_tag) pending.value = true;
+      }
+      bool has_action() const {
+        if constexpr(comparable_tag) return static_cast<bool>(lz != id());
+        else return pending.value;
+      }
+      void clear_action(){
+        lz = id();
+        if constexpr(!comparable_tag) pending.value = false;
       }
     };
     int n;
@@ -38,58 +51,54 @@ struct Dynamic_LazySegtree{
     node* root;
     function<S(int, int)> default_prod;
     void push(node* p, int l, int r){
-      if(p && p->lz != id()){
-        int m = (l+r) >> 1;
-        if(l < m) {
-          if(!p->lp) p->lp = pool.create(default_prod(l,m));
-          p->lp->act(p->lz);
-        }
-        if(m < r){
-          if(!p->rp) p->rp = pool.create(default_prod(m,r));
-          p->rp->act(p->lz);
-        }
-        p->lz = id();
-      }
+      if(!p->has_action()) return;
+      int m = l+(r-l)/2;
+      if(!p->lp) p->lp = pool.create(default_prod(l,m));
+      if(!p->rp) p->rp = pool.create(default_prod(m,r));
+      p->lp->act(p->lz);
+      p->rp->act(p->lz);
+      p->clear_action();
     }
-    void calc(node*p, int l, int r){
-      if(p){ 
-        int m = (l+r) >> 1;
-        p->val = op(p->lp ? p->lp->val : default_prod(l,m), p->rp ? p->rp->val : default_prod(m,r));
-      }
+    void calc(node* p, int l, int r, int m){
+      p->val = op(p->lp ? p->lp->val : default_prod(l,m),p->rp ? p->rp->val : default_prod(m,r));
     }
-    void _set(node*& p, int l, int r, int i, S x){
-      if(!p) p = pool.create(default_prod(l,r));
-      if(r - l == 1) {
-        p->val = x;
-        p->lz = id();
+    void _set(node*& p, int l, int r, int i, const S& x){
+      if(r-l == 1){
+        if(!p) p = pool.create(x);
+        else {
+          p->val = x;
+          p->clear_action();
+        }
         return;
       }
-      push(p,l,r);
-      int m = (l+r) >> 1;
-      if(i < m) _set(p->lp, l, m, i, x);
-      else _set(p->rp, m, r, i, x);
-      calc(p,l,r);
+      if(!p) p = pool.create(e());
+      else push(p,l,r);
+      int m = l+(r-l)/2;
+      if(i < m) _set(p->lp,l,m,i,x);
+      else _set(p->rp,m,r,i,x);
+      calc(p,l,r,m);
     }
-    S _prod(node* p, int l, int r, int i, int j, F acc) const {
-      if(r <= i || j <= l) return e();
-      if(!p) return mapping(acc, default_prod(std::max(l,i),std::min(r,j)));
+    S _prod(const node* p, int l, int r, int i, int j, F acc) const {
+      if(!p) return mapping(acc,default_prod(std::max(l,i),std::min(r,j)));
       if(i <= l && r <= j) return mapping(acc,p->val);
       acc = composition(acc,p->lz);
-      int m = (l+r) >> 1;
+      int m = l+(r-l)/2;
+      if(j <= m) return _prod(p->lp,l,m,i,j,acc);
+      if(m <= i) return _prod(p->rp,m,r,i,j,acc);
       return op(_prod(p->lp,l,m,i,j,acc),_prod(p->rp,m,r,i,j,acc));
     }
-    void _apply(node*& p, int l, int r, int i, int j, F f){
-      if(r <= i || j <= l) return;
-      if(!p) p = pool.create(default_prod(l,r));
-      if(i <= l && r <= j) {
+    void _apply(node*& p, int l, int r, int i, int j, const F& f){
+      if(i <= l && r <= j){
+        if(!p) p = pool.create(default_prod(l,r));
         p->act(f);
         return;
       }
-      push(p,l,r);
-      int m = (l+r) >> 1;
-      _apply(p->lp, l, m, i, j, f);
-      _apply(p->rp, m, r, i, j, f);
-      calc(p,l,r);
+      if(!p) p = pool.create(e());
+      else push(p,l,r);
+      int m = l+(r-l)/2;
+      if(i < m) _apply(p->lp,l,m,i,j,f);
+      if(m < j) _apply(p->rp,m,r,i,j,f);
+      calc(p,l,r,m);
     }
   public:
     Dynamic_LazySegtree(const Dynamic_LazySegtree&) = delete;
@@ -120,9 +129,9 @@ struct Dynamic_LazySegtree{
     void set(int i, S x){assert(0 <= i && i < n); _set(root,0,n,i,x);}
     S get(int i) const {assert(0 <= i && i < n); return _prod(root,0,n,i,i+1,id());}
     S get(int i, S) const {return get(i);}
-    S prod(int l, int r) const {assert(0 <= l && l <= r && r <= n); return _prod(root,0,n,l,r,id());}
+    S prod(int l, int r) const {assert(0 <= l && l <= r && r <= n); return l == r ? e() : _prod(root,0,n,l,r,id());}
     S all_prod(){return (root ? root->val : default_prod(0,n));}
-    void apply(int l, int r, F f){assert(0 <= l && l <= r && r <= n); return _apply(root,0,n,l,r,f);}
+    void apply(int l, int r, F f){assert(0 <= l && l <= r && r <= n); if(l < r) _apply(root,0,n,l,r,f);}
 };
 
 }  // namespace soryuusi

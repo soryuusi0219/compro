@@ -1,7 +1,10 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/internal/sortable_base.hpp
 #pragma once
+#include <algorithm>
+#include <array>
 #include <cassert>
 #include <cstddef>
+#include <limits>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -100,6 +103,8 @@ class SortableSequence {
   using Node = typename Blocks::Node;
   using Outer = TreeArena<Blocks,Backend>;
   using Links = BinaryTreeOps<Node,Blocks>;
+  static constexpr int small_sort_limit = 16;
+  static constexpr int bulk_sort_threshold = 128;
   struct Storage {
     ExplicitSet<Key,Ops,Backend,true,Compare> entries;
     Outer blocks;
@@ -169,14 +174,71 @@ class SortableSequence {
   Inner* meld(Inner* a, Inner* b){
     if(!a || !b) return a ? a : b;
     auto& entries = arena->entries;
-    auto& engine = entries.arena->engine;
-    const Key& a_max = Ops::key(engine.access(a,Ops::size(a)-1));
-    const Key& b_min = Ops::key(engine.access(b,0));
-    if(!entries.less(b_min,a_max)) return engine.join(a,b);
-    const Key& b_max = Ops::key(engine.access(b,Ops::size(b)-1));
-    const Key& a_min = Ops::key(engine.access(a,0));
-    if(!entries.less(a_min,b_max)) return engine.join(b,a);
+    if(auto* joined = entries.join_ordered(a,b)) return joined;
     return entries.unite(a,b);
+  }
+  Inner* sort_small(Node* tree){
+    std::array<Inner*,small_sort_limit> nodes;
+    int count = 0;
+    auto collect_inner = [&](auto&& self,Inner* p) -> void {
+      if(!p) return;
+      Ops::push(p);
+      self(self,p->lp);
+      nodes[count++] = p;
+      self(self,p->rp);
+    };
+    auto collect = [&](auto&& self,Node* p) -> void {
+      if(!p) return;
+      Blocks::push(p);
+      self(self,p->lp);
+      collect_inner(collect_inner,p->inner);
+      self(self,p->rp);
+      if(p != tree) arena->blocks.release(p);
+    };
+    collect(collect,tree);
+    auto& entries = arena->entries;
+    for(int i = 1; i < count; ++i){
+      Inner* p = nodes[i];
+      int j = i;
+      while(j && entries.less(Ops::key(p),Ops::key(nodes[j-1]))){
+        nodes[j] = nodes[j-1];
+        --j;
+      }
+      nodes[j] = p;
+    }
+    for(int i = 0; i < count; ++i) nodes[i]->pp = nodes[i]->lp = nodes[i]->rp = nullptr;
+    return entries.arena->engine.build(count,[&](int i){return nodes[i];});
+  }
+  Inner* sort_many(std::vector<Inner*>& blocks, int length){
+    if(blocks.size() >= static_cast<std::size_t>(1+(length-1)/4)){
+      // Small blocks are cheaper to sort together and rebuild in linear time.
+      std::vector<Inner*> elements;
+      if(blocks.size() == static_cast<std::size_t>(length)) elements.swap(blocks);
+      else {
+        elements.reserve(length);
+        for(auto* block : blocks){
+          if(Ops::size(block) == 1) elements.push_back(block);
+          else TreeArena<Ops,Backend>::visit_in_order(block,[&](Inner* p){elements.push_back(p);});
+        }
+      }
+      auto& entries = arena->entries;
+      std::stable_sort(elements.begin(),elements.end(),[&](Inner* a,Inner* b){return entries.less(Ops::key(a),Ops::key(b));});
+      for(auto* p : elements){Ops::push(p); p->pp = p->lp = p->rp = nullptr;}
+      return entries.arena->engine.build(elements.size(),[&](int i){return elements[i];});
+    }
+    // Meld groups of equal block count, then combine them in sequence order.
+    std::array<Inner*,std::numeric_limits<int>::digits> batches{};
+    for(auto* part : blocks){
+      int i = 0;
+      while(batches[i]){
+        part = meld(batches[i],part);
+        batches[i++] = nullptr;
+      }
+      batches[i] = part;
+    }
+    Inner* result = nullptr;
+    for(auto* part : batches) if(part) result = meld(part,result);
+    return result;
   }
   template<bool Reverse> S fold_block(Node* block, int l, int r){
     int n = Blocks::local_size(block);
@@ -201,16 +263,34 @@ class SortableSequence {
     });
   }
   Node* copy_from(SortableSequence& source, bool transfer){
-    std::vector<Inner*> nodes;
-    nodes.reserve(source.size());
-    visit_elements(source.root,[&](Inner* p){nodes.push_back(p);});
-    return arena->blocks.engine.build(nodes.size(),[&](int i){
-      Inner* node = nodes[i];
-      Node* copy = make_element(Ops::key(node),node->value);
-      if(transfer) source.arena->entries.arena->transfer_reference(node,arena->entries.arena,copy->inner);
-      return copy;
+    auto& entries = arena->entries;
+    auto copy = [&](Inner* node){
+      Inner* p = entries.make_node(Ops::key(node),node->value);
+      if(transfer) source.arena->entries.arena->transfer_reference(node,entries.arena,p);
+      return p;
+    };
+    std::vector<Node*> blocks;
+    std::vector<Inner*> elements;
+    Outer::visit_in_order(source.root,[&](Node* block){
+      Inner* inner = block->inner;
+      if(Ops::size(inner) == 1){
+        blocks.push_back(make_block(copy(inner)));
+        return;
+      }
+      elements.clear();
+      TreeArena<Ops,Backend>::visit_in_order(inner,[&](Inner* p){elements.push_back(p);});
+      auto less = [&](Inner* a,Inner* b){return entries.less(Ops::key(a),Ops::key(b));};
+      if(!transfer || std::is_sorted(elements.begin(),elements.end(),less)){
+        auto* subtree = entries.arena->engine.build(elements.size(),[&](int i){return copy(elements[i]);});
+        blocks.push_back(make_block(subtree,block->descending));
+      } else {
+        if(block->descending) std::reverse(elements.begin(),elements.end());
+        for(auto* p : elements) blocks.push_back(make_block(copy(p)));
+      }
     });
+    return arena->blocks.engine.build(blocks.size(),[&](int i){return blocks[i];});
   }
+
 public:
   using key_type = Key;
   using value_type = S;
@@ -284,18 +364,43 @@ public:
   }
   void set_at(int i, const S& value){set(i,value);}
   void sort(int l, int r, bool decreasing = false){
+    assert(0 <= l && l <= r && r <= size());
+    int length = r-l;
+    if(length <= 1) return;
+    if(Blocks::local_size(root) == size() && root->descending == decreasing) return;
+    if(length <= small_sort_limit){
+      auto [block,offset] = Links::locate(root,l);
+      auto& engine = arena->blocks.engine;
+      if constexpr(requires {engine.access_pushed(root,block);}) engine.access_pushed(root,block);
+      else engine.access_node(root,block);
+      if(length <= Blocks::local_size(block)-offset && block->descending == decreasing) return;
+    }
     range(l,r,[&](Node*& tree){
-      if(!tree) return 0;
-      Node* result = tree;
+      if(!tree->lp && !tree->rp){
+        if(tree->descending != decreasing){
+          tree->descending = decreasing;
+          std::swap(tree->lsum,tree->rsum);
+        }
+        return 0;
+      }
+      auto consume = [&](auto visit){
+        Outer::visit_in_order(tree,[&](Node* p){
+          visit(p->inner);
+          if(p != tree) arena->blocks.release(p);
+        });
+      };
       Inner* merged = nullptr;
-      Outer::visit_in_order(tree,[&](Node* p){
-        merged = meld(merged,p->inner);
-        if(p != result) arena->blocks.release(p);
-      });
-      result->lp = result->rp = nullptr;
-      result->descending = decreasing;
-      attach(result,merged);
-      Blocks::pull(result);
+      if(length <= small_sort_limit) merged = sort_small(tree);
+      else if(length > bulk_sort_threshold){
+        std::vector<Inner*> blocks;
+        consume([&](Inner* p){blocks.push_back(p);});
+        merged = sort_many(blocks,length);
+      }
+      else consume([&](Inner* p){merged = meld(merged,p);});
+      tree->lp = tree->rp = nullptr;
+      tree->descending = decreasing;
+      attach(tree,merged);
+      Blocks::pull(tree);
       return 0;
     });
   }

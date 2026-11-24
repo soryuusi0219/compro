@@ -6,6 +6,8 @@
 
 密な二次元配列の一点更新・長方形集約。op は可換モノイドを想定する。
 
+配列構築版には行の長さが揃った配列を渡す。空配列は `0 × 0`。各軸の葉は実際の長さ分だけ持ち、空区間の積は `e()`。
+
 ## インターフェース
 
 ```cpp
@@ -28,13 +30,14 @@ S all_prod();
 
 ## 計算量
 
-構築 O(HW)、更新・集約 O(log H log W)、空間 O(HW)。
+正のサイズでは構築と空間は `O(HW)`。更新・集約は最悪 `O(log(H+1) log(W+1))`、`all_prod()` は `O(1)`。配列の要素数は `4*max(H,1)*max(W,1)`。
 
 ## 依存関係
 
-- [internal_bit.hpp](../math/internal/internal_bit.md)
+標準ライブラリのみ。
 
 ## Verify・利用例
 
+- [`unit/rectangle_queries`](../../../verify/unit/rectangle_queries.cpp)
 - [`aoj/range_sum_segtree_2d`](../../../verify/aoj/data_structure/range_sum_segtree_2d.cpp)
 - [`unit/data_structure_misc`](../../../verify/unit/data_structure_misc.cpp)

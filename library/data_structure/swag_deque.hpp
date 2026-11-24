@@ -24,28 +24,40 @@ struct swagdq{
   bool empty() {return !size();}
   int size() {return prefix.size() + suffix.size() - 2;}
   void p_to_s(){
-    int n = prefix.size()-1;
-    vector<T> v(n);
-    for(int i = 0; i < n; i++){
-      v[i] = prefix.top().first; prefix.pop();
+    const int keep = (prefix.size()-1)/2;
+    vector<T> saved;
+    saved.reserve(keep);
+    for(int i = 0; i < keep; ++i){
+      saved.push_back(std::move_if_noexcept(prefix.top().first));
+      prefix.pop();
     }
-    for(int i = (n >> 1); i < n; i++) suffix.push({v[i], op(suffix.top().second,v[i])});
-    for(int i = (n >> 1) - 1; i >= 0; i--) prefix.push({v[i], op(v[i],prefix.top().second)});
+    while(prefix.size() > 1){
+      push_back(std::move_if_noexcept(prefix.top().first));
+      prefix.pop();
+    }
+    for(auto it = saved.rbegin(); it != saved.rend(); ++it) push_front(std::move_if_noexcept(*it));
   }
   void s_to_p(){
-    int n = suffix.size()-1;
-    vector<T> v(n);
-    for(int i = 0; i < n; i++){
-      v[i] = suffix.top().first; suffix.pop();
+    const int keep = (suffix.size()-1)/2;
+    vector<T> saved;
+    saved.reserve(keep);
+    for(int i = 0; i < keep; ++i){
+      saved.push_back(std::move_if_noexcept(suffix.top().first));
+      suffix.pop();
     }
-    for(int i = (n >> 1); i < n; i++) prefix.push({v[i], op(v[i],prefix.top().second)});
-    for(int i = (n >> 1) - 1; i >= 0; i--) suffix.push({v[i], op(suffix.top().second,v[i])});
+    while(suffix.size() > 1){
+      push_front(std::move_if_noexcept(suffix.top().first));
+      suffix.pop();
+    }
+    for(auto it = saved.rbegin(); it != saved.rend(); ++it) push_back(std::move_if_noexcept(*it));
   }
   void push_front(T x){
-    prefix.push({x, op(x,prefix.top().second)});
+    T aggregate = prefix.size() == 1 ? x : op(x,prefix.top().second);
+    prefix.emplace(std::move_if_noexcept(x),std::move_if_noexcept(aggregate));
   }
   void push_back(T x){
-    suffix.push({x, op(suffix.top().second,x)});
+    T aggregate = suffix.size() == 1 ? x : op(suffix.top().second,x);
+    suffix.emplace(std::move_if_noexcept(x),std::move_if_noexcept(aggregate));
   }
   void pop_front(){
     assert(!empty());
@@ -58,7 +70,9 @@ struct swagdq{
     suffix.pop();
   }
   T prod(){
-    return op(prefix.top().second, suffix.top().second);
+    if(prefix.size() == 1) return suffix.top().second;
+    if(suffix.size() == 1) return prefix.top().second;
+    return op(prefix.top().second,suffix.top().second);
   }
 };
 

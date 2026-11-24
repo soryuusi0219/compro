@@ -38,6 +38,8 @@
 | [dynamic_segtree_2d.hpp](data_structure/dynamic_segtree_2d.md) | 巨大な整数座標上で一点 set/add と長方形 prod を扱う動的二次元木。 |
 | [dynamic_wavelet.hpp](data_structure/dynamic_wavelet.md) | 挿入・削除できるwavelet matrix。 |
 | [hash_table.hpp](data_structure/hash_table.md) | 固定容量の開番地ハッシュ表。 |
+| [internal/hash_table_storage.hpp](data_structure/internal/hash_table_storage.md) | 開番地ハッシュ表と疎Union-Findで共用するスロット管理。 |
+| [internal/kd_tree_builder.hpp](data_structure/internal/kd_tree_builder.md) | 通常・遅延KD木の分割と完全二分木の配置。 |
 | [increment_decrement_ordered_multi_set.hpp](data_structure/increment_decrement_ordered_multi_set.md) | 各要素を±1して順位順を保つ有界整数多重集合。 |
 | [internal/node_pool.hpp](data_structure/internal/node_pool.md) | 安定アドレスのノードプールと不透明な版ハンドル。 |
 | [internal/binary_tree_ops.hpp](data_structure/internal/binary_tree_ops.md) | 所有権を持たない回転と重み付き位置探索。 |
@@ -50,6 +52,9 @@
 | [internal/sortable_base.hpp](data_structure/internal/sortable_base.md) | 重み付きSequenceとExplicit木によるソート可能列の共通基盤。 |
 | [internal/sequence_base.hpp](data_structure/internal/sequence_base.md) | 平衡化方式から独立した可変列と所有権管理。 |
 | [internal/link_cut_base.hpp](data_structure/internal/link_cut_base.md) | 反転可能な補助木コアを使うLCT共通実装。 |
+| [internal/segtree_ops.hpp](data_structure/internal/segtree_ops.md) | 配列型セグメント木の境界走査と保留作用。 |
+| [internal/merge_sort_tree_rank.hpp](data_structure/internal/merge_sort_tree_rank.md) | マージ時の出所を記録し、キー区間を子へ写す。 |
+| [internal/wavelet_partition.hpp](data_structure/internal/wavelet_partition.md) | Wavelet Matrixのrank構築と安定分割。 |
 | [interval_heap.hpp](data_structure/interval_heap.md) | 最小・最大の双方を取り出せるヒープ。 |
 | [kd_tree.hpp](data_structure/kd_tree.md) | 固定した二次元点集合の一点更新・長方形集約。 |
 | [lazy_kd_tree.hpp](data_structure/lazy_kd_tree.md) | 固定点集合に長方形作用と集約を行うKD木。 |

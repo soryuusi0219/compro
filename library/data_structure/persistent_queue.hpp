@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <vector>
 
+#include "../math/internal/internal_bit.hpp"
 #include "internal/node_pool.hpp"
 
 namespace soryuusi {
@@ -13,10 +14,12 @@ class Persistent_Queue {
   struct node {
     T value;
     std::vector<node*> up;
-    node(const T& x, node* prev) : value(x){
-      if(prev) up.push_back(prev);
-      for(int k = 1; !up.empty() && (int)up[k-1]->up.size() >= k; ++k)
-        up.push_back(up[k-1]->up[k-1]);
+    node(const T& x, node* prev,int count) : value(x){
+      if(count == 0) return;
+      const int height = soryuusi::bit_width(static_cast<unsigned>(count));
+      up.reserve(height);
+      up.push_back(prev);
+      for(int k = 1; k < height; ++k) up.push_back(up[k-1]->up[k-1]);
     }
   };
   internal::NodePool<node> pool;
@@ -39,13 +42,12 @@ public:
   const T& front(Root r) const {
     assert(!empty(r));
     auto p = pool.get(r.back);
-    int steps = r.count-1;
-    for(int k = 0; steps; ++k, steps >>= 1) if(steps&1) p = p->up[k];
+    for(unsigned steps = r.count-1; steps; steps &= steps-1) p = p->up[soryuusi::countr_zero(steps)];
     return p->value;
   }
   [[nodiscard]] Root push(Root r, const T& x){
     auto p = pool.get(r.back);
-    r.back = pool.root(pool.create(x,p));
+    r.back = pool.root(pool.create(x,p,r.count));
     ++r.count;
     return r;
   }

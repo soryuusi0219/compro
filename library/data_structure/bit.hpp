@@ -1,6 +1,5 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/bit.hpp
 #pragma once
-#include <algorithm>
 #include <vector>
 
 #include "../math/internal/internal_bit.hpp"
@@ -17,9 +16,10 @@ struct BIT{
     BIT() {}
     BIT(int _n) : n(_n), s(_n + 1, 0) {}
     BIT(const vector<T>& v) : n(v.size()), s(n + 1, 0) {
-      for(int i = 0; i < n; ++i) {
-        s[i + 1] += v[i];
-        if(i + (i & -i) <= n) s[i + (i & -i)] += s[i];
+      for(int i = 1; i <= n; ++i) {
+        s[i] += v[i-1];
+        int step = i & -i;
+        if(step <= n-i) s[i+step] += s[i];
       }
     }
     void add(int p, T x) {

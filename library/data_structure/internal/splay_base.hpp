@@ -27,6 +27,7 @@ public:
   void prepare(Node*){}
   void splay(Node* p){
     if(!p) return;
+    if(Links::is_root(p)){Ops::push(p); return;}
     ancestors.clear();
     for(Node* q = p;;q = q->pp){ancestors.push_back(q); if(Links::is_root(q)) break;}
     for(auto it = ancestors.rbegin(); it != ancestors.rend(); ++it) Ops::push(*it);

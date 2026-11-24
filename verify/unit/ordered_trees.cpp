@@ -84,6 +84,7 @@ template<class Manager,bool Multi> void random_sets(){
     assert(set.size()==(int)a.size() && set.to_vector()==a && set.prod_all()==sum(a,0,a.size()));
     assert(set.lower_bound(key)==lower(a,key) && set.upper_bound(key)==upper(a,key));
     assert(set.count(key)==upper(a,key)-lower(a,key));
+    assert(set.contains(key)==(upper(a,key)!=lower(a,key)));
   }
   auto copy=sets[0].clone();auto original=sets[0].to_vector();copy.insert(100,S{5,1});assert(sets[0].to_vector()==original);
   Manager foreign;
@@ -115,6 +116,45 @@ template<class Manager> void pending_meld(){
     for(int i=key;i<200;i+=50)expected.push_back({key,S{10<=key && key<40 ? 7 : 1000+i,1}});
   }
   a.meld(std::move(b));assert(b.empty() && a.to_vector()==expected);
+}
+
+template<class Manager> void ordered_meld_boundaries(){
+  Manager arena;
+  auto a = arena.new_set({{2,"a"},{2,"b"}});
+  auto b = arena.new_set({{1,"L"},{2,"c"}});
+  auto c = arena.new_set({{2,"d"},{3,"R"}});
+  auto first = a.ref_at(0), donor = b.ref_at(1), right = c.ref_at(1);
+  auto count = arena.allocated_nodes();
+  a.meld(std::move(b));
+  a.meld(std::move(c));
+  assert(b.empty() && c.empty() && arena.allocated_nodes() == count);
+  assert(a.prod_all() == "LabcdR");
+  assert(a.index_of(first) == 1 && a.index_of(donor) == 3 && a.index_of(right) == 5);
+  assert(a.erase(2) && a.index_of(first) == -1);
+  assert(a.prod_all() == "LbcdR" && a.contains(2) && !a.contains(4));
+}
+
+struct BucketOrder {
+  int width;
+  bool operator()(int a,int b) const {return a/width < b/width;}
+};
+
+template<class Manager> void move_between_comparators(){
+  Manager destination(BucketOrder{10});
+  typename Manager::NodeRef kept, collided, deduplicated;
+  auto set = destination.new_set({{19,"old"}});
+  {
+    Manager source(BucketOrder{1});
+    auto other = source.new_set({{7,"first"},{8,"next"},{15,"collision"},{39,"last"}});
+    kept = other.ref_at(0);
+    collided = other.ref_at(2);
+    deduplicated = other.ref_at(1);
+    set.meld(std::move(other));
+    assert(other.empty());
+  }
+  assert(set.size() == 3 && set.prod_all() == "firstoldlast");
+  assert(set.index_of(kept) == 0 && set.index_of(collided) == -1 && set.index_of(deduplicated) == -1);
+  assert(set.contains(9) && !set.contains(20) && !set.insert(13,"new"));
 }
 
 template<template<class,class,auto,auto,bool,class> class Manager> void noncommutative(){
@@ -320,6 +360,10 @@ int main(){
   random_sets<LazyTreapExplicit<int,S,op,e,F,mapping,composition,id,false>,false>();
   pending_meld<LazySplayExplicit<int,S,op,e,F,mapping,composition,id>>();
   pending_meld<LazyTreapExplicit<int,S,op,e,F,mapping,composition,id>>();
+  ordered_meld_boundaries<SplayExplicit<int,std::string,concat,identity_string>>();
+  ordered_meld_boundaries<TreapExplicit<int,std::string,concat,identity_string>>();
+  move_between_comparators<SplayExplicit<int,std::string,concat,identity_string,false,BucketOrder>>();
+  move_between_comparators<TreapExplicit<int,std::string,concat,identity_string,false,BucketOrder>>();
   generic_keys();
   noncommutative<SplayExplicit>();noncommutative<TreapExplicit>();
   sequence_arena<SplayTree<long long,add,zero>>();sequence_arena<TreapSequence<long long,add,zero>>();

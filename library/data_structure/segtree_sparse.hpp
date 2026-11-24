@@ -4,6 +4,8 @@
 #include <type_traits>
 #include <vector>
 
+#include "../math/internal/internal_bit.hpp"
+
 namespace soryuusi {
 
 using namespace std;
@@ -14,10 +16,9 @@ struct Segtree_Sparse{
   static_assert(is_invocable_r_v<S, decltype(e)>, "e must be callable with no arguments and return a value convertible to S");
 
   private:
-    int n, b;
+    int b;
     vector<X> vx;
     vector<S> data;
-    void _update(int i){data[i] = op(data[i << 1],data[i << 1 | 1]);}
   public:
     Segtree_Sparse(){}
     Segtree_Sparse(int sz){vx.reserve(sz);}
@@ -25,23 +26,23 @@ struct Segtree_Sparse{
     void build(){
       sort(vx.begin(),vx.end());
       vx.erase(unique(vx.begin(),vx.end()),vx.end());
-      n = vx.size();
-      b = 1; while(b < n) b <<= 1;
+      b = soryuusi::bit_ceil(static_cast<unsigned>(vx.size()));
       data.assign(b*2,e());
     }
     void set(X x, S a){
       int i = lower_bound(vx.begin(),vx.end(),x) - vx.begin();
-      for(data[i += b] = a; i >>= 1;) _update(i);
+      data[i += b] = a;
+      while(i >>= 1) data[i] = op(data[i << 1],data[i << 1 | 1]);
     }
     S prod(X x, X y){
       int l = lower_bound(vx.begin(),vx.end(),x) - vx.begin();
       int r = lower_bound(vx.begin(),vx.end(),y) - vx.begin();
-      S resl = e(), resr = e();
-      for(l += b, r += b; l < r; l >>= 1, r >>= 1){
-        if(l&1) resl = op(resl, data[l++]);
-        if(r&1) resr = op(data[--r], resr);
+      S left = e(), right = e();
+      for(l += b, r += b; l < r; l >>= 1, r >>= 1) {
+        if(l & 1) left = op(left,data[l++]);
+        if(r & 1) right = op(data[--r],right);
       }
-      return op(resl,resr);
+      return op(left,right);
     }
     S all_prod(){return data[1];}
 };

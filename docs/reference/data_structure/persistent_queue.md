@@ -27,11 +27,12 @@ std::size_t allocated_nodes() const;
 
 ## 計算量
 
-総push数Q。push/frontは最悪 O(log(Q+1))、pushは1ノードと O(log(Q+1)) の祖先表を追加。pop/size/empty/版コピーは O(1)。全体空間 O(Q log(Q+1))。版オブジェクト自体のヒープ確保はありません。
+操作する版の要素数をK、総push数をQ、各push直前の要素数の最大値をMとします。push/frontは最悪 O(1 + log(K+1))。pushは1ノードと、その時点でキュー内にある祖先だけを参照する表を追加します。pop/size/empty/版コピーは O(1)。全体空間は O(Q(1 + log(M+1)))。版オブジェクト自体のヒープ確保はありません。
 
 ## 依存関係
 
 - [internal/node_pool.hpp](internal/node_pool.md)
+- [math/internal/internal_bit.hpp](../math/internal/internal_bit.md)
 
 ## Verify・利用例
 

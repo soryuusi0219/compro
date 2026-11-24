@@ -3,7 +3,8 @@
 #include <chrono>
 #include <cstdint>
 #include <type_traits>
-#include <vector>
+
+#include "internal/hash_table_storage.hpp"
 
 namespace soryuusi {
 
@@ -16,43 +17,18 @@ struct HashTable{
   using u32 = uint32_t;
   using u64 = uint64_t;
   private:
-    vector<T> key;
-    vector<U> val;
-    vector<bool> used;
-    u32 mask;
-    u32 index(T x){
-      static const u32 R = []() -> u64 {
-        u64 x = chrono::steady_clock::now().time_since_epoch().count();
-        for(int i = 0; i < 8; i++) {
-          	x ^= x << 13;
-	          x ^= x >> 7;
-	          x ^= x << 17;
-        }
-        return x | 1;
-      }() & mask;
-      u64 i = hash(x) & mask;
-      for(; used[i] && key[i] != x; i = (i+R) & mask);
-      return i;
-    }
+    internal::HashTableStorage<T,U,hash> storage;
   public:
-    HashTable(int n){
-      int s = 1; while(s < n * 2) s <<= 1;
-      key.resize(s);
-      val.resize(s);
-      used.resize(s);
-      mask = s-1;
-    }
+    HashTable(int n) : storage(n) {}
     U &operator[](const T &k) {
-      u32 i = index(k);
-      if(!used[i]) used[i] = 1, key[i] = k, val[i] = U{};
-      return val[i];
+      return storage.value(storage.insert(k,[]{ return U{}; }));
     }
     bool contains(const T &k){
-      return used[index(k)];
+      return storage.lookup(k) != storage.end();
     }
     U get(const T &k, U defalt) {
-      u32 i = index(k);
-      return used[i] ? val[i] : defalt;
+      auto i = storage.lookup(k);
+      return i == storage.end() ? defalt : storage.value(i);
     }
 };
 template<class T>

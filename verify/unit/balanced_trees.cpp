@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <cassert>
+#include <cstdint>
 #include <iostream>
+#include <limits>
 #include <numeric>
 #include <queue>
 #include <random>
@@ -32,7 +34,7 @@ std::string empty_string(){return {};}
 
 void bit_vectors(){
   std::mt19937 rng(823746);
-  for(int n : {0,1,2,31,32,33,63,64,65,127,128,129,1000}){
+  for(int n : {0,1,2,31,32,33,47,48,49,63,64,65,95,96,97,127,128,129,1000}){
     std::vector<bool> values(n);
     for(int i = 0; i < n; ++i) values[i] = rng()&1;
     DynamicBitVector bits(values);
@@ -61,6 +63,30 @@ void bit_vectors(){
     assert(bits.allocated_nodes() <= std::max<std::size_t>(count,1));
     bits.build({true,false,true}); assert(bits.size() == 3 && bits.rank(3) == 2);
     bits.build({}); assert(bits.empty());
+  }
+}
+
+void bit_block_updates(){
+  for(bool bit : {false,true}){
+    DynamicBitVector bits(std::vector<bool>(257,bit));
+    for(int i = 0; i < 400; ++i) bits.insert(bits.size(),bit);
+    for(int i = 0; i < 400; ++i) bits.insert(0,bit);
+    auto allocated = bits.allocated_nodes();
+    for(int k : {0,1,31,32,47,48,63,64,65,127,128,129,1056,1057}){
+      assert(bits.rank(k) == (bit ? k : 0));
+      assert(bits.rank(k,bits.size()) == (bit ? bits.size()-k : 0));
+    }
+    assert(bits.allocated_nodes() == allocated);
+    for(int i = 0; i < 400; ++i) bits.erase(bits.size()-1);
+    for(int i = 0; i < 400; ++i) bits.erase(0);
+    for(int i = 0; i < 400; ++i) bits.insert(bits.size(),!bit);
+    assert(bits.allocated_nodes() == allocated && bits.rank(257,657) == (bit ? 0 : 400));
+
+    for(int i = bits.size()-1; i >= 0; --i) if(i%47) bits.erase(i);
+    auto copy = bits.clone();
+    assert(bits.size() == 14 && copy.to_vector() == bits.to_vector());
+    copy.set(0,!bits.get(0));
+    assert(bits.get(0) != copy.get(0));
   }
 }
 
@@ -105,7 +131,30 @@ template<class Manager> void noncommutative_sequence(){
   auto [left,right]=sequence.split(2);right.flip_all();left.concat(std::move(right));assert(left.prod_all()=="aebcx");
 }
 
+template<class Manager> void split_pending_sequence(){
+  Manager arena;
+  auto seq = arena.new_sequence(std::vector<S>{{0,1},{1,1},{2,1},{3,1},{4,1}});
+  auto ref = seq.ref_at(1);
+  seq.apply(0,5,{2,1});
+  seq.flip_all();
+  auto [left,right] = seq.split(2);
+  assert(left.prod(0,1) == S(9,1) && right.prodrev(1,2) == S(3,1));
+  assert(left.index_of(ref) == -1 && right.index_of(ref) == 1);
+  left.concat(std::move(right));
+  assert(right.empty() && left.index_of(ref) == 3);
+  assert(left.to_vector() == std::vector<S>({{9,1},{7,1},{5,1},{3,1},{1,1}}));
+}
+
 void cartesian(){
+  auto [empty_parent,empty_left,empty_right,empty_root] = cartesian_tree(std::vector<int>{});
+  assert(empty_parent.empty() && empty_left.empty() && empty_right.empty() && empty_root == 0);
+  auto [min_parent,min_left,min_right,min_root] = cartesian_tree(std::vector<int>{1,1,1});
+  auto [max_parent,max_left,max_right,max_root] = cartesian_tree(std::vector<int>{1,1,1},true);
+  assert(min_root == 2 && min_parent == std::vector<int>({1,2,-1}));
+  assert(min_left == std::vector<int>({-1,0,1}) && min_right == std::vector<int>({-1,-1,-1}));
+  assert(max_root == 0 && max_parent == std::vector<int>({-1,0,1}));
+  assert(max_left == std::vector<int>({-1,-1,-1}) && max_right == std::vector<int>({1,2,-1}));
+
   std::mt19937 rng(517);
   for(bool maximum : {false,true}) for(int n=1;n<100;++n){
     std::vector<int> a(n);for(auto& x:a)x=rng()%8;
@@ -137,6 +186,50 @@ void wavelets(){
     }
     if(q%41==0)for(int i=0;i<(int)a.size();++i)assert(wavelet.get(i)==a[i]);
   }
+}
+
+void wavelet_boundaries(){
+  std::vector<unsigned> values(63,0);
+  DynamicWavelet<unsigned,8> wavelet(values);
+  // The same position grows across several levels while all elements are equal.
+  for(int i = 0; i < 130; ++i){
+    wavelet.insert(wavelet.size(),0);
+    values.push_back(0);
+  }
+  for(int i : {0,31,47,48,63,64,127,128,192}){
+    wavelet.set(i,255);
+    values[i] = 255;
+    wavelet.insert(i,1);
+    values.insert(values.begin()+i,1);
+    wavelet.set(i,0);
+    values[i] = 0;
+    wavelet.erase(i+1);
+    values.erase(values.begin()+i+1);
+  }
+  wavelet.set(64,128); values[64] = 128;
+  wavelet.set(48,1); values[48] = 1;
+  int n = values.size();
+  for(int i = 0; i < n; ++i) assert(wavelet.get(i) == values[i]);
+  assert(wavelet.rank(n,n,0) == 0 && wavelet.count_lt(0,n,255) == n);
+  assert(wavelet.count_interval(0,n,1,129) == 2);
+  assert(wavelet.next(0,n,2,999) == 128 && wavelet.prev(0,n,128,999) == 1);
+  assert(wavelet.next(0,n,255,999) == 999 && wavelet.prev(n,n,255,999) == 999);
+  auto copy = wavelet.clone();
+  for(int i = 0; i < n; ++i) assert(copy.get(i) == values[i]);
+  auto moved = std::move(wavelet);
+  assert(wavelet.size() == 0);
+  wavelet.insert(0,13);
+  assert(wavelet.get(0) == 13 && moved.range_kth(0,n,n-1) == 128);
+  for(int i = 0; i < n; ++i) moved.erase(0);
+  assert(moved.size() == 0 && moved.count_lt(0,0,1) == 0);
+
+  using U = std::uint64_t;
+  constexpr U high = U{1}<<63, largest = std::numeric_limits<U>::max();
+  DynamicWavelet<U,64> full({0,largest,high,1});
+  full.set(0,high+1);
+  full.set(3,largest);
+  assert(full.get(0) == high+1 && full.rank(0,4,largest) == 2);
+  assert(full.count_lt(0,4,largest) == 2 && full.range_kth(0,4,0) == high);
 }
 
 std::vector<int> path(const std::vector<std::vector<int>>& graph,int s,int t){
@@ -175,14 +268,45 @@ void forests(){
   }
   auto copy=forest.clone();for(int i=0;i<n;++i)assert(copy.get(i)==forest.get(i));
 }
+
+void preferred_paths(){
+  constexpr int n = 4097, mid = n/2;
+  lazy_linkcuttree<S,op,e,F,mapping,composition,id> chain(n,S{1,1});
+  for(int i = 1; i < n; ++i) chain.link(i-1,i);
+  chain.apply(n-1,0,{2,1});
+  chain.evert(n-1);
+  assert(chain.get(mid) == S(3,1));
+  chain.set(mid,{12,1});
+  assert(chain.prod(0) == S(3*n+9,n) && chain.lca(0,mid) == mid);
+  auto forward = chain.get_path(0,n-1);
+  assert(forward.size() == n);
+  for(int i = 0; i < n; ++i) assert(forward[i] == i);
+  chain.cut(mid,mid+1);
+  assert(!chain.connected(0,n-1) && chain.get(mid+1) == S(3,1));
+  chain.link(0,n-1);
+  assert(chain.get_path(1,n-2) == std::vector<int>({1,0,n-1,n-2}));
+  assert(chain.prod(1,n-2) == S(12,4) && chain.get(mid) == S(12,1));
+
+  linkcuttree<std::string,concatenate,empty_string> star(5);
+  for(int i = 0; i < 5; ++i) star.set(i,std::string(1,'a'+i));
+  for(int i = 1; i < 5; ++i) star.link(0,i);
+  for(int i = 1; i < 5; ++i){
+    assert(star.prod(i,0) == std::string(1,'a'+i)+"a");
+    assert(star.prod(0,i) == "a"+std::string(1,'a'+i));
+    assert(star.lca(i%4+1,(i+1)%4+1) == 0);
+  }
+}
 }
 
 int main(){
   bit_vectors();
+  bit_block_updates();
   sequence_test<LazySplayTree<S,op,e,F,mapping,composition,id>>();
   sequence_test<LazyTreapSequence<S,op,e,F,mapping,composition,id>>();
+  split_pending_sequence<LazySplayTree<S,op,e,F,mapping,composition,id>>();
+  split_pending_sequence<LazyTreapSequence<S,op,e,F,mapping,composition,id>>();
   noncommutative_sequence<SplayTree<std::string,concatenate,empty_string>>();
   noncommutative_sequence<TreapSequence<std::string,concatenate,empty_string>>();
-  cartesian();wavelets();forests();
+  cartesian();wavelets();wavelet_boundaries();forests();preferred_paths();
   std::cout << "balanced_trees: all tests passed\n";
 }

@@ -6,7 +6,9 @@
 #include <numeric>
 #include <vector>
 
-#include "wavelet.hpp"
+#include "../math/internal/internal_bit.hpp"
+#include "internal/wavelet_partition.hpp"
+#include "static_bit_vector.hpp"
 
 namespace soryuusi {
 
@@ -16,13 +18,14 @@ template<class T, class Compare = less<T>>
 struct StaticRangeLIS{
   private:
     int n;
-    Wavelet<int> wv;
+    struct Level {StaticBitVector bits; int zeros;};
+    vector<Level> levels;
+    bool nondecreasing = true, decreasing = true;
 
-    static vector<int> seaweed_doubling(const vector<T>& v){
+    static vector<int> seaweed_doubling(const vector<T>& v, Compare& comp){
       int n = v.size();
       vector<int> a(n);
       iota(a.begin(), a.end(), 0);
-      Compare comp;
       sort(a.begin(), a.end(), [&](int l, int r){
         if(comp(v[l],v[r])) return true;
         if(comp(v[r],v[l])) return false;
@@ -30,10 +33,10 @@ struct StaticRangeLIS{
       });
 
       vector<int> reca(n), recb(n), res(n,-1), buff(n), ida(n), idb(n);
-      vector<bool> s(n);
+      vector<unsigned char> s(n);
       auto rec = [&](auto&& self, int l, int r) -> void {
         if(r - l < 2) return;
-        int m = (l + r) >> 1;
+        int m = l+(r-l)/2;
         self(self,l,m), self(self,m,r);
         for(int i = l, j = m, k = l; i < m || j < r; ++k){
           if(j == r || (i < m && reca[ida[i]] > reca[ida[j]])) buff[k] = ida[i++];
@@ -87,7 +90,7 @@ struct StaticRangeLIS{
 
       auto solve = [&](auto&& self, int l, int r) -> void {
         if(r - l < 2) return;
-        int m = (l + r) >> 1;
+        int m = l+(r-l)/2;
         self(self,l,m), self(self,m,r);
         for(int i = l, j = m, k = l; i < m || j < r; ++k){
           if(j == r || (i < m && a[i] < a[j])) ida[i] = k, buff[k] = a[i++];
@@ -110,12 +113,41 @@ struct StaticRangeLIS{
       return res;
     }
   public:
-    StaticRangeLIS(const vector<T>& v) : n(v.size()), wv(seaweed_doubling(v)) {}
+    StaticRangeLIS(const vector<T>& v) : n(v.size()) {
+      Compare comp;
+      for(int i = 1; i < n && (nondecreasing || decreasing); ++i){
+        bool falls = comp(v[i],v[i-1]);
+        nondecreasing &= !falls;
+        decreasing &= falls;
+      }
+      if(nondecreasing || decreasing) return;
+      auto ranks = seaweed_doubling(v,comp);
+      levels.resize(soryuusi::bit_width(static_cast<unsigned>(n)));
+      internal::WaveletPartition<int> partition(ranks);
+      for(int k = static_cast<int>(levels.size())-1; k >= 0; --k){
+        auto& level = levels[k];
+        level.zeros = partition.split(ranks,k,level.bits,[](int){});
+      }
+    }
     // Equal elements can both be chosen (longest nondecreasing subsequence).
     int query(int l, int r) {
       assert(0 <= l && l <= r && r <= n);
-      if(l == r) return 0;
-      return wv.count_lt(0,r,l+1) - l;
+      if(r-l <= 1 || nondecreasing) return r-l;
+      if(decreasing) return 1;
+      int lo = 0, hi = r, count = 0, threshold = l+1;
+      for(int k = static_cast<int>(levels.size())-1; k >= 0 && lo < hi; --k){
+        const auto& level = levels[k];
+        int left = level.bits.rank0(lo), right = level.bits.rank0(hi);
+        if((threshold>>k)&1){
+          count += right-left;
+          lo += level.zeros-left;
+          hi += level.zeros-right;
+        } else {
+          lo = left;
+          hi = right;
+        }
+      }
+      return count-l;
     }
 };
 

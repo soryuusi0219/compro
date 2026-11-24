@@ -1,10 +1,12 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/wavelet.hpp
 #pragma once
-#include <iterator>
+#include <limits>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 #include "static_bit_vector.hpp"
+#include "internal/wavelet_partition.hpp"
 
 namespace soryuusi {
 
@@ -18,22 +20,8 @@ struct Wavelet{
     StaticBitVector data[B];
   public:
     Wavelet(vector<T> v) : n(v.size()){
-      vector<T> vl, vr;
-      vl.reserve(n);
-      vr.reserve(n);
-      for(int k = B-1; k >= 0; k--) {
-        data[k].build(n);
-        vl.clear();
-        vr.clear();
-        for(int i = 0; i < n; i++){
-          if((v[i] >> k) & 1) data[k].set(i), vr.push_back(v[i]);
-          else vl.push_back(v[i]);
-        }
-        data[k].init();
-        z[k] = vl.size();
-        v.swap(vl);
-        v.insert(v.end(), vr.begin(), vr.end());
-      }
+      internal::WaveletPartition<T> partition(v);
+      for(int k = B-1; k >= 0; --k) z[k] = partition.split(v,k,data[k],[](int){});
     }
 
     T get(int i){
@@ -48,7 +36,11 @@ struct Wavelet{
     }
 
     int rank(int l, int r, T x){
-      for(int k = B-1; k >= 0; k--){
+      if constexpr(std::is_signed_v<T>) if(x < 0) return 0;
+      if constexpr(std::is_integral_v<T> && B < std::numeric_limits<T>::digits) {
+        if(x >> B) return 0;
+      }
+      for(int k = B-1; k >= 0 && l < r; k--){
         int l0 = data[k].rank0(l), r0 = data[k].rank0(r);
         if((x >> k) & 1) l += z[k] - l0, r += z[k] - r0;
         else l = l0, r = r0;
@@ -68,8 +60,14 @@ struct Wavelet{
     }
 
     int count_lt(int l, int r, T x){
+      if constexpr(std::is_integral_v<T>) {
+        if(x <= 0) return 0;
+        if constexpr(B < std::numeric_limits<T>::digits) {
+          if(x >> B) return r-l;
+        }
+      }
       int res = 0;
-      for(int k = B-1; k >= 0; k--){
+      for(int k = B-1; k >= 0 && l < r; k--){
         int l0 = data[k].rank0(l), r0 = data[k].rank0(r);
         if((x >> k) & 1) res += r0 - l0, l += z[k] - l0, r += z[k] - r0;
         else l = l0, r = r0;

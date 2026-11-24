@@ -6,7 +6,7 @@
 
 問い合わせ座標を事前登録するLi Chao tree。直線・線分追加と最小値取得。
 
-問い合わせ座標は非空のvectorで構築時に渡します。線分の有効範囲は `[l,r)`。`get_min(x)` は登録済みの座標で使います。
+問い合わせ座標はvectorで構築時に渡します。線分の有効範囲は `[l,r)`。`get_min(x)` は登録済みの座標で使います。空の座標列に対する問い合わせは番兵の評価値を返します。ソート済みの葉の座標配列から各ノードの端点を取り、線分追加では交わる子だけを訪れます。
 
 ## インターフェース
 
@@ -34,8 +34,10 @@ using StaticLiChaoTree = Static_LiChaoTree<T,T,Line<T>,INF_Line<T,INF>>;
 ## 依存関係
 
 - [li_chao_tree_line.hpp](li_chao_tree_line.md)
+- [internal_bit.hpp](../math/internal/internal_bit.md)
 
 ## Verify・利用例
 
+- [`unit/sparse_structures`](../../../verify/unit/sparse_structures.cpp)
 - [`library_checker/line_add_get_min_static`](../../../verify/library_checker/data_structure/line_add_get_min_static.cpp)
 - [`library_checker/segment_add_get_min_static`](../../../verify/library_checker/data_structure/segment_add_get_min_static.cpp)

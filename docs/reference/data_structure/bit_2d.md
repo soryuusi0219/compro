@@ -4,7 +4,7 @@
 
 ## 機能・前提条件
 
-二次元Fenwick tree。一点加算と半開長方形の和。配列構築版は空でない長方形配列を渡す。
+二次元Fenwick tree。一点加算と半開長方形の和。`sum(i,j)` は `[0,i) × [0,j)` を集計する。配列構築版には行の長さが揃った配列を渡す。空配列は `0 × 0`。
 
 ## インターフェース
 
@@ -26,7 +26,7 @@ T sum(int hl, int hr, int wl, int wr);
 
 ## 計算量
 
-一点操作・和 O(log H log W)、配列構築 O(HW log H log W)、空間 O(HW)。
+配列構築は各軸で値を親へ一度ずつ伝え、正のサイズでは `O(HW)`。一点加算・和は最悪 `O(log(H+1) log(W+1))`、空間は `O((H+1)(W+1))`。一方の軸が空なら和は0。
 
 ## 依存関係
 
@@ -34,5 +34,6 @@ T sum(int hl, int hr, int wl, int wr);
 
 ## Verify・利用例
 
+- [`unit/rectangle_queries`](../../../verify/unit/rectangle_queries.cpp)
 - [`aoj/range_sum_bit_2d`](../../../verify/aoj/data_structure/range_sum_bit_2d.cpp)
 - [`unit/data_structure_misc`](../../../verify/unit/data_structure_misc.cpp)
