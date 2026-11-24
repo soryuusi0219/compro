@@ -1,11 +1,7 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/graph/dijkstra_01.hpp
 #pragma once
 #include <algorithm>
-#include <functional>
-#include <iterator>
-#include <queue>
-#include <type_traits>
-#include <utility>
+#include <deque>
 #include <vector>
 #include <limits>
 
@@ -30,19 +26,22 @@ struct Dijkstra01{
     G.build();
     d.assign(n,numeric_limits<int>::max());
     from.assign(n, -1);
-    deque<pair<int,int>> que;
+    deque<int> queue{v};
+    vector<unsigned char> settled(n,0);
     d[v] = 0;
-    que.emplace_back(0,v);
-    while(que.size()){
-      auto [d0,u] = que.front(); que.pop_front();
-      if(d[u] < d0) continue;
-      for(auto t : G[u]){
-        if(d[t.to] > d0+t.cost){
-          d[t.to] = d0+t.cost;
-          from[t.to] = u;
-          if(t.cost) que.emplace_back(d[t.to], t.to);
-          else que.emplace_front(d[t.to], t.to);
-        }
+    while(!queue.empty()){
+      const int u = queue.front();
+      queue.pop_front();
+      if(settled[u]) continue;
+      settled[u] = true;
+      const int d0 = d[u];
+      for(const auto& edge : G[u]){
+        const int candidate = d0+edge.cost;
+        if(d[edge.to] <= candidate) continue;
+        d[edge.to] = candidate;
+        from[edge.to] = u;
+        if(edge.cost) queue.push_back(edge.to);
+        else queue.push_front(edge.to);
       }
     }
     return d;

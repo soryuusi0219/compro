@@ -4,7 +4,7 @@
 
 ## 機能・前提条件
 
-有向グラフの強連結成分分解と縮約DAG。scc_idsは成分数と各頂点ID。
+有向グラフの強連結成分分解と縮約DAG。`scc_ids` は成分数とトポロジカル順の成分IDを返す。各探索フレームには次に調べる辺の位置を保持する。
 
 ## インターフェース
 
@@ -36,3 +36,4 @@ tuple<int, vector<vector<int>>, vector<int>> scc_compressed(bool allow_self_edge
 ## Verify・利用例
 
 - [`library_checker/scc`](../../../verify/library_checker/graph/scc.cpp)
+- [`unit/graph_algorithms`](../../../verify/unit/graph_algorithms.cpp)

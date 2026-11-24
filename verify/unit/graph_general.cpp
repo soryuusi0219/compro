@@ -2,6 +2,7 @@
 #include <cassert>
 #include <iostream>
 #include <set>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -74,6 +75,15 @@ int main() {
   std::vector<std::vector<int>> even_path(6);
   for(int i = 0; i + 1 < 6; ++i) add_edge(even_path,i,i+1);
   assert((soryuusi::tree_get_centroids(even_path) == std::pair<int,int>(2,3)));
+
+  const int deep_n = 220000;
+  soryuusi::static_graph<> deep(deep_n,2*(deep_n-1));
+  for(int v = 1; v < deep_n; ++v) deep.add_edge(v-1,v,true);
+  deep.build();
+  const auto deep_path = soryuusi::get_path(deep,0,deep_n-1);
+  assert((int)deep_path.size() == deep_n && deep_path.front() == 0 && deep_path.back() == deep_n-1);
+  assert(soryuusi::diameter(deep) == std::make_tuple(0,deep_n-1,deep_n-1));
+  assert(soryuusi::tree_get_centroids(deep) == std::make_pair(deep_n/2-1,deep_n/2));
 
   std::cout << "graph_general: all tests passed\n";
 }

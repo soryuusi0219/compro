@@ -24,38 +24,38 @@ struct ComplementConnectedComponents{
     ++deg[v];
   }
   vector<vector<int>> solve(){
-    int x = min_element(deg.begin(), deg.end()) - deg.begin();
-    int k = deg[x];
-    vector<int> id(n,k), le(k);
-    for(int i = 0, e = h[x]; ~e; e = nxt[e]) le[i] = to[e], id[to[e]] = i++;
-    vector<bool> G(k*k,true);
-    vector<int> cnt(k,n-k);
-    for(int i : le) for(int e = h[i]; ~e; e = nxt[e]) {
-      if(id[to[e]] < k) G[id[i] + id[to[e]] * k] = false;
-      else --cnt[id[i]];
+    if(n == 0) return {};
+    const int root = min_element(deg.begin(),deg.end())-deg.begin();
+    vector<int> next(n+1), marked(n,-1);
+    vector<vector<int>> groups(1,vector<int>{root});
+    groups[0].reserve(max(1,n-deg[root]));
+    for(int e = h[root]; e != -1; e = nxt[e]) marked[to[e]] = root;
+    int tail = n;
+    for(int v = 0; v < n; ++v) if(v != root){
+      if(marked[v] == root) next[tail] = v, tail = v;
+      else groups[0].push_back(v);
     }
-    vector<vector<int>> ans(1,vector<int>(n-k));
-    for(int i = 0, j = 0; i < n; ++i) if(id[i] == k) ans[0][j++] = i;
-    vector<bool> seen(k+1);
-    vector<int> st;
-    for(int i = 0; i < k; ++i) if(cnt[i]){
-      ans[0].push_back(le[i]);
-      st.push_back(i);
-      seen[i] = true;
-    }
-    for(int v = k; ~v; --v) if(!seen[v]){
-      if(v < k) st.push_back(v), ans.push_back({le[v]});
-      seen[v] = true;
-      while(st.size()){
-        int w = st.back(); st.pop_back();
-        for(int i = 0; i < k; ++i) if(G[i+w*k] && !seen[i]){
-          seen[i] = true;
-          ans.back().push_back(le[i]);
-          st.push_back(i);
+    next[tail] = n;
+    auto expand = [&](vector<int>& component, int i){
+      for(; i < (int)component.size() && next[n] != n; ++i){
+        const int v = component[i];
+        for(int e = h[v]; e != -1; e = nxt[e]) marked[to[e]] = v;
+        for(int p = n, u = next[p]; u != n; u = next[p]){
+          if(marked[u] == v) p = u;
+          else{
+            next[p] = next[u];
+            component.push_back(u);
+          }
         }
       }
+    };
+    expand(groups.front(),1);
+    while(next[n] != n){
+      const int first = next[n];
+      next[n] = next[first];
+      expand(groups.emplace_back(1,first),0);
     }
-    return ans;
+    return groups;
   }
 };
 

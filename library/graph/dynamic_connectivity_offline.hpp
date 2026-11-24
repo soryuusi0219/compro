@@ -4,11 +4,11 @@
 #include <cassert>
 #include <functional>
 #include <map>
-#include <stack>
 #include <tuple>
 #include <utility>
 #include <vector>
 
+#include "../math/internal/internal_bit.hpp"
 #include "../data_structure/dsu_undo.hpp"
 #include "static_graph.hpp"
 
@@ -51,15 +51,17 @@ struct dynamic_connectivity_offline{
   }
   void run(const function<void(int)> &f){
     vector<int> states(szlog+1,0);
-    int j, k = szlog;
+    int k = szlog;
     for(int i = 0; i < q; i++){
-      for(j = i+sz; !(j&1); j >>= 1) k--;
+      const int leaf = i+sz, up = soryuusi::countr_zero(static_cast<unsigned>(leaf));
+      int j = leaf>>up;
+      k -= up;
       uf.rollback(states[k]);
       for(;j < sz; j <<= 1) {
         for(auto e : seg[j]) uf.merge(e.to,e.cost);
         states[++k] = uf.get_state();
       }
-      for(auto e : seg[i+sz]) uf.merge(e.to,e.cost);
+      for(auto e : seg[leaf]) uf.merge(e.to,e.cost);
       f(i);
     }
   }

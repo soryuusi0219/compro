@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <cassert>
 #include <limits>
-#include <queue>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -78,46 +77,54 @@ template <class Cap, class Cost, class Costfct, auto FR, auto FL, auto MAXCOST, 
         assert(s != t);
         vector<Cost> dual(_n, ZEROCOST()), dist(_n);
         vector<int> pv(_n), pe(_n);
-        vector<bool> vis(_n);
+        vector<unsigned char> vis(_n);
+        vector<int> settled, zero;
+        struct Q {
+            Cost key;
+            int to;
+            bool operator<(const Q& r) const {return key > r.key;}
+        };
+        vector<Q> heap;
         auto dual_ref = [&]() {
             fill(dist.begin(), dist.end(), MAXCOST());
-            fill(pv.begin(), pv.end(), -1);
-            fill(pe.begin(), pe.end(), -1);
-            fill(vis.begin(), vis.end(), false);
-            struct Q {
-                Cost key;
-                int to;
-                bool operator<(Q r) const { return key > r.key; }
-            };
-            priority_queue<Q> que;
+            for(int v : settled) vis[v] = false;
+            settled.clear();
+            zero.clear();
+            heap.clear();
             dist[s] = ZEROCOST();
-            que.push(Q{ZEROCOST(), s});
-            while (!que.empty()) {
-                int v = que.top().to;
-                que.pop();
-                if (vis[v]) continue;
+            zero.push_back(s);
+            while(!zero.empty() || !heap.empty()){
+                int v;
+                if(!zero.empty()){
+                    v = zero.back();
+                    zero.pop_back();
+                }else{
+                    pop_heap(heap.begin(),heap.end());
+                    v = heap.back().to;
+                    heap.pop_back();
+                }
+                if(vis[v]) continue;
                 vis[v] = true;
-                if (v == t) break;
-                for (int i = h[v]; ~i; i = nxt[i]) {
-                    auto e = g[i];
-                    if (vis[to[i]] || !e.cap) continue;
-                    Cost cost = e.cost() - dual[to[i]] + dual[v];
-                    if (dist[to[i]] - dist[v] > cost) {
-                        dist[to[i]] = dist[v] + cost;
-                        pv[to[i]] = v;
-                        pe[to[i]] = i;
-                        que.push(Q{dist[to[i]], to[i]});
+                settled.push_back(v);
+                if(v == t) break;
+                for(int i = h[v]; i != -1; i = nxt[i]){
+                    const auto& e = g[i];
+                    const int u = to[i];
+                    if(vis[u] || !e.cap) continue;
+                    const Cost cost = e.cost() - dual[u] + dual[v];
+                    if(dist[u] - dist[v] <= cost) continue;
+                    dist[u] = dist[v]+cost;
+                    pv[u] = v;
+                    pe[u] = i;
+                    if(cost == ZEROCOST()) zero.push_back(u);
+                    else{
+                        heap.push_back({dist[u],u});
+                        push_heap(heap.begin(),heap.end());
                     }
                 }
             }
-            if (!vis[t]) {
-                return false;
-            }
-
-            for (int v = 0; v < _n; v++) {
-                if (!vis[v]) continue;
-                dual[v] -= dist[t] - dist[v];
-            }
+            if(!vis[t]) return false;
+            for(int v : settled) dual[v] -= dist[t]-dist[v];
             return true;
         };
         Cap flow = 0;
@@ -154,7 +161,7 @@ template <class Cap, class Cost, class Costfct, auto FR, auto FL, auto MAXCOST, 
       Cap cap, maxcap;
       Costfct costfct;
       bool inverted;
-      Cost cost() {return (inverted ? -FL(costfct, cap).first : FR(costfct, maxcap-cap).first);}
+      Cost cost() const {return (inverted ? -FL(costfct, cap).first : FR(costfct, maxcap-cap).first);}
       Cap next_cap() {return min((inverted ? cap - FL(costfct, cap).second : FR(costfct, maxcap-cap).second + cap - maxcap), cap);}
     };
     vector<pair<int, int>> pos;

@@ -31,6 +31,7 @@ void run(const function<void(int)> &f);
 
 ## 依存関係
 
+- [internal_bit.hpp](../math/internal/internal_bit.md)
 - [dsu_undo.hpp](../data_structure/dsu_undo.md)
 - [static_graph.hpp](static_graph.md)
 

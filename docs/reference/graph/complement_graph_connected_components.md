@@ -24,7 +24,7 @@ vector<vector<int>> solve();
 
 ## 計算量
 
-O(V+E) 時間・空間。
+時間は $O(V+E)$、グラフの格納を含む空間は $O(V+E)$。未訪問頂点を連結リストで保持し、探索の追加領域は $O(V)$。
 
 ## 依存関係
 
@@ -33,3 +33,4 @@ O(V+E) 時間・空間。
 ## Verify・利用例
 
 - [`library_checker/connected_components_of_complement_graph`](../../../verify/library_checker/graph/connected_components_of_complement_graph.cpp)
+- [`unit/graph_algorithms`](../../../verify/unit/graph_algorithms.cpp)

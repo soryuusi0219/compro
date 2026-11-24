@@ -1,11 +1,6 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/graph/dijkstra_1.hpp
 #pragma once
 #include <algorithm>
-#include <functional>
-#include <iterator>
-#include <queue>
-#include <type_traits>
-#include <utility>
 #include <vector>
 #include <limits>
 
@@ -30,17 +25,15 @@ struct Dijkstra1{
     G.build();
     d.assign(n,numeric_limits<int>::max());
     from.assign(n, -1);
-    queue<int> que;
+    vector<int> queue{v};
+    queue.reserve(n);
     d[v] = 0;
-    que.push(v);
-    while(que.size()){
-      auto u = que.front(); que.pop();
-      for(int c : G.vertices(u)){
-        if(d[c] > d[u]+1){
-          d[c] = d[u]+1;
-          from[c] = u;
-          que.push(c);
-        }
+    for(int i = 0; i < (int)queue.size(); ++i){
+      const int u = queue[i], candidate = d[u]+1;
+      for(int to : G.vertices(u)) if(d[to] == numeric_limits<int>::max()){
+        d[to] = candidate;
+        from[to] = u;
+        queue.push_back(to);
       }
     }
     return d;

@@ -14,7 +14,7 @@ using namespace std;
 void incrementalMSF(int n, const vector<pair<int,int>>& es, auto comp, auto add, auto snapshot, auto rollback, auto solve){
   int M = es.size();
   int B = soryuusi::bit_ceil((unsigned)(M+1));
-  vector<int> now;
+  vector<int> now, rejected;
   now.reserve(M);
   dsu_undo d(n);
   auto dfs = [&](auto&& self, int x, int l, int r, int k) -> void {
@@ -24,7 +24,13 @@ void incrementalMSF(int n, const vector<pair<int,int>>& es, auto comp, auto add,
     int state = d.get_state();
     for(int i = l; i < min(r-1,M); ++i) d.merge(es[i].first, es[i].second);
     int j = k;
-    for(int i = k; i < m; ++i) if(~d.merge(es[now[i]].first, es[now[i]].second)) swap(now[i],now[j++]);
+    rejected.clear();
+    for(int i = k; i < m; ++i){
+      const int id = now[i];
+      if(d.merge(es[id].first,es[id].second) != -1) now[j++] = id;
+      else rejected.push_back(id);
+    }
+    copy(rejected.begin(),rejected.end(),now.begin()+j);
     d.rollback(state);
     snapshot();
     for(int i = k; i < j; ++i) {
@@ -32,10 +38,13 @@ void incrementalMSF(int n, const vector<pair<int,int>>& es, auto comp, auto add,
       add(now[i]);
     }
     if(x < B){
-      sort(now.rbegin(),now.rend()-j,comp);
-      int state2 = d.get_state();
-      for(int i = m-1; i >= j; --i) if(!~d.merge(es[now[i]].first, es[now[i]].second)) swap(now[i],now[--m]);
-      now.resize(m);
+      int state2 = d.get_state(), keep = j;
+      // Rejected candidates retain the original sorted order.
+      for(int i = j; i < m; ++i){
+        const int id = now[i];
+        if(d.merge(es[id].first,es[id].second) != -1) now[keep++] = id;
+      }
+      now.resize(keep);
       d.rollback(state2);
       self(self, x << 1, l, (l+r) >> 1, j);
       self(self, x << 1 | 1, (l+r) >> 1, r, j);
