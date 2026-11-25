@@ -4,7 +4,7 @@
 
 ## 機能・前提条件
 
-最小・最大の双方を取り出せるヒープ。Compare に従って順序を定める。空の集合から取り出さない。
+最小・最大の双方を取り出せるヒープ。Compareに従って順序を定め、同値キーも保持します。get_min/get_max/pop_min/pop_maxは非空時に使います。隣り合う偶数・奇数添字に区間の上端・下端を保持します。構築時はこの対を整え、下降で移動した要素に対して上昇処理を行います。
 
 ## インターフェース
 
@@ -35,7 +35,7 @@ int up(int k, int root = 1);
 
 ## 計算量
 
-構築 O(N)、push/pop O(log N)、get_min/get_max O(1)、空間 O(N)。
+構築 O(N)、木のpush/popは最悪 O(log(N+1))、get_min/get_max O(1)、空間 O(N)。pushにはvectorの確保に伴う再配置が発生することがあります。
 
 ## 依存関係
 
@@ -44,3 +44,4 @@ int up(int k, int root = 1);
 ## Verify・利用例
 
 - [`library_checker/double_ended_priority_queue`](../../../verify/library_checker/data_structure/double_ended_priority_queue.cpp)
+- [`unit/data_structure_misc`](../../../verify/unit/data_structure_misc.cpp)

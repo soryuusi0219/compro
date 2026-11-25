@@ -2,9 +2,6 @@
 #pragma once
 
 #include <algorithm>
-#include <cassert>
-#include <cstddef>
-#include <limits>
 #include <numeric>
 #include <utility>
 #include <vector>
@@ -16,12 +13,12 @@ namespace soryuusi {
 template<class T>
 void sort_concatenation_min(std::vector<T>& v) {
   const int n = v.size();
-  std::vector<std::vector<int>> z;
-  z.reserve(n);
-  for(const auto& w : v) {
-    if(w.empty()) z.emplace_back();
-    else z.emplace_back(z_algo(std::vector<typename T::value_type>(w.begin(),w.end())));
-  }
+  std::vector<std::vector<int>> z(n);
+  auto prefix_match = [&](int sequence, int start){
+    auto& cache = z[sequence];
+    if(cache.empty()) cache = z_algo(v[sequence]);
+    return cache[start];
+  };
   std::vector<int> ord(n);
   std::iota(ord.begin(),ord.end(),0);
   std::sort(ord.begin(), ord.end(), [&](int l, int r) {
@@ -34,14 +31,14 @@ void sort_concatenation_min(std::vector<T>& v) {
     if(lcp < std::min(ls,rs)) return v[l][lcp] < v[r][lcp];
     if(ls == rs) return false;
     else if(ls < rs){
-      lcp = z[r][ls];
+      lcp = prefix_match(r,ls);
       if(lcp < rs-ls) return v[r][lcp] < v[r][ls+lcp];
       lcp = 0;
       while(lcp < ls && v[l][lcp] == v[r][rs-ls+lcp]) ++lcp;
       if(lcp < ls) return v[r][rs-ls+lcp] < v[l][lcp];
       return false;
     }else{
-      lcp = z[l][rs];
+      lcp = prefix_match(l,rs);
       if(lcp < ls-rs) return v[l][rs+lcp] < v[l][lcp];
       lcp = 0;
       while(lcp < rs && v[l][ls-rs+lcp] == v[r][lcp]) ++lcp;

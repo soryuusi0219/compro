@@ -140,6 +140,8 @@ void verify_tree(const std::string& s, std::mt19937& rng) {
 
 int main() {
   soryuusi::SuffixTree<> empty;
+  const soryuusi::SuffixTree<> empty_input(std::string{});
+  assert(empty_input.lcp_array().empty() && empty_input.distinct_substrings() == 0);
   assert(empty.suffix_array().empty());
   assert(empty.suffix_array_inv().empty());
   assert(empty.lcp_array().empty());
@@ -164,6 +166,13 @@ int main() {
       if (trial < 3) verify_tree<true>(s, rng);
     }
   }
+
+  const int depth = 300000;
+  const soryuusi::SuffixTree<char, 'a', 'a'> repeated(std::string(depth, 'a'));
+  assert(repeated.suffix_array().front() == depth-1);
+  assert(repeated.suffix_array().back() == 0);
+  assert(repeated.distinct_substrings() == depth);
+  assert(repeated.get_node(0).count == depth);
 
   std::cout << "suffix_tree: all tests passed\n";
 }

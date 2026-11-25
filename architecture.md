@@ -12,8 +12,8 @@ C++20のヘッダーオンリーライブラリです。`library/` を分野別�
 ライブラリ間のincludeは、読み込む側のヘッダーのディレクトリを基準とした相対パスに統一します。
 
 ```cpp
-// library/math/modint.hpp から同じディレクトリを参照
-#include "internal_math.hpp"
+// library/math/modint.hpp から数学の内部実装を参照
+#include "internal/internal_math.hpp"
 // library/math/discrete_logarithm.hpp から別分野を参照
 #include "../data_structure/hash_table.hpp"
 // library/data_structure/splay_tree.hpp から内部実装を参照
@@ -28,6 +28,14 @@ C++20のヘッダーオンリーライブラリです。`library/` を分野別�
 `tools/library_manager.py` は相対includeを正規化して `library/...` の依存グラフに変換し、
 依存切れ・循環依存・ヘッダー内のルート基準includeを検査します。
 解答コードの展開は `tools/expand_include.py` が担当します。どちらも同じファイルの重複展開を避けます。
+
+数学の公開ヘッダーは `library/math/` に置き、共通の内部実装と型traitsは `library/math/internal/` に置きます。
+`bit_width`、`countr_zero`、`popcount` などを使う実装は `internal_bit.hpp` を直接includeし、
+`soryuusi::` で修飾して呼びます。標準の `<bit>`、処理系の組み込み関数、代替実装の切り替えは、
+このヘッダーが担当します。ビット数を調べる引数は対応する符号なし整数型にそろえます。
+
+宣言、関数・テンプレートの引数列、単一の式は1行にまとめます。関数本体の文や、複数要素を持つ
+初期化の区切りには改行を使います。
 
 ## ポインタ木と永続構造
 

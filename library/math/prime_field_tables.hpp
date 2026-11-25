@@ -1,7 +1,6 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/math/prime_field_tables.hpp
 #pragma once
 #include <algorithm>
-#include <bit>
 #include <cassert>
 #include <cmath>
 #include <cstddef>
@@ -9,8 +8,9 @@
 #include <utility>
 #include <vector>
 
+#include "internal/internal_bit.hpp"
 #include "../data_structure/hash_table.hpp"
-#include "internal_math.hpp"
+#include "internal/internal_math.hpp"
 #include "linear_sieve.hpp"
 #include "prime_factorization.hpp"
 
@@ -57,9 +57,9 @@ class PrimeFieldTables {
 
   U32 make_buckets(){
     const U32 cube_root = std::max(2,static_cast<int>(std::cbrt(p)));
-    const U32 step = std::bit_floor(std::max<U32>(1,p/(cube_root*cube_root)));
+    const U32 step = soryuusi::bit_floor(std::max<U32>(1,p/(cube_root*cube_root)));
     const U32 order = std::sqrt(p/step);
-    bucket_shift = std::countr_zero(step);
+    bucket_shift = soryuusi::countr_zero(step);
     denominators.resize((p+step-1)/step);
     U32 a = 0, b = 1, c = 1, d = order;
     U32 j = 0;
@@ -167,7 +167,7 @@ class PrimeFieldTables {
     for(U32 i = small+1; i <= limit; ++i)
       logarithms[i] = subtract_exponents(add_exponents(group/2,logarithms[p%i]),logarithms[p/i]);
 
-    power_shift = (std::bit_width(group-1)+1)/2;
+    power_shift = (soryuusi::bit_width(group-1)+1)/2;
     const U32 width = 1U << power_shift;
     powers_low.resize(width,1);
     powers_high.resize((group+width-1)/width,1);

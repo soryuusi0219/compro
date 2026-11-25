@@ -34,7 +34,7 @@ inline Srev get(int x) const;
 
 ## 依存関係
 
-標準ライブラリのみ。
+- [heavy_light_decomposition.hpp](heavy_light_decomposition.md)
 
 ## Verify・利用例
 

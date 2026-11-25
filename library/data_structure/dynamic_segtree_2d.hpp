@@ -24,7 +24,10 @@ struct Dynamic_Segtree2D{
       node1D* lp;
       node1D* rp;
       node1D(int pos_, S val_) : pos(pos_), val(val_), sum(val), lp(nullptr), rp(nullptr) {}
-      void calc(){sum = op(lp ? lp->sum : e(), op(val, rp ? rp->sum : e()));}
+      void calc(){
+        sum = rp ? op(val,rp->sum) : val;
+        if(lp) sum = op(lp->sum,sum);
+      }
     };
     void _add1D(node1D*& p, int l, int r, int i, S x){
       if(!p) {
@@ -36,7 +39,7 @@ struct Dynamic_Segtree2D{
         p->val = op(p->val, x);
         return;
       }
-      int m = (l+r) >> 1;
+      int m = l+(r-l)/2;
       if(i < m) {
         if(i > p->pos) swap(i, p->pos), swap(x, p->val);
         _add1D(p->lp, l, m, i, x);
@@ -57,7 +60,7 @@ struct Dynamic_Segtree2D{
         p->calc();
         return;
       }
-      int m = (l+r) >> 1;
+      int m = l+(r-l)/2;
       if(i < m) {
         if(i > p->pos) swap(i, p->pos), swap(x, p->val);
         _set1D(p->lp, l, m, i, x);
@@ -69,18 +72,20 @@ struct Dynamic_Segtree2D{
       p->calc();
     }
 
-    S _get1D(node1D* p, int l, int r, int i){
-      if(!p) return e();
-      if(p->pos == i) return p->val;
-      int m = (l+r) >> 1;
-      if(i < m) return _get1D(p->lp, l, m, i);
-      else return _get1D(p->rp, m, r, i);
+    S _get1D(const node1D* p, int l, int r, int i){
+      while(p){
+        if(p->pos == i) return p->val;
+        int m = l+(r-l)/2;
+        if(i < m) p = p->lp, r = m;
+        else p = p->rp, l = m;
+      }
+      return e();
     }
 
-    S _prod1D(node1D* p, int l, int r, int i, int j){
+    S _prod1D(const node1D* p, int l, int r, int i, int j){
       if(!p || r <= i || j <= l) return e();
       if(i <= l && r <= j) return p->sum;
-      int m = (l+r) >> 1;
+      int m = l+(r-l)/2;
       S res = _prod1D(p->lp, l, m, i, j);
       if(i <= p->pos && p->pos < j) res = op(res,p->val);
       return op(res,_prod1D(p->rp, m, r, i, j));
@@ -95,45 +100,46 @@ struct Dynamic_Segtree2D{
     internal::NodePool<node1D> pool1;
     internal::NodePool<node2D> pool2;
     node2D* root;
-    void calc(node2D* p, int j){
-      if(!p) return;
-      _set1D(p->tree, 0, w, j, op(
-        p->lp ? _get1D(p->lp->tree,0,w,j) : e(), 
-        p->rp ? _get1D(p->rp->tree,0,w,j) : e()
-      ));
-    }
-    void _add2D(node2D*& p, int l, int r, int i, int j, S x){
+    void _add2D(node2D*& p, int l, int r, int i, int j, const S& x){
       if(!p) p = pool2.create();
       _add1D(p->tree,0,w,j,x);
-      if(r - l == 1) return;
-      int m = (l+r) >> 1;
-      if(i < m) _add2D(p->lp, l, m, i, j, x);
-      else _add2D(p->rp, m, r, i, j, x);
+      if(r-l == 1) return;
+      int m = l+(r-l)/2;
+      if(i < m) _add2D(p->lp,l,m,i,j,x);
+      else _add2D(p->rp,m,r,i,j,x);
     }
 
-    void _set2D(node2D*& p, int l, int r, int i, int j, S x){
+    S _set2D(node2D*& p, int l, int r, int i, int j, const S& x){
       if(!p) p = pool2.create();
-      if(r - l == 1) {
-        _set1D(p->tree, 0, w, j, x);
-        return;
+      if(r-l == 1){
+        _set1D(p->tree,0,w,j,x);
+        return x;
       }
-      int m = (l+r) >> 1;
-      if(i < m) _set2D(p->lp, l, m, i, j, x);
-      else _set2D(p->rp, m, r, i, j, x);
-      calc(p,j);
+      int m = l+(r-l)/2;
+      const bool right = i >= m;
+      S value = right ? _set2D(p->rp,m,r,i,j,x) : _set2D(p->lp,l,m,i,j,x);
+      const auto* sibling = right ? p->lp : p->rp;
+      if(sibling){
+        S other = _get1D(sibling->tree,0,w,j);
+        value = right ? op(other,value) : op(value,other);
+      }
+      _set1D(p->tree,0,w,j,value);
+      return value;
     }
 
-    S _get2D(node2D*& p, int l, int r, int i, int j){
-      if(!p) return e();
-      if(r - l == 1) return _get1D(p->tree,0,w,j);
-      int m = (l+r) >> 1;
-      if(i < m) return _get2D(p->lp, l, m, i, j);
-      else return _get2D(p->rp, m, r, i, j);
+    S _get2D(const node2D* p, int l, int r, int i, int j){
+      while(p){
+        if(r-l == 1) return _get1D(p->tree,0,w,j);
+        int m = l+(r-l)/2;
+        if(i < m) p = p->lp, r = m;
+        else p = p->rp, l = m;
+      }
+      return e();
     }
-    S _prod2D(node2D*& p, int l, int r, int hi, int hj, int wi, int wj){
+    S _prod2D(const node2D* p, int l, int r, int hi, int hj, int wi, int wj){
       if(!p || r <= hi || hj <= l) return e();
       if(hi <= l && r <= hj) return _prod1D(p->tree, 0, w, wi, wj);
-      int m = (l+r) >> 1;
+      int m = l+(r-l)/2;
       return op(_prod2D(p->lp, l, m, hi, hj, wi, wj), _prod2D(p->rp, m, r, hi, hj, wi, wj));
     }
   public:
@@ -172,7 +178,7 @@ struct Dynamic_Segtree2D{
     void set(int i, int j, S x){assert(0 <= i && i < h && 0 <= j && j < w); _set2D(root,0,h,i,j,x);}
     void add(int i, int j, S x){assert(0 <= i && i < h && 0 <= j && j < w); _add2D(root,0,h,i,j,x);}
     S get(int i, int j){assert(0 <= i && i < h && 0 <= j && j < w); return _get2D(root,0,h,i,j);}
-    S prod(int hl, int hr, int wl, int wr){assert(0 <= hl && hl <= hr && hr <= h && 0 <= wl && wl <= wr && wr <= w); return _prod2D(root,0,h,hl,hr,wl,wr);}
+    S prod(int hl, int hr, int wl, int wr){assert(0 <= hl && hl <= hr && hr <= h && 0 <= wl && wl <= wr && wr <= w); return hl == hr || wl == wr ? e() : _prod2D(root,0,h,hl,hr,wl,wr);}
     S all_prod(){return (root && root->tree ? root->tree->sum : e());}
 };
 

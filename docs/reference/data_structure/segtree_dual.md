@@ -1,6 +1,6 @@
-# Segtree_dual
+# segtree_dual
 
-[索引](../README.md) / [実装](../../../library/data_structure/Segtree_dual.hpp)
+[索引](../README.md) / [実装](../../../library/data_structure/segtree_dual.hpp)
 
 ## 機能・前提条件
 
@@ -9,7 +9,7 @@
 ## インターフェース
 
 ```cpp
-#include "library/data_structure/Segtree_dual.hpp"
+#include "library/data_structure/segtree_dual.hpp"
 ```
 
 主要な宣言（補助型・補助関数を含む抜粋）:
@@ -29,13 +29,15 @@ void all_apply(F f);
 
 ## 計算量
 
-構築 O(N)、set/get/apply O(log N)、空間 O(N)。
+構築 `O(N)`、`set`・`get`・区間 `apply` は最悪 `O(log(N+1))`、`all_apply` は `O(1)`。内部ノードの保留フラグを含めて空間 `O(N)`。
 
 ## 依存関係
 
-標準ライブラリのみ。
+- [segtree_ops.hpp](internal/segtree_ops.md)
+- [internal_bit.hpp](../math/internal/internal_bit.md)
 
 ## Verify・利用例
 
+- [`unit/linear_segment_trees`](../../../verify/unit/linear_segment_trees.cpp)
 - [`library_checker/range_affine_point_get_dual_segtree`](../../../verify/library_checker/data_structure/range_affine_point_get_dual_segtree.cpp)
 - [`unit/data_structure_misc`](../../../verify/unit/data_structure_misc.cpp)

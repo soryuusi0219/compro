@@ -2,8 +2,7 @@
 #pragma once
 #include <algorithm>
 #include <array>
-#include <queue>
-#include <stack>
+#include <cassert>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -17,9 +16,9 @@ struct AhoCorasick{
   private:
   static constexpr int ALPHA = MAX_CHARCTER - MIN_CHARCTER + 1;
     using VC = conditional_t<is_same_v<C, char>, string, vector<C>>;
+    bool built = false;
     int addNode(int p){
       next.emplace_back();
-      next.back().fill(0);
       fail.emplace_back(0);
       par.emplace_back(p);
       cnt.emplace_back(0);
@@ -37,40 +36,51 @@ struct AhoCorasick{
       addNode(0);  
     }
     void insert(const VC& s) {
+      assert(!built);
       int p = 0;
       for(C ch : s) {
         int i = ch - MIN_CHARCTER;
-        if(!next[p][i]) next[p][i] = addNode(p);
-        p = next[p][i];
+        int child = next[p][i];
+        if(!child){
+          child = addNode(p);
+          next[p][i] = child;
+        }
+        p = child;
       }
       cnt[p]++;
     }
     void build(){
-      queue<int> q;
-      for(int c = 0; c < ALPHA; ++c) if(next[0][c]) q.push(next[0][c]);
-      while(!q.empty()){
-        int u = q.front(); q.pop();
-        cnt[u] += cnt[fail[u]];
+      if(built) return;
+      vector<int> q;
+      q.reserve(next.size()-1);
+      for(int child : next[0]) if(child) q.push_back(child);
+      for(int i = 0; i < (int)q.size(); ++i){
+        const int u = q[i], fallback = fail[u];
+        auto& edges = next[u];
+        const auto& fallback_edges = next[fallback];
+        cnt[u] += cnt[fallback];
         for(int c = 0; c < ALPHA; ++c) {
-          int& v = next[u][c];
-          if(v) {
-            fail[v] = next[fail[u]][c];
-            q.push(v);
-          } else v = next[fail[u]][c];
+          const int child = edges[c], suffix_child = fallback_edges[c];
+          if(child){
+            fail[child] = suffix_child;
+            q.push_back(child);
+          }else edges[c] = suffix_child;
         }
       }
+      built = true;
     }
     inline int size() const {return par.size();}
     vector<int> lex_order(){
       vector<int> res;
       res.reserve(size());
       res.emplace_back(0);
-      stack<int> st;
-      for(int c = 0; c < ALPHA; ++c) if(next[0][c]) st.push(next[0][c]);
+      vector<int> st;
+      for(int child : next[0]) if(child) st.push_back(child);
       while(!st.empty()){
-        int u = st.top(); st.pop();
+        int u = st.back(); st.pop_back();
         res.emplace_back(u);
-        for(int c = 0; c < ALPHA; ++c) if(next[u][c] && next[u][c] != next[fail[u]][c]) st.push(next[u][c]);
+        for(int c = 0; c < ALPHA; ++c)
+          if(next[u][c] && next[u][c] != next[fail[u]][c]) st.push_back(next[u][c]);
       }
       return res;
     }

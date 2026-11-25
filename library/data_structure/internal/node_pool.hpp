@@ -1,10 +1,12 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/internal/node_pool.hpp
 #pragma once
+#include <algorithm>
 #include <cassert>
 #include <cstddef>
-#include <deque>
 #include <memory>
+#include <type_traits>
 #include <utility>
+#include <vector>
 
 namespace soryuusi::internal {
 
@@ -23,12 +25,40 @@ public:
   friend bool operator==(const NodeRoot&, const NodeRoot&) = default;
 };
 
-// deque keeps node addresses stable and allocates storage in blocks.
+// Blocks grow from eight to 1024 slots and keep node addresses stable.
 // No node is reclaimed individually. Moving the pool preserves its domain.
 template<class Node>
 class NodePool {
+  struct Block {
+    Node* data;
+    std::size_t capacity;
+    explicit Block(std::size_t n) : data(std::allocator<Node>{}.allocate(n)), capacity(n) {}
+    Block(Block&& old) noexcept : data(std::exchange(old.data,nullptr)), capacity(old.capacity) {}
+    ~Block(){if(data) std::allocator<Node>{}.deallocate(data,capacity);}
+  };
   struct Storage {
-    std::deque<Node> nodes;
+    std::vector<Block> blocks;
+    Node* next = nullptr;
+    Node* end = nullptr;
+    std::size_t count = 0;
+
+    void append(){
+      auto capacity = blocks.empty() ? 8 : std::min<std::size_t>(blocks.back().capacity*2,1024);
+      auto& block = blocks.emplace_back(capacity);
+      next = block.data;
+      end = block.data+capacity;
+    }
+
+    ~Storage(){
+      if constexpr(!std::is_trivially_destructible_v<Node>){
+        if(blocks.empty()) return;
+        for(std::size_t i = 0; i+1 < blocks.size(); ++i) {
+          std::destroy_n(blocks[i].data,blocks[i].capacity);
+        }
+        Node* last = blocks.back().data;
+        std::destroy_n(last,next-last);
+      }
+    }
 #ifndef NDEBUG
     inline static std::size_t next_domain = 0;
     std::size_t domain = ++next_domain;
@@ -47,11 +77,14 @@ public:
   NodePool(NodePool&&) noexcept = default;
   NodePool& operator=(NodePool&&) noexcept = default;
   template<class... Args> Node* create(Args&&... args){
-    auto& nodes = ensure().nodes;
-    nodes.emplace_back(std::forward<Args>(args)...);
-    return &nodes.back();
+    auto& s = ensure();
+    if(s.next == s.end) s.append();
+    auto* node = std::construct_at(s.next,std::forward<Args>(args)...);
+    ++s.next;
+    ++s.count;
+    return node;
   }
-  std::size_t size() const {return storage ? storage->nodes.size() : 0;}
+  std::size_t size() const {return storage ? storage->count : 0;}
   Root root(Node* p) const {
     Root r;
     r.ptr = p;

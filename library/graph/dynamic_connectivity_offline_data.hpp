@@ -3,12 +3,12 @@
 #include <algorithm>
 #include <cassert>
 #include <map>
-#include <stack>
 #include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
 
+#include "../math/internal/internal_bit.hpp"
 #include "../data_structure/dsu_undo_with_data.hpp"
 #include "static_graph.hpp"
 
@@ -75,17 +75,19 @@ struct dynamic_connectivity_offline_data{
   void run(F&& f){
     static_assert(is_invocable_r_v<void, F, int>);
     vector<int> states(szlog+1,0);
-    int j, k = szlog;
+    int k = szlog;
     for(int i = 0; i < q; i++){
-      for(j = i+sz; !(j&1); j >>= 1) k--;
+      const int leaf = i+sz, up = soryuusi::countr_zero(static_cast<unsigned>(leaf));
+      int j = leaf>>up;
+      k -= up;
       uf.rollback(states[k]);
       for(;j < sz; j <<= 1) {
         for(auto e : sege[j]) uf.merge(e.to,e.cost);
         for(auto e : segv[j]) uf.apply(e.to,e.cost);
         states[++k] = uf.get_state();
       }
-      for(auto e : sege[i+sz]) uf.merge(e.to,e.cost);
-      for(auto e : segv[i+sz]) uf.apply(e.to,e.cost);
+      for(auto e : sege[leaf]) uf.merge(e.to,e.cost);
+      for(auto e : segv[leaf]) uf.apply(e.to,e.cost);
       f(i);
     }
   }

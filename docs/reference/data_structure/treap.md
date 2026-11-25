@@ -41,6 +41,8 @@ get/set/erase_atは0<=i<size()、insert_at/splitは0<=i<=size()。prod/flip/appl
 
 列長N、相手長M。通常操作・split・同一arenaのconcatは期待 O(log(N+M+1))、単発最悪 O(N+M)。管理型構築・空列作成・moveは O(1)。vectorからの構築・clone・to_vectorは O(N)。異arenaのconcatは O(M) と結合の対数時間。size/empty/全体集約/flip_all/clearは O(1)。共有arenaの確保数Aに対して O(A) 空間、作業領域を加えます。move代入で古いarenaの最後の所有者を失う場合は、その解放時間も必要です。
 
+長さ1の `prod` と `prodrev` は位置アクセス1回で値を取得します。 `new_sequence(vector)` のCartesian tree構築はノードの親リンクを使い、追加の作業領域は O(1) です。
+
 `ref_at` と、対象が列にある場合の `index_of` は期待 O(log(N+1))。
 同一arena内の別の列や取り除かれた木を指す場合、`index_of` は元の木の高さに比例します。
 参照を取得したノードだけに管理情報を確保します。

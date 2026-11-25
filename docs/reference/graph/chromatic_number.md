@@ -28,7 +28,7 @@ O(V 2^V) 時間、O(2^V) 空間。内部固定整数modによる判定を使う�
 
 ## 依存関係
 
-標準ライブラリのみ。
+- [internal_bit.hpp](../math/internal/internal_bit.md)
 
 ## Verify・利用例
 

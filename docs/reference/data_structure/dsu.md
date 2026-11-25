@@ -27,7 +27,7 @@ vector<vector<int>> groups();
 
 ## 計算量
 
-構築 O(N)、通常操作は償却 O(α(N))、groups O(N α(N))、空間 O(N)。
+構築 `O(N)`、通常操作は償却 `O(α(N))`、1操作の最悪は `O(log(N+1))`。成分列挙ではサイズから各グループの領域を予約し、`O(N α(N))` で根の添字順に返す。各グループ内は頂点の昇順。空間 `O(N)`。
 
 ## 依存関係
 
@@ -35,4 +35,5 @@ vector<vector<int>> groups();
 
 ## Verify・利用例
 
+- [`unit/unionfind_hash`](../../../verify/unit/unionfind_hash.cpp)
 - [`library_checker/unionfind`](../../../verify/library_checker/data_structure/unionfind.cpp)

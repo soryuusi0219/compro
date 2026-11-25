@@ -1,7 +1,6 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/math/bitmatrix.hpp
 #pragma once
 #include <algorithm>
-#include <bit>
 #include <cassert>
 #include <cstdint>
 #include <initializer_list>
@@ -12,6 +11,7 @@
 #include <utility>
 #include <vector>
 
+#include "internal/internal_bit.hpp"
 #include "matrix.hpp"
 
 namespace soryuusi {
@@ -120,7 +120,7 @@ struct BitMatrix {
     for(int i = 0; i < height_; ++i) for(int j = 0; j < other.width_; ++j) {
       unsigned parity = 0;
       for(int block = 0; block < blocks(); ++block) {
-        parity ^= popcount(row_data(i)[block]&transposed.row_data(j)[block])&1;
+        parity ^= soryuusi::popcount(row_data(i)[block]&transposed.row_data(j)[block])&1;
       }
       if(parity) result.set(i,j);
     }
@@ -135,7 +135,7 @@ struct BitMatrix {
       int table_size = 1<<length;
       vector<block_type> table((size_t)table_size*output_blocks);
       for(int mask = 1; mask < table_size; ++mask) {
-        int bit = countr_zero((unsigned)mask);
+        int bit = soryuusi::countr_zero((unsigned)mask);
         int previous = mask^(1<<bit);
         const block_type* source = other.row_data(first+bit);
         block_type* destination = table.data()+(size_t)mask*output_blocks;
@@ -343,7 +343,7 @@ struct BitMatrix {
     vector<bool> result(height_);
     for(int row = 0; row < height_; ++row) {
       unsigned parity = 0;
-      for(int block = 0; block < blocks(); ++block) parity ^= popcount(row_data(row)[block]&packed[block])&1;
+      for(int block = 0; block < blocks(); ++block) parity ^= soryuusi::popcount(row_data(row)[block]&packed[block])&1;
       result[row] = parity;
     }
     return result;

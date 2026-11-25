@@ -27,25 +27,37 @@ struct Prim{
     w.push_back(cost);
   }
   pair<T,vector<pair<long long,long long>>> solve(int x = 0){
-    priority_queue<tuple<T,int,int>,vector<tuple<T,int,int>>,greater<tuple<T,int,int>>> que;
-    vector<bool> v(n,false);
-    v[0] = true;
-    for(int i = h[x]; ~i; i = nxt[i]) que.push({w[i],x,to[i]});
-    vector<pair<long long,long long>> ret;
+    if(!n) return {T(0),{}};
+    priority_queue<tuple<T,int,int>,vector<tuple<T,int,int>>,greater<tuple<T,int,int>>> queue;
+    vector<unsigned char> visited(n,0);
+    vector<int> parent(n,-1);
+    vector<T> best(n,T(0));
+    vector<pair<long long,long long>> result;
+    auto visit = [&](int u){
+      visited[u] = true;
+      for(int i = h[u]; i != -1; i = nxt[i]){
+        const int v = to[i];
+        if(visited[v]) continue;
+        const T& weight = w[i];
+        const T& current = best[v];
+        if(parent[v] == -1 || tie(weight,u) < tie(current,parent[v])){
+          best[v] = weight;
+          parent[v] = u;
+          queue.emplace(weight,u,v);
+        }
+      }
+    };
+    visit(x);
     T cost = 0;
-    int v_size = 0;
-    while(v_size < n-1){
-      if(que.empty()) break;
-      tuple<T,int,int> t = que.top(); que.pop();
-      T c = get<0>(t); int u1 = get<1>(t), u2 = get<2>(t);
-      if(v[u2]) continue;
-      v_size++;
-      v[u2] = true;
-      cost += c;
-      ret.push_back({u1,u2});
-      for(int i = h[u2]; ~i; i = nxt[i]) if(!v[to[i]]) que.push({w[i],u2,to[i]});
+    while(!queue.empty() && (int)result.size() < n-1){
+      const auto [w,u,v] = queue.top();
+      queue.pop();
+      if(visited[v]) continue;
+      cost += w;
+      result.emplace_back(u,v);
+      visit(v);
     }
-    return {cost,ret};
+    return {cost,move(result)};
   }
 };
 

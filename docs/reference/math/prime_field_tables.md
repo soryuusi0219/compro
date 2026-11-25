@@ -31,9 +31,10 @@ std::uint32_t pow(std::uint32_t x, long long n) const;
 ## 依存関係
 
 - [hash_table.hpp](../data_structure/hash_table.md)
-- [internal_math.hpp](internal_math.md)
+- [internal_math.hpp](internal/internal_math.md)
 - [linear_sieve.hpp](linear_sieve.md)
 - [prime_factorization.hpp](prime_factorization.md)
+- [internal_bit.hpp](internal/internal_bit.md)
 
 ## Verify・利用例
 

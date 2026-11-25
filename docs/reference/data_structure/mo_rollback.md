@@ -4,7 +4,7 @@
 
 ## 機能・前提条件
 
-削除をrollbackで置き換えるMo法。add/del/reset/snapshot/rollback/solve のcallbackを指定する。
+半開区間 `[l,r)` を扱うrollback Mo法。左端のブロックが変わるとresetを呼びます。右端を伸ばす追加はそのブロック内に残し、各回答の前にsnapshotと一時追加、回答の後に一時部分のdelとrollbackをこの順で呼びます。solveに渡すIDは0始まりの登録順です。コンストラクタのqは想定件数で、runは登録済みの区間を処理します。
 
 ## インターフェース
 
@@ -24,7 +24,7 @@ void run(const ADD &add, const DEL &del, const RES& reset, const SNAP &snapshot,
 
 ## 計算量
 
-Q ソート O(Q log Q)、O(N√Q+Q) 回程度の追加・巻き戻し。空間 O(Q) に利用側の状態を加える。
+Q件のソートは O(Q log(Q+1))。ブロック幅bではadd/delの合計が O(Qb+N²/b+N) 回です。これにresetと回答ごとのsnapshot/rollback/solveの処理費用が加わります。空間は O(Q) と利用側の状態です。
 
 ## 依存関係
 

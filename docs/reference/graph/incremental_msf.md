@@ -4,6 +4,8 @@
 
 ## 機能・前提条件
 
+候補を重み順のまま振り分け、連結性による候補除去にも同じ順序を使う。
+
 辺を順に加えた各prefixの最小全域森をオフライン分割統治で求める。辺比較、追加、snapshot、rollback、回答のcallbackを渡す。
 
 ## インターフェース
@@ -25,6 +27,7 @@ void incrementalMSF(int n, const vector<pair<int,int>>& es, auto comp, auto add,
 ## 依存関係
 
 - [dsu_undo.hpp](../data_structure/dsu_undo.md)
+- [internal_bit.hpp](../math/internal/internal_bit.md)
 
 ## Verify・利用例
 

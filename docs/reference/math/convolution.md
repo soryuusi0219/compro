@@ -37,9 +37,10 @@ middle productの変換長は $N$ 以上の最小の2冪で足りる。使用で
 
 ## 依存関係
 
-- [internal_math.hpp](internal_math.md)
-- [modint_traits.hpp](modint_traits.md)
+- [internal_math.hpp](internal/internal_math.md)
+- [modint_traits.hpp](internal/modint_traits.md)
 - [ntt.hpp](ntt.md)
+- [internal_bit.hpp](internal/internal_bit.md)
 
 ## Verify・利用例
 

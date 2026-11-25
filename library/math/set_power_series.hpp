@@ -1,13 +1,13 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/math/set_power_series.hpp
 #pragma once
 #include <algorithm>
-#include <bit>
 #include <cassert>
 #include <cstddef>
 #include <span>
 #include <utility>
 #include <vector>
 
+#include "internal/internal_bit.hpp"
 #include "convolution_subset.hpp"
 #include "modint_factorials.hpp"
 
@@ -20,15 +20,15 @@ struct SetPowerSeries : vector<T>{
   using vector<T>::vector;
   using SPS = SetPowerSeries;
   template<class U> SetPowerSeries(const vector<U>& v){
-    const auto size = std::bit_ceil(v.size());
+    const auto size = soryuusi::bit_ceil(v.size());
     this->reserve(size);
     this->insert(this->end(),v.begin(),v.end());
     this->resize(size);
   }
   SetPowerSeries(vector<T>&& v) : vector<T>(std::move(v)){
-    this->resize(std::bit_ceil(this->size()));
+    this->resize(soryuusi::bit_ceil(this->size()));
   }
-  int dim() const {return this->empty() ? -1 : std::countr_zero(this->size());}
+  int dim() const {return this->empty() ? -1 : soryuusi::countr_zero(this->size());}
 
   friend SPS& operator+=(SPS& x, const SPS& y){
     for(int i = 0; i < (int)(x.size()); ++i) x[i] += y[i];
@@ -57,7 +57,7 @@ struct SetPowerSeries : vector<T>{
   friend SPS operator/(const SPS& x, const SPS& y) {
     if(x.empty()) return SPS(1);
     assert(!y.empty());
-    const auto n = std::bit_ceil(std::max(x.size(),y.size()));
+    const auto n = soryuusi::bit_ceil(std::max(x.size(),y.size()));
     if(y.size() == 1){
       SPS result(x.begin(),x.end());
       result.resize(n);
@@ -141,11 +141,11 @@ private:
 
 public:
   SPS inv() const {
-    assert(std::has_single_bit(this->size()));
+    assert(soryuusi::has_single_bit(this->size()));
     return inverse_blocks<false>();
   }
   SPS exp() const {
-    assert(std::has_single_bit(this->size()) && this->front() == T(0));
+    assert(soryuusi::has_single_bit(this->size()) && this->front() == T(0));
     SPS g(this->size());
     g[0] = T(1);
     const std::span<const T> f(*this);
@@ -158,12 +158,12 @@ public:
     return g;
   }
   SPS log() const {
-    assert(std::has_single_bit(this->size()) && this->front() == T(1));
+    assert(soryuusi::has_single_bit(this->size()) && this->front() == T(1));
     return inverse_blocks<true>();
   }
   SPS pow(int m) const {
     const auto n = this->size();
-    assert(std::has_single_bit(n));
+    assert(soryuusi::has_single_bit(n));
     if(m == 0){
       SPS identity(n);
       identity[0] = T(1);
@@ -188,7 +188,7 @@ public:
     return power_blocks(SPS{constant},T(exponent));
   }
   SPS pow_rational(T m) const {
-    assert(std::has_single_bit(this->size()) && this->front() == T(1));
+    assert(soryuusi::has_single_bit(this->size()) && this->front() == T(1));
     if(m == T(0)) return pow(0);
     if(m == T(1)) return *this;
     if(m == T(2)) return *this * *this;
@@ -199,7 +199,7 @@ public:
 
 template<class T, class Factorials = modint_factorials<T>>
 vector<T> power_projection(const SetPowerSeries<T>& f, const SetPowerSeries<T>& g, int m){
-  assert(m >= 0 && std::has_single_bit(f.size()) && f.size() == g.size());
+  assert(m >= 0 && soryuusi::has_single_bit(f.size()) && f.size() == g.size());
   if(m == 0) return {};
   if(m == 1) return {g.back()};
   const int limit = std::min(f.dim(),m-1);
@@ -254,7 +254,7 @@ vector<T> power_projection(const SetPowerSeries<T>& f, const SetPowerSeries<T>& 
 template<class T>
 SetPowerSeries<T> composition(const vector<T>& F, const SetPowerSeries<T>& f){
   using SPS = SetPowerSeries<T>;
-  assert(std::has_single_bit(f.size()));
+  assert(soryuusi::has_single_bit(f.size()));
   if(F.size() <= 1){
     SPS result(f.size());
     if(!F.empty()) result[0] = F[0];
@@ -288,7 +288,7 @@ SetPowerSeries<T> composition(const vector<T>& F, const SetPowerSeries<T>& f){
   for(std::size_t k = 1; k < f.size(); k <<= 1){
     internal::SubsetConvolution<T> plan(k);
     plan.set_left(std::span<const T>(f).subspan(k,k));
-    const auto remaining = std::min<std::size_t>(g.size(),f.dim()-std::countr_zero(k));
+    const auto remaining = std::min<std::size_t>(g.size(),f.dim()-soryuusi::countr_zero(k));
     for(std::size_t i = 0; i < remaining; ++i){
       g[i].resize(2*k);
       // Lifting by one element applies the next ordinary derivative to the upper half.

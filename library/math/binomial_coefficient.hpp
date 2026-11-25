@@ -1,7 +1,6 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/math/binomial_coefficient.hpp
 #pragma once
 #include <algorithm>
-#include <bit>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -9,7 +8,8 @@
 #include <utility>
 #include <vector>
 
-#include "internal_math.hpp"
+#include "internal/internal_bit.hpp"
+#include "internal/internal_math.hpp"
 #include "prime_factorization.hpp"
 
 namespace soryuusi {
@@ -25,7 +25,7 @@ class BinomialCoefficient {
   public:
     explicit Divider(U32 d)
         : divisor(d), reciprocal(~U64(0)/d+1),
-          shift(std::has_single_bit(d) ? std::countr_zero(d) : -1) {}
+          shift(soryuusi::has_single_bit(d) ? soryuusi::countr_zero(d) : -1) {}
 
     std::pair<U64,U32> split(U64 x) const {
       if(shift >= 0) return {x >> shift,x & (divisor-1)};
@@ -152,13 +152,11 @@ class BinomialCoefficient {
       U32 numerator = 1, denominator = 1;
       for(U64 i = 1; i <= k; ++i){
         U64 a = n-k+i, b = i;
-        for(auto [quotient,remainder] = by_p.split(a); !remainder;
-            std::tie(quotient,remainder) = by_p.split(a)){
+        for(auto [quotient,remainder] = by_p.split(a); !remainder; std::tie(quotient,remainder) = by_p.split(a)){
           a = quotient;
           ++valuation;
         }
-        for(auto [quotient,remainder] = by_p.split(b); !remainder;
-            std::tie(quotient,remainder) = by_p.split(b)){
+        for(auto [quotient,remainder] = by_p.split(b); !remainder; std::tie(quotient,remainder) = by_p.split(b)){
           b = quotient;
           --valuation;
         }
@@ -220,7 +218,7 @@ class BinomialCoefficient {
         return factorial.empty() ? prime_digits<false>(n,k) : prime_digits<true>(n,k);
       }
       if(p == 2){
-        const int valuation = std::popcount(k)+std::popcount(n-k)-std::popcount(n);
+        const int valuation = soryuusi::popcount(k)+soryuusi::popcount(n-k)-soryuusi::popcount(n);
         if(valuation >= exponent) return 0;
         if(!factorial.empty()) return binary_digits(n,k,valuation);
       }

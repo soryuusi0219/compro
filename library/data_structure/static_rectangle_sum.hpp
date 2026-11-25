@@ -10,47 +10,67 @@ using namespace std;
 template<class S, class X = int, class Y = int>
 struct StaticRectangleSum{
   private:
-    struct Query{X x; int idx; Y yl, yr; S w;};
-    vector<Query> query;
-    vector<Y> vy;
-    int q = 0;
+    struct Point { X x; Y y; S w; };
+    struct Query { X xl, xr; Y yl, yr; };
+    struct Event { X x; int index; };
+    struct Range { int l, r; };
+    vector<Point> points;
+    vector<Query> queries;
+    vector<Y> ys;
   public:
     StaticRectangleSum() {}
-    StaticRectangleSum(int n, int q_) {query.reserve(n+q_*2), vy.reserve(n);}
+    StaticRectangleSum(int n, int q) {points.reserve(n); queries.reserve(q); ys.reserve(n);}
     void add_point(X x, Y y, S w){
-      query.emplace_back(x,-1,y,y,w);
-      vy.push_back(y);
+      ys.push_back(y);
+      points.push_back({x,y,w});
     }
     void add_query(X xl, X xr, Y yl, Y yr){
-      query.emplace_back(xl,q << 1,yl,yr,0);
-      query.emplace_back(xr,q << 1 | 1,yl,yr,0);
-      ++q;
+      queries.push_back({xl,xr,yl,yr});
     }
     vector<S> solve(){
-      sort(query.begin(),query.end(),[](const Query& l, const Query& r){
-        return l.x == r.x ? l.idx > r.idx : l.x < r.x;  
-      });
-      sort(vy.begin(),vy.end());
-      vy.erase(unique(vy.begin(),vy.end()),vy.end());
-      int m = vy.size();
-      vector<S> s(m+1, 0), ans(q,0);
-      for(const auto& [x, idx, yl, yr, w] : query){
-        if(~idx){
-          int qid = idx >> 1;
-          bool f = idx & 1;
-          int pl = lower_bound(vy.begin(),vy.end(),yl) - vy.begin();
-          int pr = lower_bound(vy.begin(),vy.end(),yr) - vy.begin();
-          if(f){
-            for(; pl; pl -= pl & -pl) ans[qid] -= s[pl];
-            for(; pr; pr -= pr & -pr) ans[qid] += s[pr];
-          }else{
-            for(; pl; pl -= pl & -pl) ans[qid] += s[pl];
-            for(; pr; pr -= pr & -pr) ans[qid] -= s[pr];
-          }
-        }else{
-          int p = lower_bound(vy.begin(),vy.end(),yl) - vy.begin();
-          for(++p; p <= m; p += p & -p) s[p] += w;
+      vector<S> ans(queries.size(),0);
+      if(points.empty() || queries.empty()) return ans;
+      sort(points.begin(),points.end(),[](const Point& l,const Point& r){ return l.x < r.x; });
+      sort(ys.begin(),ys.end());
+      ys.erase(unique(ys.begin(),ys.end()),ys.end());
+      vector<Range> ranges;
+      vector<Event> events;
+      ranges.reserve(queries.size());
+      events.reserve(queries.size()*2);
+      for(int i = 0; i < static_cast<int>(queries.size()); ++i) {
+        const auto& [xl,xr,yl,yr] = queries[i];
+        int l = lower_bound(ys.begin(),ys.end(),yl)-ys.begin();
+        int r = lower_bound(ys.begin(),ys.end(),yr)-ys.begin();
+        ranges.push_back({l,r});
+        if(l != r && xl < xr) {
+          events.push_back({xl,i*2});
+          events.push_back({xr,i*2+1});
         }
+      }
+      sort(events.begin(),events.end(),[](const Event& l,const Event& r){ return l.x < r.x; });
+      const int n = points.size(), m = ys.size();
+      vector<S> tree(m+1,0);
+      int i = 0;
+      for(const auto& [x,index] : events) {
+        while(i < n && points[i].x < x) {
+          const auto& point = points[i++];
+          int p = lower_bound(ys.begin(),ys.end(),point.y)-ys.begin();
+          for(++p; p <= m; p += p & -p) tree[p] += point.w;
+        }
+        auto [l,r] = ranges[index>>1];
+        // Shared Fenwick ancestors cancel in a difference of two prefixes.
+        S value = 0;
+        while(l != r) {
+          if(l < r) {
+            value += tree[r];
+            r -= r & -r;
+          } else {
+            value -= tree[l];
+            l -= l & -l;
+          }
+        }
+        if(index & 1) ans[index>>1] += value;
+        else ans[index>>1] -= value;
       }
       return ans;
     }

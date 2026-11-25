@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "library/data_structure/Segtree_dual.hpp"
+#include "library/data_structure/segtree_dual.hpp"
 #include "library/math/modint.hpp"
 
 using mint = soryuusi::modint998244353;

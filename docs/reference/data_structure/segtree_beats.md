@@ -32,7 +32,7 @@ int min_left(int r, auto g);
 
 ## 計算量
 
-通常の一点・集約 O(log N)、更新は失敗回数に依存し最悪 O(N)。空間 O(N)。
+内部の葉数は `max(1,n)` 以上の最小の2冪。構築・空間は `O(N)`。一点・区間・境界探索の走査は `O(log(N+1))` で、作用が失敗した場合は追加で訪れるノード数に比例する。任意の作用に対する1回の最悪時間は `O(N)`。保留タグがないノードでは子への伝播処理を省く。
 
 ## 詳細な使用方法
 
@@ -93,8 +93,10 @@ apply(l, r, f) は半開区間 [l, r)、apply(p, f) は1点、all_apply(f) は�
 
 ## 依存関係
 
-標準ライブラリのみ。
+- [segtree_ops.hpp](internal/segtree_ops.md)
+- [internal_bit.hpp](../math/internal/internal_bit.md)
 
 ## Verify・利用例
 
-直接includeするverifyはありません。依存先からの間接利用は `make report` で確認できます。
+- [`unit/linear_segment_trees`](../../../verify/unit/linear_segment_trees.cpp)
+- [`library_checker/range_chmin_chmax_add_range_sum`](../../../verify/library_checker/data_structure/range_chmin_chmax_add_range_sum.cpp)

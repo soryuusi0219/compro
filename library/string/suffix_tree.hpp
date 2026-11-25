@@ -2,13 +2,14 @@
 #pragma once
 #include <algorithm>
 #include <array>
-#include <limits>
 #include <map>
 #include <string>
 #include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
+
+#include "../data_structure/static_rmq.hpp"
 
 namespace soryuusi {
 
@@ -20,64 +21,7 @@ struct SuffixTree{
   using VC = conditional_t<is_same_v<C, char>, string, vector<C>>;
   using maptype = conditional_t<USE_MAP, map<C,int>, array<int,ALPHA>>;
   
-  struct StaticRMQ{
-    static constexpr int b = 3;
-    static constexpr int B = 1 << b;
-    static constexpr int INTMX = numeric_limits<int>::max();
-    int n, m, h;
-    vector<int> data, left_prod, right_prod;
-    vector<vector<int>> sparse_table;
-    StaticRMQ() {};
-    void build(const vector<int>& v){
-      data = v;
-      n = data.size();
-      if(n <= B) return;
-      m = ((n-1) >> b) + 1;
-      left_prod.assign(n+1,INTMX);
-      right_prod.assign(n+1,INTMX);
-      h = 31-__builtin_clz(m);
-      sparse_table.assign(h+1, vector(m+1,INTMX));
-      int temp = INTMX;
-      for(int i = 0; i < n; i++){
-        left_prod[i] = temp;
-        temp = min(temp, data[i]);
-        if(!(~i&(B-1))) sparse_table[0][i >> b] = temp, temp = INTMX;
-      }
-      left_prod[n] = temp;
-      if(n&(B-1)) sparse_table[0][m-1] = temp, temp = INTMX;
-      for(int i = (n&~(B-1))-1; i >= 0; i--){
-        temp = min(data[i], temp);
-        right_prod[i] = temp;
-        if(!(i&(B-1))) temp = INTMX;
-      }
-      sparse_table[0][m] = sparse_table[0][m-1];
-      for(int h0 = 1; h0 <= h; h0++){
-        int i = 1 << h0;
-        for(int j = i; j <= m; j += i << 1){
-          temp = INTMX;
-          for(int k = j-1; k >= j - i; k--) temp = min(sparse_table[0][k], temp), sparse_table[h0][k] = temp;
-          temp = INTMX;
-          for(int k = j; k < min(j + i,m+1); k++) sparse_table[h0][k] = temp, temp = min(temp, sparse_table[0][k]);
-        }
-      }
-      for(int i = 1; i <= m; i += 2) sparse_table[0][i] = INTMX;
-    }
-    inline int naive_prod(int l, int r) const {
-      int res = INTMX;
-      for(int i = l; i < r; i++) res = min(res,data[i]);
-      return res;
-    }
-    int prod(int l, int r) const {
-      if(l >= r) return INTMX;
-      if(r-l <= 8) return naive_prod(l,r);
-      int l1 = (l >> b) + 1;
-      int r1 = r >> b;
-      if(l1 > r1) return naive_prod(l,r);
-      if(l1 == r1) return min(right_prod[l], left_prod[r]);
-      int mid = 31-__builtin_clz(l1^r1);
-      return min({right_prod[l],sparse_table[mid][l1], sparse_table[mid][r1], left_prod[r]});
-    }
-  };
+  using StaticRMQ = soryuusi::StaticRMQ<int,false,32>;
 
   struct Node {
     int l, r, link, term, count, depth;
@@ -92,7 +36,8 @@ struct SuffixTree{
     int n;
     VC s;
     vector<Node> nodes;
-    vector<int> suffix_node, sa, isa, lcp;
+    vector<int> sa, isa, lcp;
+    long long distinct_count = 0;
     StaticRMQ lcpRMQ;
     bool lcp_built = false;
 
@@ -114,7 +59,7 @@ struct SuffixTree{
     }
 
     inline bool walk_down(int next_node, int pos) {
-      int elen = next_node ? min(nodes[next_node].r, pos + 1) - nodes[next_node].l : 0;
+      int elen = min(nodes[next_node].r, pos + 1) - nodes[next_node].l;
       if(active_len >= elen){
         active_e += elen, active_len -= elen, active_node = next_node; 
         return true;
@@ -148,35 +93,66 @@ struct SuffixTree{
         else if(active_node) active_node = nodes[active_node].link != -1 ? nodes[active_node].link : 0;
       }
 
+      build_suffix_index();
+    }
+    void build_suffix_index(){
       int id = 0, dep = 0;
-      auto dfs = [&](auto self, int u, int depth) -> void {
-        nodes[u].count = nodes[u].term;
-        nodes[u].depth = depth;
-        if(nodes[u].term) {
-          suffix_node[n-depth] = u;
+      auto enter = [&](Node& node, int depth){
+        node.count = node.term;
+        node.depth = depth;
+        distinct_count += node.len();
+        if(node.term){
           sa[id] = n - depth;
           isa[n - depth] = id;
           if(id) lcp[id-1] = dep;
           ++id;
           dep = depth;
         }
-        if constexpr (USE_MAP) {
-          for(auto& [_, nxt] : nodes[u].next) if(~nxt) {
-            self(self, nxt, depth + nodes[nxt].len());
-            dep = min(dep,depth);
-            nodes[u].count += nodes[nxt].count;
-          }
-        }
-        else for(int i = 0; i < ALPHA; ++i) {
-          int nxt = nodes[u].next[i];
-          if(~nxt) {
-            self(self, nxt, depth + nodes[nxt].len());
-            dep = min(dep,depth);
-            nodes[u].count += nodes[nxt].count;
-          }
-        }
       };
-      dfs(dfs,0,0);
+      using Cursor = conditional_t<USE_MAP,typename map<C,int>::const_iterator,int>;
+      auto begin = [](const Node& node) -> Cursor {
+        if constexpr (USE_MAP) return node.next.cbegin();
+        else return 0;
+      };
+      auto next_child = [](const Node& node, Cursor& cursor){
+        const auto& edges = node.next;
+        if constexpr (USE_MAP){
+          if(cursor != edges.cend()) return (cursor++)->second;
+        }else{
+          while(cursor < ALPHA){
+            const int child = edges[cursor++];
+            if(child >= 0) return child;
+          }
+        }
+        return -1;
+      };
+      vector<pair<int,Cursor>> stack;
+      Node& root = nodes.front();
+      enter(root,0);
+      if(n == 0) return;
+      stack.emplace_back(0,begin(root));
+      while(!stack.empty()){
+        auto& [u,cursor] = stack.back();
+        auto& node = nodes[u];
+        const int child = next_child(node,cursor);
+        if(child >= 0){
+          auto& edge = nodes[child];
+          enter(edge,node.depth+edge.len());
+          // Open-ended edges are leaves in Ukkonen's construction.
+          if(edge.r != n){
+            stack.emplace_back(child,begin(edge));
+            continue;
+          }
+          node.count += edge.count;
+          dep = min(dep,node.depth);
+        }else{
+          stack.pop_back();
+          if(stack.empty()) break;
+          auto& parent = nodes[stack.back().first];
+          dep = min(dep,parent.depth);
+          parent.count += node.count;
+        }
+      }
     }
     void extend(int pos){
       ++remainder;
@@ -212,18 +188,14 @@ struct SuffixTree{
       }
     }
   public:
-    SuffixTree() : n(0) {build();}
-    SuffixTree(const VC& s_) : n(s_.size()), s(s_), suffix_node(n), sa(n), isa(n), lcp(n-1) {build();}
+    SuffixTree() : SuffixTree(VC{}) {}
+    SuffixTree(const VC& s_) : n(s_.size()), s(s_), sa(n), isa(n), lcp(max(0,n-1)) {build();}
     const vector<Node>& get_nodes() const { return nodes; }
     const Node& get_node(int i) const { return nodes[i]; }
     const vector<int>& suffix_array() const { return sa; }
     const vector<int>& suffix_array_inv() const { return isa; }
     const vector<int>& lcp_array() const { return lcp; }
-    long long distinct_substrings() const {
-      long long res = (long long) n * (n+1) / 2;
-      for(int i = 0; i < n-1; ++i) res -= lcp[i];
-      return res;
-    }
+    long long distinct_substrings() const {return distinct_count;}
     struct State {
       int v, nxt, l;
       State(int v_ = 0, int nxt_ = -1, int l_ = 0) : v(v_), nxt(nxt_), l(l_){}
@@ -299,10 +271,17 @@ struct SuffixTree{
       return {a,b,len};
     }
     template<class U> int count_occurrences(const U& T){
-      State st;
-      for(auto c : T) next_state(st, c);
-      if(state_len(st) < static_cast<int>(T.size())) return 0;
-      return state_count(st);
+      if(n == 0) return 0;
+      int node = 0, left = 0, right = 0;
+      for(C c : T){
+        if(left == right){
+          node = get_next(node,c);
+          if(node == -1) return 0;
+          left = nodes[node].l+1;
+          right = nodes[node].r;
+        }else if(s[left++] != c) return 0;
+      }
+      return nodes[node].count;
     }
     // LCP of S[i,n) and S[j,n);
     int suffix_LCP(int i, int j){

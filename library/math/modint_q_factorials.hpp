@@ -1,13 +1,13 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/math/modint_q_factorials.hpp
 #pragma once
 #include <algorithm>
-#include <bit>
 #include <cassert>
 #include <cstdint>
 #include <vector>
 
-#include "internal_math.hpp"
-#include "modint_traits.hpp"
+#include "internal/internal_bit.hpp"
+#include "internal/internal_math.hpp"
+#include "internal/modint_traits.hpp"
 #include "prime_factorization.hpp"
 
 namespace soryuusi {
@@ -78,7 +78,7 @@ class modint_q_factorials {
   static bool ready(Table& table, Index n, Index end, T base){
     if(n < table.factorial.size()) return true;
     if(n > automatic_limit) return false;
-    const Index target = std::min({end-1,automatic_limit,std::bit_ceil(n+1)-1});
+    const Index target = std::min({end-1,automatic_limit,soryuusi::bit_ceil(n+1)-1});
     table.extend(target,base);
     return true;
   }

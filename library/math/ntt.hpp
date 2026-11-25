@@ -3,7 +3,6 @@
 
 #include <algorithm>
 #include <array>
-#include <bit>
 #include <cassert>
 #include <concepts>
 #include <cstddef>
@@ -24,8 +23,9 @@
 #define SORYUUSI_NTT_X86_SIMD 0
 #endif
 
-#include "internal_math.hpp"
-#include "modint_traits.hpp"
+#include "internal/internal_bit.hpp"
+#include "internal/internal_math.hpp"
+#include "internal/modint_traits.hpp"
 
 namespace soryuusi {
 
@@ -35,7 +35,7 @@ template <class Mint, internal::is_static_modint_like_t<Mint>* = nullptr>
 struct NTTEngine {
     static constexpr int mod = Mint::mod();
     static constexpr int primitive_root = internal::primitive_root<mod>;
-    static constexpr int rank2 = std::countr_zero(static_cast<unsigned int>(mod - 1));
+    static constexpr int rank2 = soryuusi::countr_zero(static_cast<unsigned int>(mod - 1));
 
   private:
     struct FFTInfo {
@@ -89,8 +89,7 @@ struct NTTEngine {
             std::memcpy(&values, p, sizeof(values));
             return values;
         } else {
-            return _mm256_setr_epi32(p[0].val(), p[1].val(), p[2].val(), p[3].val(),
-                                     p[4].val(), p[5].val(), p[6].val(), p[7].val());
+            return _mm256_setr_epi32(p[0].val(), p[1].val(), p[2].val(), p[3].val(), p[4].val(), p[5].val(), p[6].val(), p[7].val());
         }
     }
 
@@ -133,8 +132,7 @@ struct NTTEngine {
             const __m256i even = _mm256_mul_epu32(x, quotient);
             const __m256i odd = _mm256_mul_epu32(_mm256_srli_epi64(x, 32), quotient);
             const __m256i q = _mm256_blend_epi32(_mm256_srli_epi64(even, 32), odd, 0xaa);
-            return reduce32(_mm256_sub_epi32(_mm256_mullo_epi32(x, value),
-                                            _mm256_mullo_epi32(q, _mm256_set1_epi32(mod))));
+            return reduce32(_mm256_sub_epi32(_mm256_mullo_epi32(x, value), _mm256_mullo_epi32(q, _mm256_set1_epi32(mod))));
         }
     };
 
@@ -157,8 +155,7 @@ struct NTTEngine {
 
     template <bool Inverse, bool Unit>
     __attribute__((target("avx2")))
-    static void radix4_avx2(Mint* a0p, Mint* a1p, Mint* a2p, Mint* a3p,
-                           int p, Mint rot, Mint imag) {
+    static void radix4_avx2(Mint* a0p, Mint* a1p, Mint* a2p, Mint* a3p, int p, Mint rot, Mint imag) {
         const Mint rot2 = rot * rot;
         const Shoup32 w1(rot), w2(rot2), w3(rot2 * rot), wi(imag);
         for (int i = 0; i < p; i += 8) {
@@ -210,32 +207,25 @@ struct NTTEngine {
     static __m512i add_mod(__m512i a, __m512i b) {
         const __m512i m = _mm512_set1_epi64(mod);
         __m512i x = _mm512_add_epi64(a, b);
-        return _mm512_mask_sub_epi64(
-            x, _mm512_cmp_epu64_mask(x, m, _MM_CMPINT_NLT), x, m);
+        return _mm512_mask_sub_epi64(x, _mm512_cmp_epu64_mask(x, m, _MM_CMPINT_NLT), x, m);
     }
 
     __attribute__((target("avx512f,avx512dq,avx512vl")))
     static __m512i sub_mod(__m512i a, __m512i b) {
         const __m512i m = _mm512_set1_epi64(mod);
         __m512i x = _mm512_sub_epi64(_mm512_add_epi64(a, m), b);
-        return _mm512_mask_sub_epi64(
-            x, _mm512_cmp_epu64_mask(x, m, _MM_CMPINT_NLT), x, m);
+        return _mm512_mask_sub_epi64(x, _mm512_cmp_epu64_mask(x, m, _MM_CMPINT_NLT), x, m);
     }
 
     // Shoup multiplication.  Both operands are below mod, so one correction
     // after floor(x * floor(w*2^32/mod) / 2^32) is sufficient.
     __attribute__((target("avx512f,avx512dq,avx512vl")))
     static __m512i mul_const(__m512i x, unsigned int w) {
-        const unsigned long long wp =
-            (static_cast<unsigned long long>(w) << 32) / mod;
-        const __m512i q = _mm512_srli_epi64(
-            _mm512_mullo_epi64(x, _mm512_set1_epi64(wp)), 32);
-        __m512i r = _mm512_sub_epi64(
-            _mm512_mullo_epi64(x, _mm512_set1_epi64(w)),
-            _mm512_mullo_epi64(q, _mm512_set1_epi64(mod)));
+        const unsigned long long wp = (static_cast<unsigned long long>(w) << 32) / mod;
+        const __m512i q = _mm512_srli_epi64(_mm512_mullo_epi64(x, _mm512_set1_epi64(wp)), 32);
+        __m512i r = _mm512_sub_epi64(_mm512_mullo_epi64(x, _mm512_set1_epi64(w)), _mm512_mullo_epi64(q, _mm512_set1_epi64(mod)));
         const __m512i m = _mm512_set1_epi64(mod);
-        return _mm512_mask_sub_epi64(
-            r, _mm512_cmp_epu64_mask(r, m, _MM_CMPINT_NLT), r, m);
+        return _mm512_mask_sub_epi64(r, _mm512_cmp_epu64_mask(r, m, _MM_CMPINT_NLT), r, m);
     }
 
     __attribute__((target("avx512f,avx512dq,avx512vl")))
@@ -255,8 +245,7 @@ struct NTTEngine {
     }
 
     __attribute__((target("avx512f,avx512dq,avx512vl")))
-    static void radix4_avx512(Mint* a0p, Mint* a1p, Mint* a2p, Mint* a3p,
-                              int p, Mint rot, Mint imag, bool inverse) {
+    static void radix4_avx512(Mint* a0p, Mint* a1p, Mint* a2p, Mint* a3p, int p, Mint rot, Mint imag, bool inverse) {
         const unsigned int r1 = rot.val();
         const unsigned int r2 = (rot * rot).val();
         const unsigned int r3 = (rot * rot * rot).val();
@@ -285,9 +274,7 @@ struct NTTEngine {
     }
 
     static bool avx512_available() {
-        static const bool available = __builtin_cpu_supports("avx512f") &&
-                                      __builtin_cpu_supports("avx512dq") &&
-                                      __builtin_cpu_supports("avx512vl");
+        static const bool available = __builtin_cpu_supports("avx512f") && __builtin_cpu_supports("avx512dq") && __builtin_cpu_supports("avx512vl");
         return available;
     }
 #endif
@@ -332,18 +319,16 @@ struct NTTEngine {
 
     template <std::random_access_iterator It>
     static constexpr void check(It first, It last) {
-        static_assert(std::same_as<std::remove_cv_t<std::iter_value_t<It>>, Mint>,
-                      "NTTEngine iterator value_type must be Mint");
+        static_assert(std::same_as<std::remove_cv_t<std::iter_value_t<It>>, Mint>, "NTTEngine iterator value_type must be Mint");
         const auto n = last - first;
         assert(n > 0 && (n & (n - 1)) == 0);
         assert(n <= (std::ptrdiff_t{1} << rank2));
     }
 
     template <std::random_access_iterator It>
-    static void ntt_scalar(It first, It last,
-                           [[maybe_unused]] Backend backend) {
+    static void ntt_scalar(It first, It last, [[maybe_unused]] Backend backend) {
         const int n = static_cast<int>(last - first);
-        const int h = std::countr_zero(static_cast<unsigned int>(n));
+        const int h = soryuusi::countr_zero(static_cast<unsigned int>(n));
         int len = 0;
         while (len < h) {
             if (h - len == 1) {
@@ -367,7 +352,7 @@ struct NTTEngine {
                         first[offset + i + p] = l - r;
                     }
                     if (s + 1 != (1 << len)) {
-                        rot *= info.rate2[std::countr_zero(~static_cast<unsigned int>(s))];
+                        rot *= info.rate2[soryuusi::countr_zero(~static_cast<unsigned int>(s))];
                     }
                 }
                 ++len;
@@ -391,17 +376,12 @@ struct NTTEngine {
                     for (; i < p; ++i) {
                         // Keep twiddle products unreduced and normalize only
                         // when writing the four outputs.
-                        const unsigned long long mod2 =
-                            static_cast<unsigned long long>(mod) * mod;
+                        const unsigned long long mod2 = static_cast<unsigned long long>(mod) * mod;
                         const unsigned long long a0 = first[offset + i].val();
-                        const unsigned long long a1 =
-                            static_cast<unsigned long long>(first[offset + i + p].val()) * rot.val();
-                        const unsigned long long a2 =
-                            static_cast<unsigned long long>(first[offset + i + 2 * p].val()) * rot2.val();
-                        const unsigned long long a3 =
-                            static_cast<unsigned long long>(first[offset + i + 3 * p].val()) * rot3.val();
-                        const unsigned long long a1na3imag =
-                            static_cast<unsigned long long>(Mint(a1 + mod2 - a3).val()) * imag.val();
+                        const unsigned long long a1 = static_cast<unsigned long long>(first[offset + i + p].val()) * rot.val();
+                        const unsigned long long a2 = static_cast<unsigned long long>(first[offset + i + 2 * p].val()) * rot2.val();
+                        const unsigned long long a3 = static_cast<unsigned long long>(first[offset + i + 3 * p].val()) * rot3.val();
+                        const unsigned long long a1na3imag = static_cast<unsigned long long>(Mint(a1 + mod2 - a3).val()) * imag.val();
                         const unsigned long long na2 = mod2 - a2;
                         first[offset + i] = a0 + a1 + a2 + a3;
                         first[offset + i + p] = a0 + a2 + 2 * mod2 - a1 - a3;
@@ -409,7 +389,7 @@ struct NTTEngine {
                         first[offset + i + 3 * p] = a0 + na2 + mod2 - a1na3imag;
                     }
                     if (s + 1 != (1 << len)) {
-                        rot *= info.rate3[std::countr_zero(~static_cast<unsigned int>(s))];
+                        rot *= info.rate3[soryuusi::countr_zero(~static_cast<unsigned int>(s))];
                     }
                 }
                 len += 2;
@@ -418,10 +398,9 @@ struct NTTEngine {
     }
 
     template <std::random_access_iterator It>
-    static void intt_scalar(It first, It last,
-                            [[maybe_unused]] Backend backend) {
+    static void intt_scalar(It first, It last, [[maybe_unused]] Backend backend) {
         const int n = static_cast<int>(last - first);
-        const int h = std::countr_zero(static_cast<unsigned int>(n));
+        const int h = soryuusi::countr_zero(static_cast<unsigned int>(n));
         int len = h;
         while (len > 0) {
             if (len == 1) {
@@ -442,11 +421,10 @@ struct NTTEngine {
                         const Mint l = first[offset + i];
                         const Mint r = first[offset + i + p];
                         first[offset + i] = l + r;
-                        first[offset + i + p] =
-                            (static_cast<unsigned long long>(mod) + l.val() - r.val()) * irot.val();
+                        first[offset + i + p] = (static_cast<unsigned long long>(mod) + l.val() - r.val()) * irot.val();
                     }
                     if (s + 1 != (1 << (len - 1))) {
-                        irot *= info.irate2[std::countr_zero(~static_cast<unsigned int>(s))];
+                        irot *= info.irate2[soryuusi::countr_zero(~static_cast<unsigned int>(s))];
                     }
                 }
                 --len;
@@ -472,18 +450,14 @@ struct NTTEngine {
                         const unsigned long long a1 = first[offset + i + p].val();
                         const unsigned long long a2 = first[offset + i + 2 * p].val();
                         const unsigned long long a3 = first[offset + i + 3 * p].val();
-                        const unsigned long long a2na3iimag =
-                            Mint((mod + a2 - a3) * iimag.val()).val();
+                        const unsigned long long a2na3iimag = Mint((mod + a2 - a3) * iimag.val()).val();
                         first[offset + i] = a0 + a1 + a2 + a3;
-                        first[offset + i + p] =
-                            (a0 + mod - a1 + a2na3iimag) * irot.val();
-                        first[offset + i + 2 * p] =
-                            (a0 + a1 + 2ULL * mod - a2 - a3) * irot2.val();
-                        first[offset + i + 3 * p] =
-                            (a0 + 2ULL * mod - a1 - a2na3iimag) * irot3.val();
+                        first[offset + i + p] = (a0 + mod - a1 + a2na3iimag) * irot.val();
+                        first[offset + i + 2 * p] = (a0 + a1 + 2ULL * mod - a2 - a3) * irot2.val();
+                        first[offset + i + 3 * p] = (a0 + 2ULL * mod - a1 - a2na3iimag) * irot3.val();
                     }
                     if (s + 1 != (1 << (len - 2))) {
-                        irot *= info.irate3[std::countr_zero(~static_cast<unsigned int>(s))];
+                        irot *= info.irate3[soryuusi::countr_zero(~static_cast<unsigned int>(s))];
                     }
                 }
                 len -= 2;
@@ -500,7 +474,7 @@ struct NTTEngine {
             spectrum[2 * i] *= rot;
             spectrum[2 * i + 1] *= Mint(0) - rot;
             if (i + 1 != n) {
-                const int index = std::countr_zero(~static_cast<unsigned int>(i));
+                const int index = soryuusi::countr_zero(~static_cast<unsigned int>(i));
                 rot *= Inverse ? info.irate2[index] : info.rate2[index];
             }
         }
@@ -518,7 +492,7 @@ struct NTTEngine {
         const int n = static_cast<int>(spectrum.size() / 2);
         assert(n > 0);
         std::vector<Mint> difference(spectrum.begin() + n, spectrum.end());
-        const int level = std::countr_zero(static_cast<unsigned int>(n));
+        const int level = soryuusi::countr_zero(static_cast<unsigned int>(n));
         intt_unnormalized(difference);
         twist(difference, info.iroot[level + 1], info.inverse_size[level]);
         ntt(difference);
@@ -527,9 +501,9 @@ struct NTTEngine {
 
   public:
     static Mint inverse_size(int length) {
-        assert(length > 0 && std::has_single_bit(static_cast<unsigned int>(length)));
+        assert(length > 0 && soryuusi::has_single_bit(static_cast<unsigned int>(length)));
         assert(length <= (1 << rank2));
-        return info.inverse_size[std::countr_zero(static_cast<unsigned int>(length))];
+        return info.inverse_size[soryuusi::countr_zero(static_cast<unsigned int>(length))];
     }
 
     // Scale any retained part of an unnormalized inverse transform of length n.
@@ -581,9 +555,7 @@ struct NTTEngine {
     template <std::random_access_iterator It>
     static bool can_use_avx512() {
 #if SORYUUSI_NTT_X86_SIMD
-        if constexpr (std::contiguous_iterator<It> && sizeof(Mint) == 4 &&
-                      std::is_trivially_copyable_v<Mint> &&
-                      std::is_standard_layout_v<Mint>) {
+        if constexpr (std::contiguous_iterator<It> && sizeof(Mint) == 4 && std::is_trivially_copyable_v<Mint> && std::is_standard_layout_v<Mint>) {
             return avx512_available();
         }
 #endif
@@ -630,7 +602,7 @@ struct NTTEngine {
     // length-2n transform. The original spectrum contains the even frequencies.
     static void ntt_odd_extend(std::span<Mint> spectrum) {
         check(spectrum.begin(), spectrum.end());
-        const int level = std::countr_zero(static_cast<unsigned int>(spectrum.size()));
+        const int level = soryuusi::countr_zero(static_cast<unsigned int>(spectrum.size()));
         assert(level < rank2);
         if (level == 0) return;
         intt_unnormalized(spectrum);
@@ -650,7 +622,7 @@ struct NTTEngine {
     // Transpose of ntt_odd_extend for the ordinary dot product on spectra.
     static void ntt_odd_extend_transposed(std::span<Mint> spectrum) {
         check(spectrum.begin(), spectrum.end());
-        const int level = std::countr_zero(static_cast<unsigned int>(spectrum.size()));
+        const int level = soryuusi::countr_zero(static_cast<unsigned int>(spectrum.size()));
         assert(level < rank2);
         if (level == 0) return;
         intt_unnormalized(spectrum);
@@ -700,7 +672,7 @@ struct NTTEngine {
             Mint rot = 1;
             for (int i = 0; i < n; ++i) {
                 result[i] = (spectrum[2 * i] - spectrum[2 * i + 1]) * rot;
-                if (i + 1 != n) rot *= info.irate2[std::countr_zero(~static_cast<unsigned int>(i))];
+                if (i + 1 != n) rot *= info.irate2[soryuusi::countr_zero(~static_cast<unsigned int>(i))];
             }
         } else {
             for (int i = 0; i < n; ++i) result[i] = spectrum[2 * i] + spectrum[2 * i + 1];

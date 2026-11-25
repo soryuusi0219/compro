@@ -6,8 +6,9 @@
 #include <cstdint>
 #include <vector>
 
+#include "internal/internal_bit.hpp"
 #include "convolution_mod.hpp"
-#include "modint_traits.hpp"
+#include "internal/modint_traits.hpp"
 #include "ntt.hpp"
 
 namespace soryuusi {
@@ -36,15 +37,14 @@ struct online_convolution {
   static constexpr int ntt_threshold = 32;
 
   static int level(int len) {
-    return __builtin_ctz(static_cast<unsigned int>(len));
+    return soryuusi::countr_zero(static_cast<unsigned int>(len));
   }
 
   static constexpr bool ntt_size_supported(int len) {
     if constexpr (!is_ntt_friendly_v<T>) {
       return false;
     } else {
-      return std::int64_t{2} * len <=
-             (std::int64_t{1} << NTTEngine<T>::rank2);
+      return std::int64_t{2} * len <= (std::int64_t{1} << NTTEngine<T>::rank2);
     }
   }
 
@@ -101,8 +101,7 @@ struct online_convolution {
 
   void calculate_fallback(int la, int lb, int len) {
     if constexpr (internal::is_modint_like_v<T>) {
-      if (len > 60 &&
-          static_cast<std::uint64_t>(T::mod()) <= 2147483647ULL) {
+      if (len > 60 && static_cast<std::uint64_t>(T::mod()) <= 2147483647ULL) {
         vm left(a.begin() + la, a.begin() + la + len);
         vm right(b.begin() + lb, b.begin() + lb + len);
         vm result = convolution_mod(left, right);
@@ -121,8 +120,7 @@ struct online_convolution {
     if (offset >= limit) return;
     const int clipped_len = min(len, limit - offset);
     if constexpr (is_ntt_friendly_v<T>) {
-      if (clipped_len == len && len >= ntt_threshold &&
-          ntt_size_supported(len)) {
+      if (clipped_len == len && len >= ntt_threshold && ntt_size_supported(len)) {
         calculate_ntt(la, lb, len);
         return;
       }

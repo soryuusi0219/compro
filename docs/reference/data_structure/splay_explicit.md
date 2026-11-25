@@ -32,7 +32,7 @@ template<class Key, class S, auto op, auto e,
 using LazyMonotoneSplayExplicit = /* arena manager with lazy key and value actions */;
 ```
 
-管理型：Compareを受け取る構築、Set型、new_set()、new_set(vector<pair<Key,S>>)、allocated_nodes()。初期値はstable sortし、重複不可なら同値キーの最初の値を採用します。
+管理型：Compareを受け取る構築、Set型、new_set()、new_set(vector<pair<Key,S>>)、allocated_nodes()。初期値はCompare順に整列し、同値キーの入力順を保ちます。重複不可なら同値キーの最初の値を採用します。
 
 Setの操作：
 
@@ -86,7 +86,7 @@ Multi=trueで境界が同値でも整列している場合は、そのまま前�
 
 ## 計算量
 
-要素数N。挿入・1要素削除・検索・順位アクセス・区間集約・区間作用・splitは償却 O(log(N+1))。範囲削除は削除数Kを加えます。初期構築は整列込み O(N log(N+1))、clone/to_vectorは O(N)。空の入力との同一arena meldは O(1)。それ以外の同一arena meldはm=min(N,M)に対し保守的に償却 O(m log(N+M+1))、再帰深さ O(log(m+1))。異arenaでは消費元長Mの移送・stable sortに O(M log(M+1)) が追加されます。size/empty/全体集約/clearは O(1)。保持空間はarena全体の確保数Aに対して O(A)、作業領域を加えます。
+要素数N。挿入・1要素削除・検索・順位アクセス・区間集約・区間作用・splitは償却 O(log(N+1))。範囲削除は削除数Kを加えます。初期構築は整列済みなら O(N)、それ以外は O(N log(N+1))。clone/to_vectorは O(N)。空の入力との同一arena meldは O(1)。それ以外の同一arena meldはm=min(N,M)に対し保守的に償却 O(m log(N+M+1))、再帰深さ O(log(m+1))。相互に整列した2集合は境界を確認して1回のjoinで併合します。異arenaからの移送には、消費元長Mに対して移送先の比較順に整列済みなら O(M)、それ以外は O(M log(M+1)) が加わります。size/empty/全体集約/clearは O(1)。保持空間はarena全体の確保数Aに対して O(A)、作業領域を加えます。
 
 キー作用は更新後も境界と整列していれば償却 O(log(N+1))。
 meldが必要なら、更新要素数Kに対して償却 O((1+min(K,N-K)) log(N+1))。

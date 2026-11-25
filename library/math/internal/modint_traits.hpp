@@ -1,4 +1,4 @@
-// https://github.com/soryuusi0219/compro/blob/main/library/math/modint_traits.hpp
+// https://github.com/soryuusi0219/compro/blob/main/library/math/internal/modint_traits.hpp
 #pragma once
 
 #include <cstdint>
@@ -14,10 +14,7 @@ template <class T, class = void>
 struct is_modint_like : std::false_type {};
 
 template <class T>
-struct is_modint_like<
-    T,
-    std::void_t<decltype(T::mod()), decltype(T::raw(0)),
-                decltype(std::declval<const T&>().val())>> : std::true_type {};
+struct is_modint_like<T, std::void_t<decltype(T::mod()), decltype(T::raw(0)), decltype(std::declval<const T&>().val())>> : std::true_type {};
 
 template <class T>
 inline constexpr bool is_modint_like_v = is_modint_like<T>::value;
@@ -29,11 +26,7 @@ template <class T, class = void>
 struct is_static_modint_like : std::false_type {};
 
 template <class T>
-struct is_static_modint_like<
-    T,
-    std::void_t<decltype(std::integral_constant<
-        std::uint64_t, static_cast<std::uint64_t>(T::mod())>{})>>
-    : is_modint_like<T> {};
+struct is_static_modint_like<T, std::void_t<decltype(std::integral_constant<std::uint64_t, static_cast<std::uint64_t>(T::mod())>{})>> : is_modint_like<T> {};
 
 template <class T>
 inline constexpr bool is_static_modint_like_v = is_static_modint_like<T>::value;
@@ -53,13 +46,7 @@ template <class T, class = void>
 struct is_ntt_friendly : std::false_type {};
 
 template <class T>
-struct is_ntt_friendly<
-    T, std::enable_if_t<internal::is_static_modint_like_v<T>>>
-    : std::bool_constant<2 <= T::mod() &&
-                         T::mod() <= std::numeric_limits<int>::max() &&
-                         (static_cast<std::uint64_t>(T::mod() - 1) &
-                          ((std::uint64_t{1} << 20) - 1)) == 0 &&
-                         internal::is_prime_constexpr(static_cast<int>(T::mod()))> {};
+struct is_ntt_friendly<T, std::enable_if_t<internal::is_static_modint_like_v<T>>> : std::bool_constant<2 <= T::mod() && T::mod() <= std::numeric_limits<int>::max() && (static_cast<std::uint64_t>(T::mod() - 1) & ((std::uint64_t{1} << 20) - 1)) == 0 && internal::is_prime_constexpr(static_cast<int>(T::mod()))> {};
 
 template <class T>
 inline constexpr bool is_ntt_friendly_v = is_ntt_friendly<T>::value;

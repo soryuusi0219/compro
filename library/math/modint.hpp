@@ -9,8 +9,8 @@
 #include <cstdint>
 #include <type_traits>
 
-#include "internal_math.hpp"
-#include "modint_traits.hpp"
+#include "internal/internal_math.hpp"
+#include "internal/modint_traits.hpp"
 
 namespace soryuusi {
 
@@ -105,8 +105,7 @@ struct static_modint : internal::static_modint_base {
         return *this;
     }
     constexpr mint& operator*=(const mint& rhs) {
-        _v = static_cast<unsigned int>(
-            static_cast<unsigned long long>(_v) * rhs._v % umod());
+        _v = static_cast<unsigned int>(static_cast<unsigned long long>(_v) * rhs._v % umod());
         return *this;
     }
     constexpr mint& operator/=(const mint& rhs) { return *this *= rhs.inv(); }

@@ -6,6 +6,8 @@
 
 キー固定のwavelet matrixとFenwick tree。重みをaddし位置×値域の和を取得する。
 
+キーは `[0,2^B)`、位置区間は `[l,r)`。整数型ではキーの範囲外の検索値も使える。値域の上下端は数値どおりに比較する。
+
 ## インターフェース
 
 ```cpp
@@ -33,13 +35,15 @@ T prev(int l, int r, T x, T default_value = -1);
 
 ## 計算量
 
-構築 O(NB)、個数・順序統計 O(B)、重み更新・和 O(B log N)、空間 O(NB)。
+構築は最悪 `O(NB)`、個数・順序統計は `O(B)`、値域和は `O(B log(N+1))`。重みの並びが同じ階層はFenwick木を共有する。保持する木の数を `D <= B` とすると、更新は `O(B + D log(N+1))`、空間は `O(ND + B(N/64+1))` ワード。
 
 ## 依存関係
 
 - [bit.hpp](bit.md)
 - [static_bit_vector.hpp](static_bit_vector.md)
+- [wavelet_partition.hpp](internal/wavelet_partition.md)
 
 ## Verify・利用例
 
+- [`unit/static_rank_and_order_statistics`](../../../verify/unit/static_rank_and_order_statistics.cpp)
 - [`library_checker/point_add_rectangle_sum_wavelet_bit`](../../../verify/library_checker/data_structure/point_add_rectangle_sum_wavelet_bit.cpp)

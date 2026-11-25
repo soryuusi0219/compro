@@ -1,9 +1,10 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/area_union_rectangle.hpp
 #pragma once
 #include <algorithm>
-#include <bit>
-#include <iostream>
 #include <vector>
+
+#include "../math/internal/internal_bit.hpp"
+#include "internal/segtree_ops.hpp"
 
 namespace soryuusi {
 
@@ -12,112 +13,78 @@ using namespace std;
 template<class T>
 struct Area_Union_Rectangle{
   private:
-    struct LazySegtree{
-      private:
-        struct S{int mn; T sum;};
-        int n, b, h;
-        vector<S> data;
-        vector<T> y;
-        vector<int> lz;
-        void upd(int k){
-          if(data[k << 1].mn == data[k << 1 | 1].mn) data[k] = {data[k << 1].mn, data[k << 1].sum + data[k << 1 | 1].sum};
-          else if(data[k << 1].mn < data[k << 1 | 1].mn) data[k] = data[k << 1];
-          else data[k] = data[k << 1 | 1];
-        }
-        void act(int k, int f) {
-          data[k].mn += f;
-          if(k < b) lz[k] += f;
-        }
-        void push(int k) {
-          act(k << 1, lz[k]), act(k << 1 | 1, lz[k]);
-          lz[k] = 0;
-        }
-      public:
-        T w;
-        LazySegtree(const vector<T>& y) : n(y.size()-1), w(0) {
-          h = bit_width((unsigned)n - 1), b = 1 << h;
-          data.assign(2 * b, {0,0}), lz.assign(b, 0);
-          for(int i = 0; i < n; i++) data[b + i] = {0,y[i+1] - y[i]};
-          for(int i = b-1; i; --i) upd(i);
-        }
-        void add(int l, int r) {
-          int il = __builtin_ctz(l += b), ir = __builtin_ctz(r += b);
-          for(int i = h; i > il; --i) push(l >> i);
-          for(int i = h; i > ir; --i) push((r - 1) >> i);
+    struct Rectangle { T l, r, d, u; };
+    struct Event { T x; int index; };
+    struct Range { int l, r; };
+    vector<Rectangle> rectangles;
 
-          for(int l2 = l, r2 = r; l2 < r2; l2 >>= 1, r2 >>= 1){
-            if(l2&1){
-              if(!data[l2].mn) w += data[l2].sum;
-              act(l2, 1);
-              ++l2;
-            }
-            if(r2&1){
-              --r2;
-              if(!data[r2].mn) w += data[r2].sum;
-              act(r2, 1);
-            }
-          }
-          for(int i = il + 1; i <= h; ++i) upd(l >> i);
-          for(int i = ir + 1; i <= h; ++i) upd((r - 1) >> i);
-        }
-        void del(int l, int r) {
-          int il = __builtin_ctz(l += b), ir = __builtin_ctz(r += b);
-          for(int i = h; i > il; --i) push(l >> i);
-          for(int i = h; i > ir; --i) push((r - 1) >> i);
+    struct CoverTree {
+      int b, h;
+      vector<int> count;
+      vector<T> length, covered;
 
-          for(int l2 = l, r2 = r; l2 < r2; l2 >>= 1, r2 >>= 1){
-            if(l2&1){
-              act(l2, -1);
-              if(!data[l2].mn) w -= data[l2].sum;
-              ++l2;
-            }
-            if(r2&1){
-              --r2;
-              act(r2, -1);
-              if(!data[r2].mn) w -= data[r2].sum;
-            }
-          }
-          for(int i = il + 1; i <= h; ++i) upd(l >> i);
-          for(int i = ir + 1; i <= h; ++i) upd((r - 1) >> i);
+      explicit CoverTree(const vector<T>& y) : b(soryuusi::bit_ceil(static_cast<unsigned>(y.size()-1))), h(soryuusi::countr_zero(static_cast<unsigned>(b))), count(2*b), length(2*b,T(0)), covered(2*b,T(0)) {
+        for(int i = 1; i < static_cast<int>(y.size()); ++i) length[b+i-1] = y[i]-y[i-1];
+        for(int k = b-1; k; --k) length[k] = length[k<<1]+length[k<<1|1];
+      }
+
+      void pull(int k) {
+        if(count[k]) covered[k] = length[k];
+        else if(k < b) covered[k] = covered[k<<1]+covered[k<<1|1];
+        else covered[k] = T(0);
+      }
+
+      void change(int l, int r, int delta) {
+        l += b;
+        r += b;
+        internal::SegtreeBoundary boundary(l,r,h);
+        auto update = [&](int k){ count[k] += delta; pull(k); };
+        for(; l < r; l >>= 1, r >>= 1) {
+          if(l & 1) update(l++);
+          if(r & 1) update(--r);
         }
-        // void print(){
-        //   for(auto [mn,sum] : data) cout << "(" << mn << "," << sum << ") ";
-        //   cout << w << endl;
-        // }
+        boundary.pull([&](int k){ pull(k); });
+      }
     };
-    struct Query{
-      T x, yl, yr;
-      bool f;
-    };
-    vector<T> vy;
-    vector<Query> query;
+
   public:
     Area_Union_Rectangle(){}
-    Area_Union_Rectangle(int q){query.reserve(q*2); vy.reserve(q*2);}
+    Area_Union_Rectangle(int q){rectangles.reserve(q);}
     void add(T l, T r, T d, T u){
-      query.emplace_back(l,d,u,true);
-      query.emplace_back(r,d,u,false);
-      vy.push_back(d);
-      vy.push_back(u);
+      if(l < r && d < u) rectangles.push_back({l,r,d,u});
     }
     T area(){
-      if(query.empty()) return T(0);
-      sort(query.begin(),query.end(),[](const Query&l, const Query&r){return l.x < r.x;});
-      sort(vy.begin(),vy.end());
-      vy.erase(unique(vy.begin(),vy.end()),vy.end());
-      if(vy.size() < 2) return T(0);
-      LazySegtree seg(vy);
-      T prevx = query[0].x;
-      T ans = 0;
-      for(auto [x,yl,yr,f] : query){
-        ans += (x - prevx) * seg.w;
-        prevx = x;
-        int l = lower_bound(vy.begin(),vy.end(),yl) - vy.begin();
-        int r = lower_bound(vy.begin(),vy.end(),yr) - vy.begin();
-        if(f) seg.add(l,r);
-        else seg.del(l,r);
+      if(rectangles.empty()) return T(0);
+      vector<T> y;
+      y.reserve(rectangles.size()*2);
+      for(const auto& rect : rectangles) {
+        y.push_back(rect.d);
+        y.push_back(rect.u);
       }
-      return ans;
+      sort(y.begin(),y.end());
+      y.erase(unique(y.begin(),y.end()),y.end());
+      vector<Range> ranges;
+      vector<Event> events;
+      ranges.reserve(rectangles.size());
+      events.reserve(rectangles.size()*2);
+      for(int i = 0; i < static_cast<int>(rectangles.size()); ++i) {
+        const auto& [l,r,d,u] = rectangles[i];
+        int low = lower_bound(y.begin(),y.end(),d)-y.begin();
+        int high = lower_bound(y.begin(),y.end(),u)-y.begin();
+        ranges.push_back({low,high});
+        events.push_back({l,i*2});
+        events.push_back({r,i*2+1});
+      }
+      sort(events.begin(),events.end(),[](const Event& a,const Event& b){ return a.x < b.x; });
+      CoverTree tree(y);
+      T last = events[0].x, answer = 0;
+      for(const auto& [x,index] : events) {
+        answer += (x-last)*tree.covered[1];
+        last = x;
+        auto [low,high] = ranges[index>>1];
+        tree.change(low,high,(index & 1) ? -1 : 1);
+      }
+      return answer;
     }
 };
 

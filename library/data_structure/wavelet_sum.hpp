@@ -1,10 +1,12 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/wavelet_sum.hpp
 #pragma once
-#include <iterator>
+#include <limits>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 #include "static_bit_vector.hpp"
+#include "internal/wavelet_partition.hpp"
 
 namespace soryuusi {
 
@@ -15,27 +17,42 @@ struct Wavelet_Sum{
   private:
     int n;
     int z[B];
+    int aggregate[B];
     StaticBitVector data[B];
-    vector<U> val[B+1];
+    vector<U> val[B];
   public:
     Wavelet_Sum(vector<T> v, const vector<U>& w) : n(v.size()) {
-      vector<T> nv;
-      nv.reserve(n);
-      val[B].reserve(n+1);
-      val[B] = {0};
-      val[B].insert(val[B].end(), w.begin(), w.end());
-      for(int k = B-1; k >= 0; k--) {
-        data[k].build(n);
-        val[k].reserve(n+1);
-        val[k] = {0};
-        nv.clear();
-        for(int i = 0; i < n; i++) if(!((v[i] >> k) & 1)) nv.push_back(v[i]), val[k].push_back(val[k+1][i+1]);
-        z[k] = nv.size();
-        for(int i = 0; i < n; i++) if((v[i] >> k) & 1) data[k].set(i), nv.push_back(v[i]), val[k].push_back(val[k+1][i+1]);
-        data[k].init();
-        v.swap(nv);
+      internal::WaveletPartition<T> partition(v);
+      const vector<U>* weights = &w;
+      int slot = -1;
+      for(int k = B-1; k >= 0; --k) {
+        auto& next = val[k];
+        int offset = slot < 0 ? 0 : 1;
+        z[k] = partition.split(v,k,data[k],[&](int i){
+          if(next.empty()) {
+            next.reserve(n+1);
+            next.push_back(0);
+          }
+          next.push_back((*weights)[i+offset]);
+        });
+        if(z[k] == 0 || z[k] == n) {
+          if(slot >= 0) {
+            aggregate[k] = slot;
+            continue;
+          }
+          next.reserve(n+1);
+          next.push_back(0);
+          next.insert(next.end(),w.begin(),w.end());
+        }
+        if(slot >= 0) {
+          auto& prefix = val[slot];
+          for(int i = 0; i < n; ++i) prefix[i+1] += prefix[i];
+        }
+        slot = aggregate[k] = k;
+        weights = &next;
       }
-      for(int k = 0; k < B; k++) for(int i = 0; i < n; i++) val[k][i+1] += val[k][i];
+      auto& prefix = val[slot];
+      for(int i = 0; i < n; ++i) prefix[i+1] += prefix[i];
     }
 
     T get(int i){
@@ -50,7 +67,11 @@ struct Wavelet_Sum{
     }
 
     int rank(int l, int r, T x){
-      for(int k = B-1; k >= 0; k--){
+      if constexpr(std::is_signed_v<T>) if(x < 0) return 0;
+      if constexpr(std::is_integral_v<T> && B < std::numeric_limits<T>::digits) {
+        if(x >> B) return 0;
+      }
+      for(int k = B-1; k >= 0 && l < r; k--){
         int l0 = data[k].rank0(l), r0 = data[k].rank0(r);
         if((x >> k) & 1) l += z[k] - l0, r += z[k] - r0;
         else l = l0, r = r0;
@@ -59,12 +80,16 @@ struct Wavelet_Sum{
     }
 
     U sum_with_val(int l, int r, T x){
-      for(int k = B-1; k >= 0; k--){
+      if constexpr(std::is_signed_v<T>) if(x < 0) return U(0);
+      if constexpr(std::is_integral_v<T> && B < std::numeric_limits<T>::digits) {
+        if(x >> B) return U(0);
+      }
+      for(int k = B-1; k >= 0 && l < r; k--){
         int l0 = data[k].rank0(l), r0 = data[k].rank0(r);
         if((x >> k) & 1) l += z[k] - l0, r += z[k] - r0;
         else l = l0, r = r0;
       }
-      return val[0][r]-val[0][l];
+      return val[aggregate[0]][r]-val[aggregate[0]][l];
     }
 
     T range_kth(int l, int r, int x){
@@ -79,8 +104,14 @@ struct Wavelet_Sum{
     }
 
     int count_lt(int l, int r, T x){
+      if constexpr(std::is_integral_v<T>) {
+        if(x <= 0) return 0;
+        if constexpr(B < std::numeric_limits<T>::digits) {
+          if(x >> B) return r-l;
+        }
+      }
       int res = 0;
-      for(int k = B-1; k >= 0; k--){
+      for(int k = B-1; k >= 0 && l < r; k--){
         int l0 = data[k].rank0(l), r0 = data[k].rank0(r);
         if((x >> k) & 1) res += r0 - l0, l += z[k] - l0, r += z[k] - r0;
         else l = l0, r = r0;
@@ -89,10 +120,22 @@ struct Wavelet_Sum{
     }
 
     U sum_lt(int l, int r, T x){
+      if constexpr(std::is_integral_v<T>) {
+        if(x <= 0) return U(0);
+        if constexpr(B < std::numeric_limits<T>::digits) {
+          if(x >> B) {
+            int l0 = data[B-1].rank0(l), r0 = data[B-1].rank0(r);
+            const auto& prefix = val[aggregate[B-1]];
+            U total = prefix[r0]-prefix[l0];
+            total += prefix[z[B-1]+r-r0]-prefix[z[B-1]+l-l0];
+            return total;
+          }
+        }
+      }
       U res = 0;
-      for(int k = B-1; k >= 0; k--){
+      for(int k = B-1; k >= 0 && l < r; k--){
         int l0 = data[k].rank0(l), r0 = data[k].rank0(r);
-        if((x >> k) & 1) res += val[k][r0] - val[k][l0], l += z[k] - l0, r += z[k] - r0;
+        if((x >> k) & 1) res += val[aggregate[k]][r0] - val[aggregate[k]][l0], l += z[k] - l0, r += z[k] - r0;
         else l = l0, r = r0;
       }
       return res;

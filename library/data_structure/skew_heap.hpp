@@ -120,11 +120,13 @@ class PersistentSkewHeap {
     Node* result;
     Node** next = &result;
     while(a.node && b.node){
-      if(b.node->key + b.offset < a.node->key + a.offset) std::swap(a,b);
+      Key key = a.node->key + a.offset;
+      Key other = b.node->key + b.offset;
+      if(other < key){std::swap(a,b); key = std::move(other);}
       const Node& p = *a.node;
       Key pending = p.lazy + a.offset;
       Node* left = add_copy({p.right,pending});
-      Node* copy = pool.create(left,nullptr,p.key + a.offset,Key{},p.value);
+      Node* copy = pool.create(left,nullptr,std::move(key),Key{},p.value);
       *next = copy;
       next = &copy->right;
       a = {p.left,pending};
@@ -155,6 +157,7 @@ public:
   }
   [[nodiscard]] Root push(Root p, Key key, Value value = {}){
     Node* old = pool.get(p.root);
+    if(!old || key < old->key) return Root(pool.root(pool.create(nullptr,old,std::move(key),Key{},std::move(value))),p.count+1);
     Node* node = pool.create(nullptr,nullptr,std::move(key),Key{},std::move(value));
     return Root(pool.root(meld_nodes({old,Key{}},{node,Key{}})),p.count+1);
   }

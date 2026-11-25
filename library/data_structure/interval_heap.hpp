@@ -17,11 +17,11 @@ struct Interval_Heap{
   Interval_Heap(){};
   Interval_Heap(const vector<T> &v, Compare comp_ = Compare()) : data(v), comp(comp_){
     n = data.size();
-	  make_heap();
+    make_heap();
   }
   template<class Iter> Interval_Heap(Iter first, Iter last, Compare comp_ = Compare()) : data(first, last), comp(comp_){
     n = data.size();
-	  make_heap();
+    make_heap();
   }
   bool empty(){return !n;}
   int size(){return n;}
@@ -37,7 +37,7 @@ struct Interval_Heap{
     for(int i = n-1; i >= 0; i--){
       if(i & 1 && comp(data[i-1],data[i])) swap(data[i-1],data[i]);
       int k = down(i);
-      up(k, i);
+      if(k != i) up(k,i);
     }
   }
   void pop_min(){

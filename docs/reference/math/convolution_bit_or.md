@@ -25,7 +25,7 @@ vector<T> convolution_bitor(vector<T> a,vector<T> b);
 
 ## 依存関係
 
-標準ライブラリのみ。
+- [internal_bit.hpp](internal/internal_bit.md)
 
 ## Verify・利用例
 

@@ -6,6 +6,8 @@
 
 更新座標を先に登録する疎Fenwick tree。add_point → build → add/sum の順に利用する。
 
+`build()` は重複座標を一つにまとめ、各座標の値を0にする。`add` は登録座標に対して呼ぶ。`sum(x)` は `x` 未満の座標、`sum(l,r)` は `[l,r)` 内の座標を集計する。
+
 ## インターフェース
 
 ```cpp
@@ -36,5 +38,6 @@ build O(N log N)、更新・和 O(log N)、空間 O(N)。
 
 ## Verify・利用例
 
+- [`unit/linear_segment_trees`](../../../verify/unit/linear_segment_trees.cpp)
 - [`library_checker/point_add_range_sum_bit_sparse`](../../../verify/library_checker/data_structure/point_add_range_sum_bit_sparse.cpp)
 - [`unit/data_structure_misc`](../../../verify/unit/data_structure_misc.cpp)

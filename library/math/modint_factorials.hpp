@@ -9,8 +9,8 @@
 #include <utility>
 #include <vector>
 
-#include "internal_math.hpp"
-#include "modint_traits.hpp"
+#include "internal/internal_math.hpp"
+#include "internal/modint_traits.hpp"
 
 namespace soryuusi {
 

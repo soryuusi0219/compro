@@ -4,7 +4,7 @@
 
 ## 機能・前提条件
 
-根付き・根なし木の同型判定。子の型IDをソートし共有辞書で同型を分類する。
+根付き・根なし木の同型判定。子の型IDをソートし共有辞書で同型を分類する。深い木も反復走査で処理し、子の型IDの作業領域を使い回す。
 
 ## インターフェース
 
@@ -34,3 +34,4 @@ bool is_tree_isom(const vector<vector<long long>>& t1, const vector<vector<long 
 ## Verify・利用例
 
 - [`library_checker/rooted_tree_isomorphism_classification`](../../../verify/library_checker/tree/rooted_tree_isomorphism_classification.cpp)
+- [`unit/tree_algorithms`](../../../verify/unit/tree_algorithms.cpp)

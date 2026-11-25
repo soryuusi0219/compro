@@ -38,7 +38,7 @@ assert(lis.query(2,2) == 0);
 
 ## 計算量
 
-Nを配列長、Bを内部wavelet matrixのbit幅（現在31）とします。
+Nを配列長、Bを内部wavelet matrixのbit幅 `bit_width(N)` とします。入力がCompare順で単調非減少、または狭義単調減少の場合は、O(N) の走査だけで構築し、O(1) で回答します。
 
 - 前処理: `O(N log² N + NB)` 時間。seaweedの分割統治を行います。
 - 問い合わせ: `O(B)` 時間（添字幅に合わせる通常の評価では `O(log N)`）。空区間は `O(1)`。
@@ -48,7 +48,9 @@ Nを配列長、Bを内部wavelet matrixのbit幅（現在31）とします。
 
 ## 依存関係
 
-- [wavelet.hpp](wavelet.md)
+- [internal_bit.hpp](../math/internal/internal_bit.md)
+- [internal/wavelet_partition.hpp](internal/wavelet_partition.md)
+- [static_bit_vector.hpp](static_bit_vector.md)
 
 ## Verify・利用例
 

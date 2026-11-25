@@ -1,10 +1,10 @@
 #include <cassert>
-#include <bit>
 #include <limits>
 #include <random>
 
 #include "library/math/formal_power_series.hpp"
 #include "library/math/modint.hpp"
+#include "library/math/internal/internal_bit.hpp"
 
 namespace {
 
@@ -153,7 +153,7 @@ void shortest_recurrences(){
       for(auto c : recurrence) mask = (mask << 1)|c.val();
       auto fits = [=](int order, unsigned int coefficients){
         for(int i = order; i < n; ++i)
-          if((std::popcount((bits >> (i-order))&coefficients)&1) != ((bits >> i)&1)) return false;
+          if((soryuusi::popcount((bits >> (i-order))&coefficients)&1) != ((bits >> i)&1)) return false;
         return true;
       };
       assert(d <= n && fits(d,mask));

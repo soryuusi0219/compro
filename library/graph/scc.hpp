@@ -13,7 +13,7 @@ using namespace std;
 
 struct SCC{
   private:
-    int n;
+    int n = 0;
     static_graph<> G;
   public:
     SCC() {}
@@ -24,48 +24,43 @@ struct SCC{
     }
     pair<int,vector<int>> scc_ids(){
       G.build();
-      vector<int> ids(n,-1);
-      vector<int> recst, st, ord(n,-1), low(n,-1), par(n,-1);
-      recst.reserve(n);
-      st.reserve(n);
-      int k = 0, g = 0;
-      for(int i = 0; i < n; ++i) if(!~ord[i]){
-        recst.push_back(i);
-        int p = -1;
-        st.push_back(i);
-        while(recst.size()){
-          int v = recst.back();
-          if(v >= 0){
-            if(~ord[v]){
-              if(!~ids[v]) low[p] = min(low[p], ord[v]);
-              recst.pop_back();
-            }else{
-              recst.back() -= n;
-              low[v] = ord[v] = k++;
-              par[v] = p;
-              p = v;
-              st.push_back(v);
-              for(int c : G.vertices(v)) recst.push_back(c);
-            }
-          }else{
-            recst.pop_back();
-            v += n;
-            if(low[v] == ord[v]){
-              ids[v] = g;
-              while(st.back() != v){
-                ids[st.back()] = g;
-                st.pop_back();
-              }
-              st.pop_back();
-              ++g;
-            }
-            p = par[v];
-            if(~p) low[p] = min(low[p], low[v]);
+      vector<int> ids(n,-1), ord(n,-1), active;
+      struct Frame{int vertex, next, begin, low;};
+      vector<Frame> stack;
+      active.reserve(n);
+      int index = 0, groups = 0;
+      auto enter = [&](int v){
+        ord[v] = index++;
+        active.push_back(v);
+        stack.push_back({v,G.start[v+1],G.start[v],ord[v]});
+      };
+      for(int root = 0; root < n; ++root) if(ord[root] == -1){
+        enter(root);
+        while(!stack.empty()){
+          auto& [v,next,begin,low] = stack.back();
+          if(next != begin){
+            const int to = G.es[--next].to;
+            if(ord[to] == -1) enter(to);
+            else low = min(low,ord[to]);
+            continue;
           }
+          if(low == ord[v]){
+            int member;
+            do {
+              member = active.back();
+              active.pop_back();
+              ids[member] = groups;
+              ord[member] = n;
+            } while(member != v);
+            ++groups;
+          }
+          const int subtree_low = low;
+          stack.pop_back();
+          if(!stack.empty()) stack.back().low = min(stack.back().low,subtree_low);
         }
       }
-      for(auto& i : ids) i = g-i-1;
-      return {g,ids};
+      for(int& id : ids) id = groups-id-1;
+      return {groups,move(ids)};
     }
     vector<vector<int>> scc(){
       auto [g,ids] = scc_ids();
@@ -81,7 +76,7 @@ struct SCC{
         sort(v.begin(), v.end());
         v.erase(unique(v.begin(), v.end()), v.end());
       }
-      return {g,graph,ids};
+      return {g,move(graph),move(ids)};
     }
 };
 

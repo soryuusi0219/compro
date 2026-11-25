@@ -4,7 +4,7 @@
 
 ## 機能・前提条件
 
-固定文字集合またはmapを使うsuffix tree。suffix array/LCP、異なる部分文字列数、文字列の探索状態を提供する。
+固定文字集合またはmapを使うsuffix tree。suffix array/LCP、異なる部分文字列数、文字列の探索状態を提供する。空の文字列からも構築できる。suffix arrayとLCPの構築では、明示的なスタックで木をたどる。
 
 ## インターフェース
 
@@ -19,9 +19,9 @@ template<class C = char, C MIN_CHARCTER = 'a', C MAX_CHARCTER = 'z', bool USE_MA
 struct SuffixTree;
 using VC = conditional_t<is_same_v<C, char>, string, vector<C>>;
 using maptype = conditional_t<USE_MAP, map<C,int>, array<int,ALPHA>>;
-struct StaticRMQ;
+using StaticRMQ = soryuusi::StaticRMQ<int,false,32>;
 StaticRMQ();
-void build(const vector<int>& v);
+void build(vector<int> v);
 inline int naive_prod(int l, int r) const;
 int prod(int l, int r) const;
 struct Node;
@@ -50,11 +50,13 @@ int suffix_LCP(int i, int j);
 
 ## 計算量
 
-固定文字種Σで構築 O(NΣ) を上界とする。map版は遷移ごと O(log Σ)。空間 O(NΣ) または O(N)。
+固定文字種Σで構築 O(NΣ) を上界とする。map版は遷移ごと O(log Σ)。空間 O(NΣ) または O(N)。`distinct_substrings()` は O(1)。`count_occurrences()` は圧縮辺を直接たどり、最初の不一致で終了する。
+
+`suffix_LCP` は初回にLCP配列から幅32の静的RMQを構築し、以降は $O(1)$。
 
 ## 依存関係
 
-標準ライブラリのみ。
+- [static_rmq.hpp](../data_structure/static_rmq.md)
 
 ## Verify・利用例
 

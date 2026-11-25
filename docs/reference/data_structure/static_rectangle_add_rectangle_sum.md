@@ -6,6 +6,8 @@
 
 長方形加算と長方形和を全て登録してsolveするオフライン処理。半開座標区間を使う。
 
+Y座標を圧縮し、Fenwick木に長方形の寄与を表すXY・Y・X・定数の4係数を保持する。端点の係数を集約してから座標を代入する。`solve()` の答えは質問の登録順。
+
 ## インターフェース
 
 ```cpp
@@ -34,4 +36,5 @@ vector<S> solve();
 
 ## Verify・利用例
 
+- [`unit/rectangle_queries`](../../../verify/unit/rectangle_queries.cpp)
 - [`library_checker/static_rectangle_add_rectangle_sum`](../../../verify/library_checker/data_structure/static_rectangle_add_rectangle_sum.cpp)

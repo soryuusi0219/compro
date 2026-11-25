@@ -32,7 +32,7 @@ constexpr INT floor_sum(INT n, INT m, INT a, INT b);
 
 ## 依存関係
 
-- [internal_math.hpp](internal_math.md)
+- [internal_math.hpp](internal/internal_math.md)
 
 ## Verify・利用例
 

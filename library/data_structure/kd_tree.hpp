@@ -1,10 +1,12 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/kd_tree.hpp
 #pragma once
 #include <algorithm>
-#include <numeric>
+#include <cstddef>
 #include <type_traits>
 #include <utility>
 #include <vector>
+
+#include "internal/kd_tree_builder.hpp"
 
 namespace soryuusi {
 
@@ -26,59 +28,47 @@ struct KDTree{
     vector<node> data;
     void _update(int i){data[i].val = op(data[i << 1].val,data[i << 1 | 1].val);}
 
-    static bool comp_x(const Point &p1, const Point &p2) { return p1.first < p2.first; }
-    static bool comp_y(const Point &p1, const Point &p2) { return p1.second < p2.second; }
-    static Point maxp(const Point &p1, const Point &p2) { return {max(p1.first, p2.first), max(p1.second, p2.second)}; }
-    static Point minp(const Point &p1, const Point &p2) { return {min(p1.first, p2.first), min(p1.second, p2.second)}; }
-
-    int n;
-    int b;
+    int n = 0;
     vector<Point> pts;
     vector<int> ref;
-
-    template<bool xy>
-    void _build_rec(int l, int r, int id, const vector<S>& v, vector<int>& ids){
-      if(r - l <= 1) {
-        data[id] = node{pts[ids[l]],pts[ids[l]],v[ids[l]]};
-        ref[ids[l]] = id;
-        return;
-      }
-      int m = (l+r) >> 1;
-      nth_element(ids.begin()+l,ids.begin()+m,ids.begin()+r,[&](int i, int j){
-        if constexpr (xy) return pts[i].first < pts[j].first;
-        else return pts[i].second < pts[j].second;
-      });
-      _build_rec<!xy>(l,m,id << 1, v, ids);
-      _build_rec<!xy>(m,r,id << 1 | 1, v, ids);
-      data[id].val = op(data[id << 1].val,data[id << 1 | 1].val);
-      data[id].s = minp(data[id << 1].s,data[id << 1 | 1].s);
-      data[id].t = maxp(data[id << 1].t,data[id << 1 | 1].t);
-    }
+    vector<S> initial;
 
   public:
     KDTree(){}
     KDTree(int n_){pts.reserve(n_);}
     KDTree(const vector<Point>& pts_) : pts(pts_) {}
     int add_point(X x, Y y, S v = e()){
+      if(initial.size() != pts.size()) initial.resize(pts.size(),e());
+      initial.push_back(v);
       pts.emplace_back(x,y);
       return pts.size()-1;
     }
     
-    void build(){build(vector<S>(pts.size(),e()));}
+    void build(){
+      if(initial.empty()) build(vector<S>(pts.size(),e()));
+      else build(initial);
+    }
     void build(const vector<S>& v){
       n = pts.size();
-      b = 1; while(b < n) b <<= 1;
-      data.resize(b*2);
+      data.resize(size_t(n)*2);
       ref.resize(n);
-      vector<int> ids(n);
-      iota(ids.begin(),ids.end(),0);
-      _build_rec<true>(0,n,1,v,ids);
+      internal::KDTreeBuilder<X,Y>(pts).build([&](int i,int p){
+        data[i] = node{pts[p],pts[p],v[p]};
+        ref[p] = i;
+      },[&](int i){
+        const auto& left = data[i<<1];
+        const auto& right = data[i<<1|1];
+        data[i].s = {min(left.s.first,right.s.first),min(left.s.second,right.s.second)};
+        data[i].t = {max(left.t.first,right.t.first),max(left.t.second,right.t.second)};
+        _update(i);
+      });
     }
 
     void set(int i, S x){for(data[i = ref[i]].val = x; i >>= 1;)  _update(i);}
     S get(int i) const {return data[ref[i]].val;}
 
     S prod(X xmn, X xmx, Y ymn, Y ymx){
+      if(!n || !(xmn < xmx) || !(ymn < ymx)) return e();
       auto rec = [&](int i, auto self) -> S {
         if(data[i].t.first < xmn || xmx <= data[i].s.first || data[i].t.second < ymn || ymx <= data[i].s.second) return e();
         if(xmn <= data[i].s.first && data[i].t.first < xmx && ymn <= data[i].s.second && data[i].t.second < ymx) return data[i].val;

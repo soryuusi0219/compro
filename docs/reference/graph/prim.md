@@ -4,7 +4,7 @@
 
 ## 機能・前提条件
 
-無向重み付きグラフの最小全域木。solve(x)は重み和と選んだ辺を返す。対象成分が全頂点を含む入力で利用する。
+無向重み付きグラフの最小全域木。solve(x)は重み和と選んだ辺を返す。頂点 `x` を含む連結成分を処理し、各未確定頂点の候補辺が改善されたときだけヒープへ追加する。
 
 ## インターフェース
 
@@ -33,3 +33,4 @@ O((V+E) log E) 時間、O(V+E) 空間。
 ## Verify・利用例
 
 - [`library_checker/minimum_spanning_tree`](../../../verify/library_checker/graph/minimum_spanning_tree.cpp)
+- [`unit/graph_algorithms`](../../../verify/unit/graph_algorithms.cpp)

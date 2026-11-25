@@ -1,8 +1,9 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/segtree.hpp
 #pragma once
-#include <bit>
 #include <type_traits>
 #include <vector>
+
+#include "../math/internal/internal_bit.hpp"
 
 namespace soryuusi {
 
@@ -18,23 +19,24 @@ struct Segtree{
     void _update(int i){data[i] = op(data[i << 1],data[i << 1 | 1]);}
   public:
     Segtree(){}
-    Segtree(int n_) : n(n_), b(1<<bit_width((unsigned)n)), data(b*2,e()){}
-    Segtree(vector<S> v) : n(v.size()), b(1<<bit_width((unsigned)n)), data(b*2,e()){
+    Segtree(int n_) : n(n_), b(soryuusi::bit_ceil(static_cast<unsigned>(n))), data(b*2,e()){}
+    Segtree(vector<S> v) : n(v.size()), b(soryuusi::bit_ceil(static_cast<unsigned>(n))), data(b*2,e()){
       for(int i = 0; i < n; ++i) data[b+i] = v[i];
       for(int i = b-1; i; --i) _update(i);
     }
     void set(int i, S a){
-      for(data[i += b] = a; i >>= 1;) _update(i);
+      data[i += b] = a;
+      while(i >>= 1) _update(i);
     }
     void reset(int i){ set(i,e());}
     S get(int i){return data[i + b];}
     S prod(int l, int r){
-      S resl = e(), resr = e();
-      for(l += b, r += b; l < r; l >>= 1, r >>= 1){
-        if(l&1) resl = op(resl, data[l++]);
-        if(r&1) resr = op(data[--r], resr);
+      S left = e(), right = e();
+      for(l += b, r += b; l < r; l >>= 1, r >>= 1) {
+        if(l & 1) left = op(left,data[l++]);
+        if(r & 1) right = op(data[--r],right);
       }
-      return op(resl,resr);
+      return op(left,right);
     }
     S all_prod(){return data[1];}
 

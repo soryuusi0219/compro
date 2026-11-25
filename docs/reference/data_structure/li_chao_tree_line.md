@@ -17,9 +17,9 @@ Li Chao treeで使う直線型 `Line<T>{a,b}` と無限大直線 `INF_Line<T,inf
 ```cpp
 template<class T>
 struct Line;
-T get(T x);
+constexpr T get(T x);
 template<class T, T infinity>
-Line<T> INF_Line();
+constexpr Line<T> INF_Line();
 ```
 
 ## 計算量
@@ -32,4 +32,4 @@ Line<T> INF_Line();
 
 ## Verify・利用例
 
-直接includeするverifyはありません。依存先からの間接利用は `make report` で確認できます。
+- [`unit/sparse_structures`](../../../verify/unit/sparse_structures.cpp)

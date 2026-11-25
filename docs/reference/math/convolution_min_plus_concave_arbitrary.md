@@ -25,7 +25,7 @@ vector<T> min_plus_convolution_conc_arb(const vector<T> A, const vector<T> B, co
 
 ## 依存関係
 
-標準ライブラリのみ。
+- [internal_bit.hpp](internal/internal_bit.md)
 
 ## Verify・利用例
 

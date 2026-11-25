@@ -2,6 +2,7 @@
 #include <cassert>
 #include <deque>
 #include <iostream>
+#include <limits>
 #include <numeric>
 #include <random>
 #include <string>
@@ -175,6 +176,81 @@ void persistent_versions(){
 
 std::string concatenate(std::string a, std::string b){return a+b;}
 std::string empty_string(){return {};}
+void persistent_boundaries(){
+  constexpr int limit = std::numeric_limits<int>::max();
+  Persistent_Vector<int> array;
+  auto dense = array.build(std::vector<int>(258,3));
+  auto far = array.set(dense,limit,42);
+  auto branch = array.set(far,257,8);
+  auto count = array.allocated_nodes();
+  assert(array.get(dense,limit) == 0 && array.get(dense,257) == 3);
+  assert(array.get(far,limit) == 42 && array.get(far,limit-1) == 0 && array.get(far,257) == 3);
+  assert(array.get(branch,limit) == 42 && array.get(branch,257) == 8 && array.get(branch,258) == 0);
+  assert(array.allocated_nodes() == count);
+  Persistent_Vector<bool> bits;
+  auto filled = bits.build(std::vector<bool>(513,true));
+  auto cleared = bits.set(filled,512,false);
+  assert(bits.get(filled,512) && !bits.get(cleared,512) && !bits.get(filled,513));
+
+  PersistentDSUWithData<std::string,concatenate> dsu(80,"");
+  auto base = dsu.set(dsu.empty_root(),1,"a");
+  base = dsu.set(base,2,"b");
+  base = dsu.set(base,65,"c");
+  auto group = dsu.merge(base,1,2);
+  auto joined = dsu.merge(group,65,2);
+  assert(dsu.get(joined,1) == "cab" && dsu.leader(joined,65) == 1);
+  assert(dsu.get(group,1) == "ab" && dsu.get(base,2) == "b" && !dsu.same(group,2,65));
+  count = dsu.allocated_nodes();
+  assert(dsu.merge(joined,1,65) == joined && dsu.allocated_nodes() == count);
+
+  PS plain(limit);
+  auto root = plain.set(plain.empty_root(),4,3);
+  root = plain.set(root,limit/2,10);
+  auto next = plain.set(root,limit-2,7);
+  auto within_ten = [](long long x){return x <= 10;};
+  auto within_seven = [](long long x){return x <= 7;};
+  count = plain.allocated_nodes();
+  assert(plain.prod(next,limit-3,limit) == 7 && plain.get(root,limit-2) == 0);
+  assert(plain.max_right(next,5,within_ten) == limit-2);
+  assert(plain.min_left(next,limit-2,within_ten) == 5);
+  assert(plain.max_right(next,limit/2+1,within_seven) == limit);
+  assert(plain.min_left(next,limit/2,within_seven) == 0 && plain.allocated_nodes() == count);
+
+  struct Tag {long long scale, bias;};
+  constexpr auto act = [](Tag f,S x) -> S {return {f.scale*x.first+f.bias*x.second,x.second};};
+  constexpr auto compose = [](Tag f,Tag g) -> Tag {return {f.scale*g.scale,f.scale*g.bias+f.bias};};
+  constexpr auto identity = []() -> Tag {return {1,0};};
+  Persistent_Dynamic_LazySegtree<S,op,e,Tag,act,compose,identity> lazy(limit,[](int l,int r){return S{r-l,r-l};});
+  auto empty = lazy.empty_root();
+  auto target = lazy.apply(empty,0,limit,{1,3});
+  auto source = lazy.apply(empty,limit/2,limit,{2,1});
+  source = lazy.apply(source,0,limit,{-1,2});
+  auto copied = lazy.copy_range_with_apply(target,source,limit-10,limit-1,{2,5});
+  auto replaced = lazy.set(copied,limit-3,{20,1});
+  count = lazy.allocated_nodes();
+  assert(lazy.get(target,limit-3) == S(4,1) && lazy.get(source,limit-3) == S(-1,1));
+  assert(lazy.prod(source,0,limit/2).first == limit/2);
+  assert(lazy.prod(copied,limit-11,limit) == S(35,11));
+  assert(lazy.prod(replaced,limit-11,limit) == S(52,11));
+  assert(lazy.apply(target,limit-2,limit-2,{2,5}) == target && lazy.copy_range(target,source,2,2) == target);
+  assert(lazy.copy_range(target,source,0,limit) == source && lazy.allocated_nodes() == count);
+
+  Persistent_Queue<int> queue;
+  auto q = queue.empty_root();
+  for(int i = 0; i < 300; ++i) q = queue.push(q,i);
+  const auto old = q;
+  for(int i = 0; i < 1600; ++i){
+    assert(queue.front(q) == i);
+    q = queue.push(queue.pop(q),i+300);
+  }
+  count = queue.allocated_nodes();
+  for(int i = 1600; i < 1900; ++i){
+    assert(queue.front(q) == i);
+    q = queue.pop(q);
+  }
+  assert(queue.empty(q) && queue.front(old) == 0 && queue.allocated_nodes() == count);
+}
+
 void sequences(){
   std::mt19937 rng(42);
   LazySeq arena; auto seq = arena.new_sequence(); std::vector<long long> values;
@@ -240,6 +316,6 @@ int main(int argc, char** argv){
     if(mode == "nonedge") {LCT a(3); a.link(0,1); a.link(1,2); a.cut(0,2);}
     return 0;
   }
-  mutable_trees(); persistent_versions(); sequences(); forests();
+  mutable_trees(); persistent_versions(); persistent_boundaries(); sequences(); forests();
   std::cout << "pointer_structures: all tests passed\n";
 }

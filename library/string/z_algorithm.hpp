@@ -7,8 +7,9 @@ namespace soryuusi {
 using namespace std;
 
 template<class V>
-vector<int> z_algo(V s){
+vector<int> z_algo(const V& s){
   int n = s.size();
+  if(n == 0) return {};
   vector<int> res(n);
   res[0] = n;
   for(int i = 1, j = 0; i < n; ++i){

@@ -32,7 +32,7 @@ T weighted_sum(const vector<T>& weight);
 
 ## 依存関係
 
-標準ライブラリのみ。
+- [internal_bit.hpp](../math/internal/internal_bit.md)
 
 ## Verify・利用例
 

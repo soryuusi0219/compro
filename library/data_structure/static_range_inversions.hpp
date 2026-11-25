@@ -1,11 +1,17 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/static_range_inversions.hpp
 #pragma once
 #include <algorithm>
+#include <cassert>
+#include <cstdint>
 #include <cmath>
 #include <functional>
+#include <limits>
 #include <numeric>
 #include <utility>
+#include <variant>
 #include <vector>
+
+#include "bit.hpp"
 
 namespace soryuusi {
 
@@ -16,45 +22,23 @@ template<class T, class Compare = less<T>>
 struct StaticRangeInversions{
   using ll = long long;
   private:
-  struct BIT{
-      private:
-        int n; vector<ll> s;
-      public:
-        BIT() {}
-        BIT(int _n) : n(_n), s(_n + 1, 0) {}
-        void clear(){fill(s.begin(),s.end(),0);}
-        void clear(int n_){n = n_; s.resize(n+1);}
-        void add(int p, int x) {
-          for(++p; p <= n; p += p & -p) s[p] += x;
-        }
-        ll sum(int p) const {
-          ll res = 0;
-          for(; p; p -= p & -p) res += s[p];
-          return res;
-        }
-        ll sum(int l, int r) const { return sum(r) - sum(l); }
-    };
-    int n, l, k;
+    using Half = std::uint32_t;
+    template<class Cell> using Rows = vector<vector<Cell>>;
+    int n, l = 1, k = 0;
+    bool nondecreasing = true, decreasing = true;
     vector<int> a, b;
-    vector<vector<ll>> table;
-    
-  public:
-    StaticRangeInversions(const vector<T>& v, int q = -1) : n(v.size()), a(n), b(n){
-      if(q == -1) q = n;
-      if(!n) return;
-      l = min<int>(max<int>(static_cast<long double>(n) / sqrtl(q) * 0.9L,1),n);
-      k = (n+l-1)/l;
-      iota(b.begin(), b.end(), 0);
-      sort(b.begin(), b.end(), [&](int l, int r){return v[l] == v[r] ? l < r : Compare()(v[l],v[r]);});
-      for(int i = 0; i < n; ++i) a[b[i]] = i;
-      iota(b.begin(),b.end(),0);
-      for(int i = 0; i < k; ++i) sort(b.begin() + i*l, b.begin() + min((i+1)*l,n), [&](int l, int r){return a[l] < a[r];});
-      table = vector<vector<ll>>(k+1,vector<ll>(n+1,0));
-      BIT fw(n);
+    variant<Rows<Half>,Rows<ll>> table;
+    Rows<ll> aligned;
+    int boundary(int block) const {return block == k ? n : block*l;}
+
+    template<class Cell> void build(Rows<Cell>& table){
+      table.reserve(std::size_t(k)+1);
+      for(int i = 0; i <= k; ++i) table.emplace_back(std::size_t(n)+1,Cell{});
+      BIT<int> fw(n);
       for(int i = 0, j = 0, j2 = 0; i < k; ++i){
         ll invs = 0;
-        while(j < min((i+1)*l,n)){
-          invs += fw.sum(a[j],n);
+        while(j < boundary(i+1)){
+          invs += j-i*l-fw.sum(a[j]);
           fw.add(a[j],1);
           table[i][++j] = invs;
         }
@@ -90,7 +74,7 @@ struct StaticRangeInversions{
         nlblock.clear();
         int x = 0;
         int xmx = lblock.size();
-        int ymx = min((i+1)*l,n);
+        int ymx = boundary(i+1);
         while(x < xmx || y < ymx){
           if(y == ymx || (x < xmx && a[lblock[x]] < a[b[y]])){
             table[i+1][lblock[x]] = y - i*l;
@@ -101,26 +85,90 @@ struct StaticRangeInversions{
         lblock.swap(nlblock);
       }
     }
-    long long query(int x, int y){
-      if(y-x < 2) return 0;
+    template<class Cell> ll query_rows(const Rows<Cell>& table, int x, int y) const {
       int xb = x/l, yb = y/l;
-      if(xb < yb){
-        ll res = table[xb+1][y] + table[yb][x] - table[yb][(xb+1)*l];
-        int i = xb*l, j = yb*l, imx = (xb+1)*l, jmx = min((yb+1)*l,n), cnt = 0;
-        while(i < imx || j < jmx){
-          if(j == jmx || (i < imx && a[b[i]] < a[b[j]])) {
-            if(b[i++] >= x) res += cnt;
-          }else cnt += (b[j++] < y);
+      int lb = boundary(xb), le = boundary(xb+1), rb = boundary(yb);
+      auto prefix = [&](int from) -> ll {
+        if constexpr(sizeof(Cell) == sizeof(Half)){
+          if(!aligned.empty()) return aligned[from][yb-from]+Half(table[from][y]-table[from][rb]);
         }
-        return res;
-      }else{
-        ll res = table[xb][y] + table[xb+1][x] - table[xb+1][xb*l];
-        for(int i = xb*l, cnt = 0; i < min((xb+1)*l,n); ++i){
-          if(b[i] < x) res += cnt;
-          else if(b[i] >= y) ++cnt;
+        return table[from][y];
+      };
+      if(x == lb) return prefix(xb);
+      if(xb < yb){
+        ll res = prefix(xb+1)+Cell(table[yb][x]-table[yb][le]);
+        if(y == rb) return res;
+        int i = lb, j = rb, re = boundary(yb+1), count = 0;
+        while(i < le || j < re){
+          if(j == re || (i < le && a[b[i]] < a[b[j]])){
+            if(b[i++] >= x) res += count;
+          } else count += (b[j++] < y);
         }
         return res;
       }
+      Cell res = table[xb][y]+table[xb+1][x]-table[xb+1][lb];
+      for(int i = lb, count = 0; i < le; ++i){
+        if(b[i] < x) res += count;
+        else if(b[i] >= y) ++count;
+      }
+      return res;
+    }
+
+  public:
+    StaticRangeInversions(const vector<T>& v, int q = -1) : n(v.size()){
+      assert(q >= -1);
+      Compare comp;
+      for(int i = 1; i < n && (nondecreasing || decreasing); ++i){
+        bool falls = comp(v[i],v[i-1]);
+        nondecreasing &= !falls;
+        decreasing &= falls;
+      }
+      if(nondecreasing || decreasing) return;
+      if(q == -1) q = n;
+      l = q == 0 ? n : static_cast<int>(std::clamp(0.9L*n/std::sqrt(static_cast<long double>(q)),1.0L,static_cast<long double>(n)));
+      k = n/l+(n%l != 0);
+      a.resize(n);
+      b.resize(n);
+      iota(b.begin(),b.end(),0);
+      stable_sort(b.begin(),b.end(),[&](int i,int j){return comp(v[i],v[j]);});
+      for(int i = 0; i < n; ++i) a[b[i]] = i;
+      iota(b.begin(),b.end(),0);
+      for(int i = 0; i < k; ++i){
+        sort(b.begin()+i*l,b.begin()+boundary(i+1),[&](int i,int j){return a[i] < a[j];});
+      }
+      const ll max_inversions = ll(n)*(n-1)/2;
+      constexpr auto limit = std::numeric_limits<Half>::max();
+      if(max_inversions > limit && ll(l)*n > limit){
+        build(table.emplace<Rows<ll>>());
+      } else {
+        auto& narrow = get<Rows<Half>>(table);
+        build(narrow);
+        if(max_inversions > limit){
+          // Each increment adds at most one block, so its wrapped difference is exact.
+          aligned.resize(std::size_t(k)+1);
+          aligned[k].push_back(0);
+          for(int i = 0; i < k; ++i){
+            auto& row = aligned[i];
+            row.resize(std::size_t(k-i)+1);
+            for(int j = i+1; j <= k; ++j){
+              Half delta = narrow[i][boundary(j)]-narrow[i][boundary(j-1)];
+              row[j-i] = row[j-i-1]+delta;
+            }
+          }
+        }
+      }
+    }
+    long long query(int x, int y){
+      assert(0 <= x && x <= y && y <= n);
+      if(y-x < 2 || nondecreasing) return 0;
+      if(decreasing) return ll(y-x)*(y-x-1)/2;
+      if(y-x <= 32){
+        ll res = 0;
+        for(int j = x+1; j < y; ++j) for(int i = x; i < j; ++i) res += a[i] > a[j];
+        return res;
+      }
+      if(auto* narrow = get_if<Rows<Half>>(&table)) return query_rows(*narrow,x,y);
+      return query_rows(get<Rows<ll>>(table),x,y);
     }
 };
 

@@ -72,15 +72,16 @@ class ExplicitSet {
   Node* root = nullptr;
   explicit ExplicitSet(std::shared_ptr<Storage> owner, Node* p = nullptr) : arena(std::move(owner)), root(p){}
   bool less(const Key& a, const Key& b) const {return arena->compare(a,b);}
-  int bound(Node*& tree, const Key& key, bool upper){
+  template<bool Track = false> std::pair<int,Node*> bound(Node*& tree, const Key& key, bool upper){
     int passed = 0, last_rank = 0;
     Node* last = nullptr;
+    Node* boundary = nullptr;
     for(Node* p = tree; p;){
       Ops::push(p);
       last = p; last_rank = passed+Ops::size(p->lp);
       bool go_right = upper ? !less(key,Ops::key(p)) : less(Ops::key(p),key);
       if(go_right){passed = last_rank+1; p = p->rp;}
-      else p = p->lp;
+      else {if constexpr(Track) boundary = p; p = p->lp;}
     }
     // Splaying the last visited node is essential for amortized search bounds.
     if(last){
@@ -88,7 +89,7 @@ class ExplicitSet {
       else if constexpr(requires {arena->engine.access_node(tree,last);}) arena->engine.access_node(tree,last);
       else arena->engine.access(tree,last_rank);
     }
-    return passed;
+    return {passed,boundary};
   }
   Node* make_node(const Key& key, const S& value){return arena->create(value,typename Ops::Extra(key));}
   Node* build_sorted(const std::vector<std::pair<Key,S>>& entries){
@@ -96,7 +97,8 @@ class ExplicitSet {
   }
   template<class Entry, class GetKey>
   void normalize(std::vector<Entry>& entries, GetKey key){
-    std::stable_sort(entries.begin(),entries.end(),[&](const Entry& a,const Entry& b){return less(key(a),key(b));});
+    auto compare = [&](const Entry& a,const Entry& b){return less(key(a),key(b));};
+    if(!std::is_sorted(entries.begin(),entries.end(),compare)) std::stable_sort(entries.begin(),entries.end(),compare);
     if constexpr(!Multi){
       auto end = std::unique(entries.begin(),entries.end(),[&](const Entry& a,const Entry& b){
         return !less(key(a),key(b)) && !less(key(b),key(a));
@@ -135,10 +137,23 @@ class ExplicitSet {
       auto [b,c] = arena->engine.split_prefix(bc,through);
       return {a,b,c};
     }
-    int l = bound(p,key,false), r = bound(p,key,true);
+    int l = bound(p,key,false).first, r = bound(p,key,true).first;
     auto [a,bc] = arena->engine.split(p,l);
     auto [b,c] = arena->engine.split(bc,r-l);
     return {a,b,c};
+  }
+  // Try to join two nonempty trees without partitioning either one.
+  Node* join_ordered(Node*& a, Node*& b){
+    auto& engine = arena->engine;
+    const Key& a_max = Ops::key(engine.access(a,Ops::size(a)-1));
+    const Key& b_min = Ops::key(engine.access(b,0));
+    if constexpr(Multi){
+      if(!less(b_min,a_max)) return engine.join(a,b);
+    } else if(less(a_max,b_min)) return engine.join(a,b);
+    const Key& b_max = Ops::key(engine.access(b,Ops::size(b)-1));
+    const Key& a_min = Ops::key(engine.access(a,0));
+    if(less(b_max,a_min)) return engine.join(b,a);
+    return nullptr;
   }
   Node* unite(Node* a, Node* b){
     if(!a || !b) return a ? a : b;
@@ -174,17 +189,20 @@ public:
   int size() const {return Ops::size(root);}
   bool empty() const {return !root;}
   std::size_t allocated_nodes() const {return arena ? arena->pool.size() : 0;}
-  int lower_bound(const Key& key){return bound(root,key,false);}
-  int upper_bound(const Key& key){return bound(root,key,true);}
+  int lower_bound(const Key& key){return bound(root,key,false).first;}
+  int upper_bound(const Key& key){return bound(root,key,true).first;}
   int count(const Key& key){int l = lower_bound(key); int r = upper_bound(key); return r-l;}
-  bool contains(const Key& key){return count(key) != 0;}
+  bool contains(const Key& key){
+    auto* p = bound<true>(root,key,false).second;
+    return p && !less(key,Ops::key(p));
+  }
   bool insert(const Key& key, const S& value){
-    int pos = Multi ? upper_bound(key) : lower_bound(key);
-    if constexpr(!Multi){
-      if(pos < size()){
-        Node* p = arena->engine.access(root,pos);
-        if(!less(key,Ops::key(p))) return false;
-      }
+    int pos;
+    if constexpr(Multi) pos = upper_bound(key);
+    else {
+      auto [rank,p] = bound<true>(root,key,false);
+      if(p && !less(key,Ops::key(p))) return false;
+      pos = rank;
     }
     arena->insert_at(root,pos,make_node(key,value));
     return true;
@@ -205,7 +223,12 @@ public:
     return range(l,r,[&](Node*& p){release_tree(p); p = nullptr; return r-l;});
   }
   void erase_at(int i){assert(0 <= i && i < size()); arena->erase_at(root,i);}
-  bool erase(const Key& key){int l = lower_bound(key), r = upper_bound(key); if(l == r) return false; erase_at(l); return true;}
+  bool erase(const Key& key){
+    auto [rank,p] = bound<true>(root,key,false);
+    if(!p || less(key,Ops::key(p))) return false;
+    erase_at(rank);
+    return true;
+  }
   int erase_all(const Key& key){int l = lower_bound(key), r = upper_bound(key); return erase_range(l,r);}
   S prod(int l, int r){
     assert(0 <= l && l <= r && r <= size());
@@ -241,8 +264,7 @@ public:
     if(ordered(a,b) && ordered(b,c)) root = engine.join(engine.join(a,b),c);
     else root = unite(engine.join(a,c),b);
   }
-  void apply_keys_by_key(const Key& low, const Key& high, typename Ops::key_action_type f,
-                         bool decreasing = false) requires Ops::has_key_action {
+  void apply_keys_by_key(const Key& low, const Key& high, typename Ops::key_action_type f, bool decreasing = false) requires Ops::has_key_action {
     assert(!less(high,low));
     int l = lower_bound(low), r = lower_bound(high);
     apply_keys(l,r,f,decreasing);
@@ -270,7 +292,10 @@ public:
         return p;
       });
     }
-    root = unite(root,incoming); other.root = nullptr;
+    if(!root) root = incoming;
+    else if(auto* joined = join_ordered(root,incoming)) root = joined;
+    else root = unite(root,incoming);
+    other.root = nullptr;
   }
   std::vector<std::pair<Key,S>> to_vector(){
     std::vector<std::pair<Key,S>> result;

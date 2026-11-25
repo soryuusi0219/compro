@@ -59,7 +59,7 @@ FPS pow(ll k, ll N = -1) const;
 ## 依存関係
 
 - [convolution.hpp](../convolution.md)
-- [modint_traits.hpp](../modint_traits.md)
+- [modint_traits.hpp](../internal/modint_traits.md)
 
 ## Verify・利用例
 

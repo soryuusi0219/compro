@@ -4,6 +4,8 @@
 
 ## 機能・前提条件
 
+全辺を1周して距離の更新がなければ、その時点で探索を終了する。負閉路の判定対象は始点から到達可能な閉路。
+
 負辺を許す単一始点最短路。`distance(s)` は `{成功フラグ,距離列}` を返す。始点から到達できる負閉路がある場合にフラグがfalseになる。無限大・単位元・距離結合opを指定する。
 
 ## インターフェース
@@ -38,3 +40,4 @@ O(VE) 時間、O(V+E) 空間。
 ## Verify・利用例
 
 - [`aoj/bellman_ford`](../../../verify/aoj/graph/bellman_ford.cpp)
+- [`unit/graph_algorithms`](../../../verify/unit/graph_algorithms.cpp)

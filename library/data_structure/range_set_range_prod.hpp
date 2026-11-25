@@ -1,8 +1,10 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/range_set_range_prod.hpp
 #pragma once
-#include <bit>
 #include <type_traits>
 #include <vector>
+
+#include "../math/internal/internal_bit.hpp"
+#include "internal/segtree_ops.hpp"
 
 namespace soryuusi {
 
@@ -31,66 +33,67 @@ struct RangeSetRangeProd{
         lz[k] = -1;
       }
     }
-    void prop(int l, int r) {
-      int il = __builtin_ctz(l), ir = __builtin_ctz(r);
-      for(int i = h; i > il; i--) push(l >> i);
-      for(int i = h; i > ir; i--) push((r - 1) >> i);
-    }
-    void build(int l, int r) {
-      int il = __builtin_ctz(l), ir = __builtin_ctz(r);
-      for(int i = il + 1; i <= h; i++) upd(l >> i);
-      for(int i = ir + 1; i <= h; i++) upd((r - 1) >> i);
-    }
     void all_reduce(){
       for(int i = 1; i < b; i++) push(i);
       lzval.clear();
     }
 
   public:
-    RangeSetRangeProd(int n_ = 0) : RangeSetRangeProd(vector<S>(n_, e())) {}
-    RangeSetRangeProd(const vector<S>& v) : n((int)v.size()) {
-      h = bit_width((unsigned)n), b = 1 << h;
-      d.assign(2 * b, e()), lz.assign(b, -1);
+    RangeSetRangeProd(int n_ = 0) : n(n_), b(soryuusi::bit_ceil(static_cast<unsigned>(n))), h(soryuusi::countr_zero(static_cast<unsigned>(b))), d(2 * b, e()), lz(b, -1) {}
+    RangeSetRangeProd(const vector<S>& v) : RangeSetRangeProd(static_cast<int>(v.size())) {
       for(int i = 0; i < n; i++) d[b + i] = v[i];
       for(int i = b - 1; i > 0; i--) upd(i);
     }
     void set(int p, S x) {
       p += b;
-      prop(p, p + 1);
+      internal::segtree_push_point(p, h, [&](int k){ push(k); });
       d[p] = x;
-      build(p, p + 1);
+      internal::segtree_pull_point(p, [&](int k){ upd(k); });
     }
     S get(int p) {
       p += b;
-      prop(p, p + 1);
+      internal::segtree_push_point(p, h, [&](int k){ push(k); });
       return d[p];
     }
     S prod(int l, int r) {
       if(l == r) return e();
-      prop(l += b, r += b);
-      S sl = e(), sr = e();
+      l += b, r += b;
+      internal::SegtreeBoundary(l, r, h).push([&](int k){ push(k); });
+      S left = e(), right = e();
       for(; l < r; l >>= 1, r >>= 1) {
-        if(l & 1) sl = op(sl, d[l++]);
-        if(r & 1) sr = op(d[--r], sr);
+        if(l & 1) left = op(left,d[l++]);
+        if(r & 1) right = op(d[--r],right);
       }
-      return op(sl, sr);
+      return op(left,right);
     }
     S all_prod() { return d[1]; }
     void range_set(int l, int r, S x) {
       if(l == r) return;
-      int l2 = l += b, r2 = r += b;
-      prop(l, r);
-      for(int f = lzval.size(); l < r; l >>= 1, r >>= 1, f++, x = op(x,x)) {
+      if(r-l == 1) {
+        set(l,x);
+        return;
+      }
+      // The new tags cover every old tag before it can be read.
+      bool all = l == 0 && r == n;
+      l += b, r += b;
+      internal::SegtreeBoundary boundary(l, r, h);
+      if(all) lzval.clear();
+      else boundary.push([&](int k){ push(k); });
+      for(int f = lzval.size();; ++f) {
         lzval.push_back(x);
         if(l & 1) act(l++, f);
         if(r & 1) act(--r, f);
+        l >>= 1, r >>= 1;
+        if(l >= r) break;
+        x = op(x,x);
       }
-      build(l2, r2);
+      boundary.pull([&](int k){ upd(k); });
       if((int)lzval.size() > n*2) all_reduce();
     }
     int max_right(int l, auto g) {
       if(l == n) return n;
-      prop(l += b, l + 1);
+      l += b;
+      internal::segtree_push_point(l, h, [&](int k){ push(k); });
       S sm = e();
       do {
         while(~l & 1) l >>= 1;
@@ -108,7 +111,8 @@ struct RangeSetRangeProd{
     }
     int min_left(int r, auto g) {
       if(r == 0) return 0;
-      prop(r += b, r + 1);
+      r += b;
+      internal::segtree_push_point(r - 1, h, [&](int k){ push(k); });
       S sm = e();
       do {
         r--;

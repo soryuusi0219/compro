@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <bit>
 #include <cassert>
 #include <cstddef>
 #include <limits>
@@ -9,6 +8,7 @@
 #include "library/math/convolution_subset.hpp"
 #include "library/math/modint.hpp"
 #include "library/math/set_power_series.hpp"
+#include "library/math/internal/internal_bit.hpp"
 
 namespace {
 
@@ -28,7 +28,7 @@ T coefficient(const std::vector<T>& a, const std::vector<T>& b, std::size_t mask
 template<class T>
 SPS<T> naive_product(const std::vector<T>& a, const std::vector<T>& b){
   if(a.empty() || b.empty()) return {};
-  SPS<T> c(std::bit_ceil(std::max(a.size(),b.size())));
+  SPS<T> c(soryuusi::bit_ceil(std::max(a.size(),b.size())));
   for(std::size_t s = 0; s < c.size(); ++s) c[s] = coefficient(a,b,s);
   return c;
 }

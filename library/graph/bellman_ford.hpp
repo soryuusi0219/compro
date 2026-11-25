@@ -35,27 +35,31 @@ struct BellmanFord{
     if(undirected) graph.push_back({to,from,cost});
   }
   pair<bool,vector<T>> distance(int s){
-    vector<T> dis(n,infty());
+    const T inf = infty();
+    vector<T> dis(n,inf);
     dis[s] = e();
-    for(int _ = 0; _ < n-1; _++){
-      for(Edge edge:graph){
-        if(dis[edge.from] == infty()) continue;
-        dis[edge.to] = min(dis[edge.to], op(dis[edge.from], edge.cost));
+    for(int round = 0; round < n-1; ++round){
+      bool changed = false;
+      for(const auto& edge : graph){
+        if(dis[edge.from] == inf) continue;
+        const T candidate = op(dis[edge.from],edge.cost);
+        if(candidate < dis[edge.to]){
+          dis[edge.to] = candidate;
+          changed = true;
+        }
       }
+      if(!changed) return {true,move(dis)};
     }
-    for(Edge edge:graph){
-      if(dis[edge.from] == infty()) continue;
-      if(dis[edge.to] > op(dis[edge.from], edge.cost)){
-        return {false,dis}; 
-      }
+    for(const auto& edge : graph){
+      if(dis[edge.from] != inf && op(dis[edge.from],edge.cost) < dis[edge.to]) return {false,move(dis)};
     }
-    return {true,dis};
+    return {true,move(dis)};
   }
 };
  
-long long  e() {return 0;}
-long long  op(long long  x, long long  y) {return x+y;}
-long long  infty() {return 1ll << 60;}
+inline long long e() {return 0;}
+inline long long op(long long x, long long y) {return x+y;}
+inline long long infty() {return 1ll << 60;}
 using BellmanFordll = BellmanFord<long long, e, infty, op>;
 
 }  // namespace soryuusi

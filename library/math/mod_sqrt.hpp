@@ -4,8 +4,8 @@
 #include <cassert>
 #include <cstdint>
 
-#include "internal_math.hpp"
-#include "modint_traits.hpp"
+#include "internal/internal_math.hpp"
+#include "internal/modint_traits.hpp"
 
 namespace soryuusi {
 namespace internal {
@@ -38,8 +38,7 @@ constexpr std::uint64_t mod_sqrt64(std::uint64_t a, std::uint64_t p) {
             y = mul_mod64(y, y, p);
             ++i;
         }
-        const std::uint64_t b =
-            pow_mod64_constexpr(c, std::uint64_t{1} << (m - i - 1), p);
+        const std::uint64_t b = pow_mod64_constexpr(c, std::uint64_t{1} << (m - i - 1), p);
         x = mul_mod64(x, b, p);
         c = mul_mod64(b, b, p);
         t = mul_mod64(t, c, p);
@@ -52,9 +51,7 @@ constexpr std::uint64_t mod_sqrt64(std::uint64_t a, std::uint64_t p) {
 
 inline long long mod_sqrt(long long a, long long p) {
     assert(2 <= p && internal::is_prime64_constexpr(static_cast<std::uint64_t>(p)));
-    const auto root = internal::mod_sqrt64(
-        static_cast<std::uint64_t>(internal::safe_mod(a, p)),
-        static_cast<std::uint64_t>(p));
+    const auto root = internal::mod_sqrt64(static_cast<std::uint64_t>(internal::safe_mod(a, p)), static_cast<std::uint64_t>(p));
     return root == UINT64_MAX ? -1 : static_cast<long long>(root);
 }
 
@@ -68,8 +65,7 @@ constexpr long long mod_sqrt(long long a) {
 
 template <class Mint, internal::is_modint_like_t<Mint>* = nullptr>
 constexpr Mint mod_sqrt(Mint a) {
-    const auto root =
-        internal::mod_sqrt64(a.val(), static_cast<std::uint64_t>(Mint::mod()));
+    const auto root = internal::mod_sqrt64(a.val(), static_cast<std::uint64_t>(Mint::mod()));
     return root == UINT64_MAX ? Mint(-1) : Mint::raw(root);
 }
 

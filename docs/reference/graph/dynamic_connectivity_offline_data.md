@@ -36,6 +36,7 @@ void run(F&& f);
 
 ## 依存関係
 
+- [internal_bit.hpp](../math/internal/internal_bit.md)
 - [dsu_undo_with_data.hpp](../data_structure/dsu_undo_with_data.md)
 - [static_graph.hpp](static_graph.md)
 

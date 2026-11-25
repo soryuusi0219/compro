@@ -1,8 +1,10 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/mo_rollback.hpp
 #pragma once
 #include <algorithm>
+#include <cassert>
 #include <cmath>
-#include <numeric>
+#include <cstdint>
+#include <utility>
 #include <vector>
 
 namespace soryuusi {
@@ -13,32 +15,36 @@ struct Mo_Rollback{
   int n = 0, q = 0, b = 0;
   vector<int> left, right;
   Mo_Rollback(int n_, int q_) : n(n_), q(q_){
+    assert(n >= 0 && q >= 0);
     b = max<int>(1, 1.0 * n / max<double>(1.0, sqrt(q * 2.0 / 3.0)));
     left.reserve(q_);
     right.reserve(q_);
   }
   void add_query(int l, int r) {
+    assert(0 <= l && l <= r && r <= n);
     left.push_back(l);
     right.push_back(r);
   }
   template <typename ADD, typename DEL, typename RES, typename SNAP, typename ROL, typename SOL>
   void run(const ADD &add, const DEL &del, const RES& reset, const SNAP &snapshot, const ROL &rollback, const SOL &solve){
-    vector<int> order(q);
-    iota(order.begin(),order.end(),0);
-    sort(begin(order), end(order), [&](int l, int r) {
-      int lblock = left[l] / b, rblock = left[r] / b;
-      if (rblock != lblock) return lblock < rblock;
-      return right[l] < right[r];
-    });
+    assert(b > 0 && left.size() == right.size());
+    vector<pair<std::uint64_t,int>> order;
+    order.reserve(left.size());
+    for(int i = 0; i < static_cast<int>(left.size()); ++i){
+      auto block = std::uint64_t(left[i]/b);
+      order.emplace_back((block<<32)|std::uint32_t(right[i]),i);
+    }
+    sort(order.begin(),order.end(),[](const auto& a,const auto& b){return a.first < b.first;});
 
     int nowr = 0, lbend = 0, nowlb = -1;
-    for (auto idx : order) {
-      auto l = left[idx], r = right[idx];
-      int lb = l/b;
+    for(const auto& [key,idx] : order){
+      int l = left[idx], r = right[idx];
+      int lb = key>>32;
       if(nowlb != lb){
         reset();
         nowlb = lb;
-        lbend = min(n, (nowlb+1)*b);
+        int begin = lb*b;
+        lbend = begin+min(b,n-begin);
         nowr = lbend;
       }
       if(r < lbend){

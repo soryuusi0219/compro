@@ -6,6 +6,8 @@
 
 長さNの列の一点更新と、半開区間内で値がkに等しい要素数の取得。容量mは利用期間中に現れる異なる値の総数以上にします。hashは値からuint64_tへの関数です。要素未設定のコンストラクタでは未設定位置を数えません。
 
+同じ値への代入は木を更新しません。登録済みの異なる値の総数がmに達した状態で新しい値を代入すると `std::length_error` を投げます。空区間の個数は0です。
+
 コピー禁止、move可能。移動元の木は空になり、再利用できます。`clone()` はノードを共有しない独立複製です。ノードはオブジェクトのプールが所有し、個別に解放しません。 値圧縮情報・現在値の配列・木を一体で複製するので、clone後の更新は独立です。
 
 ## インターフェース
@@ -29,8 +31,11 @@ template<class T> uint64_t hash_int(T x);
 ## 依存関係
 
 - [internal/node_pool.hpp](internal/node_pool.md)
+- [hash_table.hpp](hash_table.md)
+- [internal/hash_table_storage.hpp](internal/hash_table_storage.md)
 
 ## Verify・利用例
 
+- [`unit/sparse_structures`](../../../verify/unit/sparse_structures.cpp)
 - [unit/pointer_structures](../../../verify/unit/pointer_structures.cpp)
 - [library_checker/majority_voting](../../../verify/library_checker/data_structure/majority_voting.cpp)

@@ -42,11 +42,12 @@ $M(N)$ を長さ $N$ の畳み込み時間とする。Bernoulli数、Bell数、�
 ## 依存関係
 
 - [formal_power_series.hpp](formal_power_series.md)
-- [internal_fps_composition.hpp](internal_fps_composition.md)
-- [internal_math.hpp](internal_math.md)
+- [internal_fps_composition.hpp](internal/internal_fps_composition.md)
+- [internal_math.hpp](internal/internal_math.md)
 - [linear_sieve.hpp](linear_sieve.md)
 - [modint_factorials.hpp](modint_factorials.md)
-- [modint_traits.hpp](modint_traits.md)
+- [modint_traits.hpp](internal/modint_traits.md)
+- [internal_bit.hpp](internal/internal_bit.md)
 
 ## Verify・利用例
 

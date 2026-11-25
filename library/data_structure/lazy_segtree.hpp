@@ -1,8 +1,10 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/lazy_segtree.hpp
 #pragma once
-#include <bit>
 #include <type_traits>
 #include <vector>
+
+#include "../math/internal/internal_bit.hpp"
+#include "internal/segtree_ops.hpp"
 
 namespace soryuusi {
 
@@ -29,69 +31,58 @@ struct LazySegtree{
       act(k << 1, lz[k]), act(k << 1 | 1, lz[k]);
       lz[k] = id();
     }
-    void prop(int l, int r) {
-      int il = __builtin_ctz(l), ir = __builtin_ctz(r);
-      for(int i = h; i > il; i--) push(l >> i);
-      for(int i = h; i > ir; i--) push((r - 1) >> i);
-    }
-    void build(int l, int r) {
-      int il = __builtin_ctz(l), ir = __builtin_ctz(r);
-      for(int i = il + 1; i <= h; i++) upd(l >> i);
-      for(int i = ir + 1; i <= h; i++) upd((r - 1) >> i);
-    }
-
   public:
-    LazySegtree(int n_ = 0) : LazySegtree(vector<S>(n_, e())) {}
-    LazySegtree(const vector<S>& v) : n((int)v.size()) {
-      h = bit_width((unsigned)n), b = 1 << h;
-      d.assign(2 * b, e()), lz.assign(b, id());
+    LazySegtree(int n_ = 0) : n(n_), b(soryuusi::bit_ceil(static_cast<unsigned>(n))), h(soryuusi::countr_zero(static_cast<unsigned>(b))), d(2 * b, e()), lz(b, id()) {}
+    LazySegtree(const vector<S>& v) : LazySegtree(static_cast<int>(v.size())) {
       for(int i = 0; i < n; i++) d[b + i] = v[i];
       for(int i = b - 1; i > 0; i--) upd(i);
     }
     void set(int p, S x) {
       p += b;
-      prop(p, p + 1);
+      internal::segtree_push_point(p, h, [&](int k){ push(k); });
       d[p] = x;
-      build(p, p + 1);
+      internal::segtree_pull_point(p, [&](int k){ upd(k); });
     }
     void reset(int i){ set(i,e());}
     S get(int p) {
       p += b;
-      prop(p, p + 1);
+      internal::segtree_push_point(p, h, [&](int k){ push(k); });
       return d[p];
     }
     S prod(int l, int r) {
       if(l == r) return e();
-      prop(l += b, r += b);
-      S sl = e(), sr = e();
+      l += b, r += b;
+      internal::SegtreeBoundary(l, r, h).push([&](int k){ push(k); });
+      S left = e(), right = e();
       for(; l < r; l >>= 1, r >>= 1) {
-        if(l & 1) sl = op(sl, d[l++]);
-        if(r & 1) sr = op(d[--r], sr);
+        if(l & 1) left = op(left,d[l++]);
+        if(r & 1) right = op(d[--r],right);
       }
-      return op(sl, sr);
+      return op(left,right);
     }
     S all_prod() { return d[1]; }
     void apply(int p, F f) {
       p += b;
-      prop(p, p + 1);
+      internal::segtree_push_point(p, h, [&](int k){ push(k); });
       act(p, f);
-      build(p, p + 1);
+      internal::segtree_pull_point(p, [&](int k){ upd(k); });
     }
     void apply(int l, int r, F f) {
       if(l == r) return;
-      int l2 = l += b, r2 = r += b;
-      prop(l, r);
+      l += b, r += b;
+      internal::SegtreeBoundary boundary(l, r, h);
+      boundary.push([&](int k){ push(k); });
       for(; l < r; l >>= 1, r >>= 1) {
         if(l & 1) act(l++, f);
         if(r & 1) act(--r, f);
       }
-      build(l2, r2);
+      boundary.pull([&](int k){ upd(k); });
     }
     void all_apply(F f) { act(1,f); }
     int max_right(int l, auto g) {
       if(l == n) return n;
       l += b;
-      prop(l, l + 1);
+      internal::segtree_push_point(l, h, [&](int k){ push(k); });
       S sm = e();
       do {
         while(~l & 1) l >>= 1;
@@ -110,7 +101,7 @@ struct LazySegtree{
     int min_left(int r, auto g) {
       if(r == 0) return 0;
       r += b;
-      prop(r - 1, r);
+      internal::segtree_push_point(r - 1, h, [&](int k){ push(k); });
       S sm = e();
       do {
         r--;

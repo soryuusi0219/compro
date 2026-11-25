@@ -6,6 +6,8 @@
 
 キー固定・モノイド値を更新できるmerge sort tree。位置区間とキー範囲による集約。可換な結合を使う。
 
+`prod(l,r)` は元の位置順の積を返し、`r = N` と空区間も扱う。`prod_interval` は従来のブロック走査順で集約する。各ブロックの中では `Compare` の順に並び、同順位では元の位置が大きい要素から処理する。
+
 ## インターフェース
 
 ```cpp
@@ -29,13 +31,16 @@ S prod_interval(int l, int r, S lo, S up, bool mn_inclusive = true, bool mx_incl
 
 ## 計算量
 
-構築 O(N log N)、更新・問い合わせ O(log² N)、空間 O(N log N)。
+構築・空間は `O(N log(N+1))`、更新・キー条件付き集約は `O(log²(N+1))`、無条件の `prod` は `O(log(N+1))`。長い区間では2つのキー境界を根で求め、rankで子に写す。
 
 ## 依存関係
 
+- [internal_bit.hpp](../math/internal/internal_bit.md)
+- [merge_sort_tree_rank.hpp](internal/merge_sort_tree_rank.md)
 - [segtree.hpp](segtree.md)
 
 ## Verify・利用例
 
+- [`unit/static_rank_and_order_statistics`](../../../verify/unit/static_rank_and_order_statistics.cpp)
 - [`library_checker/point_set_range_frequency_merge_sort_tree_segtree`](../../../verify/library_checker/data_structure/point_set_range_frequency_merge_sort_tree_segtree.cpp)
 - [`unit/data_structure_misc`](../../../verify/unit/data_structure_misc.cpp)

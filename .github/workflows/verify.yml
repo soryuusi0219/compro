@@ -46,11 +46,14 @@ jobs:
         env:
           FORCE: ${{ inputs.force || false }}
         run: |
+          plan_file=$(mktemp)
+          trap 'rm -f "$plan_file"' EXIT
+          set -- --expanded --plan
           if [ "$FORCE" = true ]; then
-            python tools/verify.py --expanded --plan --format github --force >> "$GITHUB_OUTPUT"
-          else
-            python tools/verify.py --expanded --plan --format github >> "$GITHUB_OUTPUT"
+            set -- "$@" --force
           fi
+          python tools/verify.py "$@" > "$plan_file"
+          python tools/verify_shards.py < "$plan_file" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v4
         with:
           name: known-verification-receipts
@@ -58,11 +61,12 @@ jobs:
           if-no-files-found: ignore
 
   verify:
+    name: Verify shard ${{ matrix.shard }}
     needs: prepare
     if: needs.prepare.outputs.count != '0'
     runs-on: ubuntu-24.04
     container: ubuntu:24.04
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       max-parallel: 8
@@ -83,20 +87,28 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: .verify-helper/cache
-          key: system-cases-v2-${{ matrix.target }}-${{ hashFiles('verify/cases.json') }}-${{ github.run_id }}
-          restore-keys: system-cases-v2-${{ matrix.target }}-${{ hashFiles('verify/cases.json') }}-
-      - name: Verify ${{ matrix.target }}
-        run: python tools/verify.py --expanded --force "${{ matrix.target }}"
-      - name: Name result artifact
-        if: always()
-        id: artifact
+          key: system-cases-shard-v1-${{ matrix.shard }}-${{ hashFiles('verify/cases.json') }}-${{ github.run_id }}
+          restore-keys: system-cases-shard-v1-${{ matrix.shard }}-${{ hashFiles('verify/cases.json') }}-
+      - name: Verify target batch
+        timeout-minutes: 50
         env:
-          TARGET: ${{ matrix.target }}
-        run: echo "name=receipts-$(printf '%s' "$TARGET" | tr / -)" >> "$GITHUB_OUTPUT"
+          TARGETS_JSON: ${{ toJSON(matrix.targets) }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import subprocess
+          import sys
+
+          targets = json.loads(os.environ['TARGETS_JSON'])
+          if not targets:
+              sys.exit('Empty verification shard')
+          sys.exit(subprocess.call([sys.executable, 'tools/verify.py', '--expanded', '--force', '--', *targets]))
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ${{ steps.artifact.outputs.name }}
+          name: receipts-shard-${{ matrix.shard }}
           path: build/verify/results/records/*.json
           if-no-files-found: ignore
 

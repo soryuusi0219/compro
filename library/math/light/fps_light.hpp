@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "../convolution.hpp"
-#include "../modint_traits.hpp"
+#include "../internal/modint_traits.hpp"
 
 namespace soryuusi {
 

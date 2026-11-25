@@ -5,6 +5,7 @@
 
 #include "library/graph/maximal_independent_set.hpp"
 #include "library/graph/maximal_weighted_independent_set.hpp"
+#include "library/math/internal/internal_bit.hpp"
 
 namespace {
 
@@ -12,8 +13,7 @@ bool independent(const std::vector<std::vector<long long>>& graph,
                  const std::vector<long long>& vertices) {
   std::vector<bool> selected(graph.size());
   for(long long vertex : vertices) {
-    if(vertex < 0 || vertex >= static_cast<long long>(graph.size()) ||
-       selected[vertex]) return false;
+    if(vertex < 0 || vertex >= static_cast<long long>(graph.size()) || selected[vertex]) return false;
     selected[vertex] = true;
   }
   for(long long vertex : vertices) {
@@ -34,7 +34,7 @@ std::pair<int,long long> brute_force(
       for(long long v : graph[u]) if(u < v && (mask >> v & 1)) valid = false;
     }
     if(!valid) continue;
-    int size = __builtin_popcount(static_cast<unsigned>(mask));
+    int size = soryuusi::popcount(static_cast<unsigned>(mask));
     long long sum = 0;
     for(int i = 0; i < n; ++i) if(mask >> i & 1) sum += weight[i];
     best_size = std::max(best_size,size);

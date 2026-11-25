@@ -2,7 +2,6 @@
 #pragma once
 
 #include <algorithm>
-#include <bit>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -12,8 +11,9 @@
 #include <utility>
 #include <vector>
 
-#include "internal_math.hpp"
-#include "modint_traits.hpp"
+#include "internal/internal_bit.hpp"
+#include "internal/internal_math.hpp"
+#include "internal/modint_traits.hpp"
 #include "ntt.hpp"
 
 namespace soryuusi {
@@ -58,8 +58,7 @@ class convolution_mint {
         return *this;
     }
     constexpr convolution_mint& operator*=(const convolution_mint& rhs) {
-        value_ = static_cast<unsigned int>(
-            static_cast<unsigned long long>(value_) * rhs.value_ % Mod);
+        value_ = static_cast<unsigned int>(static_cast<unsigned long long>(value_) * rhs.value_ % Mod);
         return *this;
     }
     constexpr convolution_mint pow(long long exponent) const {
@@ -73,16 +72,13 @@ class convolution_mint {
     }
     constexpr convolution_mint inv() const { return pow(Mod - 2); }
 
-    friend constexpr convolution_mint operator+(convolution_mint lhs,
-                                                 const convolution_mint& rhs) {
+    friend constexpr convolution_mint operator+(convolution_mint lhs, const convolution_mint& rhs) {
         return lhs += rhs;
     }
-    friend constexpr convolution_mint operator-(convolution_mint lhs,
-                                                 const convolution_mint& rhs) {
+    friend constexpr convolution_mint operator-(convolution_mint lhs, const convolution_mint& rhs) {
         return lhs -= rhs;
     }
-    friend constexpr convolution_mint operator*(convolution_mint lhs,
-                                                 const convolution_mint& rhs) {
+    friend constexpr convolution_mint operator*(convolution_mint lhs, const convolution_mint& rhs) {
         return lhs *= rhs;
     }
 
@@ -100,8 +96,7 @@ inline constexpr bool convolution_has_ntt = [] {
 }();
 
 template <class Mint>
-std::vector<Mint> convolution_slice_naive(std::span<const Mint> a, std::span<const Mint> b,
-                                          int first, int last) {
+std::vector<Mint> convolution_slice_naive(std::span<const Mint> a, std::span<const Mint> b, int first, int last) {
     const int n = static_cast<int>(a.size()), m = static_cast<int>(b.size());
     std::vector<Mint> result(last - first);
     for (int k = first; k < last; ++k) {
@@ -239,13 +234,11 @@ std::vector<Mint> convolution_linear(std::vector<Mint> a, std::vector<Mint> b) {
     } else {
         using NTT = NTTEngine<Mint>;
         if (m <= (Square ? 32 : 39)) return convolution_slice_naive<Mint>(a, right, 0, length);
-        const unsigned int size = std::bit_ceil(static_cast<unsigned int>(length));
+        const unsigned int size = soryuusi::bit_ceil(static_cast<unsigned int>(length));
         const int max_size = 1 << NTT::rank2;
         if constexpr (!Square) {
-            const unsigned int block_size = std::bit_ceil(2U * m - 1);
-            if (block_size <= static_cast<unsigned int>(max_size) &&
-                block_size <= size / 16 &&
-                4 * std::countr_zero(block_size) + 2 < 3 * std::countr_zero(size)) {
+            const unsigned int block_size = soryuusi::bit_ceil(2U * m - 1);
+            if (block_size <= static_cast<unsigned int>(max_size) && block_size <= size / 16 && 4 * soryuusi::countr_zero(block_size) + 2 < 3 * soryuusi::countr_zero(size)) {
                 return convolution_overlap(std::move(a), std::move(b), block_size);
             }
             if (m <= 60) return convolution_slice_naive<Mint>(a, right, 0, length);
@@ -286,7 +279,7 @@ std::vector<Mint> convolution_middle(std::vector<Mint> a, std::vector<Mint> b) {
     } else {
         using NTT = NTTEngine<Mint>;
         if (std::min(m, n - first) <= 60) return internal::convolution_slice_naive<Mint>(a, b, first, n);
-        const auto size = std::bit_ceil(static_cast<unsigned int>(n));
+        const auto size = soryuusi::bit_ceil(static_cast<unsigned int>(n));
         const bool cyclic = size <= (1U << NTT::rank2);
         if (cyclic) internal::frequency_product<false>(a, b, static_cast<int>(size));
         else a = convolution_linear<false>(std::move(a), std::move(b));
@@ -323,18 +316,15 @@ std::vector<Mint> convolution_square(std::vector<Mint> a) {
     return internal::convolution_linear<true>(std::move(a), {});
 }
 
-template <unsigned int Mod = 998244353, class T,
-          std::enable_if_t<std::is_integral_v<T>>* = nullptr>
+template <unsigned int Mod = 998244353, class T, std::enable_if_t<std::is_integral_v<T>>* = nullptr>
 std::vector<T> convolution(const std::vector<T>& a, const std::vector<T>& b) {
     static_assert(1 <= Mod && Mod <= 2147483647U);
     using Mint = internal::convolution_mint<Mod>;
-    auto values = convolution(std::vector<Mint>(a.begin(), a.end()),
-                              std::vector<Mint>(b.begin(), b.end()));
+    auto values = convolution(std::vector<Mint>(a.begin(), a.end()), std::vector<Mint>(b.begin(), b.end()));
     return internal::convolution_values<T>(values);
 }
 
-template <unsigned int Mod = 998244353, class T,
-          std::enable_if_t<std::is_integral_v<T>>* = nullptr>
+template <unsigned int Mod = 998244353, class T, std::enable_if_t<std::is_integral_v<T>>* = nullptr>
 std::vector<T> convolution_square(const std::vector<T>& a) {
     static_assert(1 <= Mod && Mod <= 2147483647U);
     using Mint = internal::convolution_mint<Mod>;
@@ -347,18 +337,15 @@ std::vector<Mint> middle_product(std::vector<Mint> a, std::vector<Mint> b) {
     return internal::convolution_middle(std::move(a), std::move(b));
 }
 
-template <unsigned int Mod = 998244353, class T,
-          std::enable_if_t<std::is_integral_v<T>>* = nullptr>
+template <unsigned int Mod = 998244353, class T, std::enable_if_t<std::is_integral_v<T>>* = nullptr>
 std::vector<T> middle_product(const std::vector<T>& a, const std::vector<T>& b) {
     static_assert(1 <= Mod && Mod <= 2147483647U);
     using Mint = internal::convolution_mint<Mod>;
-    auto values = middle_product(std::vector<Mint>(a.begin(), a.end()),
-                                 std::vector<Mint>(b.begin(), b.end()));
+    auto values = middle_product(std::vector<Mint>(a.begin(), a.end()), std::vector<Mint>(b.begin(), b.end()));
     return internal::convolution_values<T>(values);
 }
 
-inline std::vector<long long> convolution_ll(const std::vector<long long>& a,
-                                              const std::vector<long long>& b) {
+inline std::vector<long long> convolution_ll(const std::vector<long long>& a, const std::vector<long long>& b) {
     if (a.empty() || b.empty()) return {};
     static constexpr unsigned long long m1 = 754974721;
     static constexpr unsigned long long m2 = 167772161;

@@ -4,7 +4,7 @@
 
 ## 機能・前提条件
 
-結合的演算の列キュー集約。pushで末尾追加、popで先頭削除、prodで列全体の積。
+結合的演算の列キュー集約。pushで末尾に追加し、popで先頭を削除します。要素を先頭から `x[0],...,x[n-1]` としたとき、prodは `op(x[n-1],op(...,x[0]))` の順で集約します。空のprodは単位元e()を返します。
 
 ## インターフェース
 
@@ -28,7 +28,7 @@ T prod() const;
 
 ## 計算量
 
-push/pop 償却 O(1)、prod O(1)、空間 O(N)。
+push/popは償却 O(1)、prodは O(1)、空間は O(N)。先頭側が空のときのpopと `p_to_s()` は末尾側を移すため、単発で最悪 O(N) です。
 
 ## 依存関係
 
@@ -37,3 +37,4 @@ push/pop 償却 O(1)、prod O(1)、空間 O(N)。
 ## Verify・利用例
 
 - [`library_checker/queue_operate_all_composite`](../../../verify/library_checker/data_structure/queue_operate_all_composite.cpp)
+- [`unit/data_structure_misc`](../../../verify/unit/data_structure_misc.cpp)

@@ -21,7 +21,6 @@
 
 | ヘッダー / reference | 機能 |
 | --- | --- |
-| [Segtree_dual.hpp](data_structure/Segtree_dual.md) | 区間への作用と一点取得を行う双対セグメント木。 |
 | [area_union_rectangle.hpp](data_structure/area_union_rectangle.md) | 軸平行長方形の和集合面積。 |
 | [binary_trie.hpp](data_structure/binary_trie.md) | 非負 B bit 整数の集合。 |
 | [bit.hpp](data_structure/bit.md) | 加法群上のFenwick tree。 |
@@ -39,6 +38,8 @@
 | [dynamic_segtree_2d.hpp](data_structure/dynamic_segtree_2d.md) | 巨大な整数座標上で一点 set/add と長方形 prod を扱う動的二次元木。 |
 | [dynamic_wavelet.hpp](data_structure/dynamic_wavelet.md) | 挿入・削除できるwavelet matrix。 |
 | [hash_table.hpp](data_structure/hash_table.md) | 固定容量の開番地ハッシュ表。 |
+| [internal/hash_table_storage.hpp](data_structure/internal/hash_table_storage.md) | 開番地ハッシュ表と疎Union-Findで共用するスロット管理。 |
+| [internal/kd_tree_builder.hpp](data_structure/internal/kd_tree_builder.md) | 通常・遅延KD木の分割と完全二分木の配置。 |
 | [increment_decrement_ordered_multi_set.hpp](data_structure/increment_decrement_ordered_multi_set.md) | 各要素を±1して順位順を保つ有界整数多重集合。 |
 | [internal/node_pool.hpp](data_structure/internal/node_pool.md) | 安定アドレスのノードプールと不透明な版ハンドル。 |
 | [internal/binary_tree_ops.hpp](data_structure/internal/binary_tree_ops.md) | 所有権を持たない回転と重み付き位置探索。 |
@@ -51,6 +52,9 @@
 | [internal/sortable_base.hpp](data_structure/internal/sortable_base.md) | 重み付きSequenceとExplicit木によるソート可能列の共通基盤。 |
 | [internal/sequence_base.hpp](data_structure/internal/sequence_base.md) | 平衡化方式から独立した可変列と所有権管理。 |
 | [internal/link_cut_base.hpp](data_structure/internal/link_cut_base.md) | 反転可能な補助木コアを使うLCT共通実装。 |
+| [internal/segtree_ops.hpp](data_structure/internal/segtree_ops.md) | 配列型セグメント木の境界走査と保留作用。 |
+| [internal/merge_sort_tree_rank.hpp](data_structure/internal/merge_sort_tree_rank.md) | マージ時の出所を記録し、キー区間を子へ写す。 |
+| [internal/wavelet_partition.hpp](data_structure/internal/wavelet_partition.md) | Wavelet Matrixのrank構築と安定分割。 |
 | [interval_heap.hpp](data_structure/interval_heap.md) | 最小・最大の双方を取り出せるヒープ。 |
 | [kd_tree.hpp](data_structure/kd_tree.md) | 固定した二次元点集合の一点更新・長方形集約。 |
 | [lazy_kd_tree.hpp](data_structure/lazy_kd_tree.md) | 固定点集合に長方形作用と集約を行うKD木。 |
@@ -81,6 +85,7 @@
 | [segtree_2d_sparse.hpp](data_structure/segtree_2d_sparse.md) | 事前登録座標上で点の値を結合し長方形を集約する疎二次元セグメント木。 |
 | [segtree_beats.hpp](data_structure/segtree_beats.md) | mapping が適用不能なら fail を返して再帰するSegment Tree Beats本体。 |
 | [segtree_beats_templates.hpp](data_structure/segtree_beats_templates.md) | chmin/chmax/addと区間和・最小・最大のBeats設定。 |
+| [segtree_dual.hpp](data_structure/segtree_dual.md) | 区間への作用と一点取得を行う双対セグメント木。 |
 | [segtree_sparse.hpp](data_structure/segtree_sparse.md) | 更新する座標を事前登録するセグメント木。 |
 | [segtree_template.hpp](data_structure/segtree_template.md) | 和・最小最大・出現回数・ペア和・アフィン合成の定番Segtree設定。 |
 | [splay_sortable.hpp](data_structure/splay_sortable.md) | splayによるソート可能列・区間集約・値とキーの遅延作用。 |
@@ -89,6 +94,7 @@
 | [static_range_inversions.hpp](data_structure/static_range_inversions.md) | 静的配列の区間転倒数。 |
 | [static_range_lis.hpp](data_structure/static_range_lis.md) | 静的配列の区間LIS。重複値は非減少として扱う。 |
 | [static_range_prod.hpp](data_structure/static_range_prod.md) | 静的モノイド区間積。 |
+| [static_rmq.hpp](data_structure/static_rmq.md) | 静的な区間最小値・最大値。 |
 | [static_rectangle_add_rectangle_sum.hpp](data_structure/static_rectangle_add_rectangle_sum.md) | 長方形加算と長方形和を全て登録してsolveするオフライン処理。 |
 | [static_rectangle_sum.hpp](data_structure/static_rectangle_sum.md) | 重み付き点と長方形質問を登録するオフライン二次元範囲和。 |
 | [swag.hpp](data_structure/swag.md) | 結合的演算の列キュー集約。 |
@@ -162,9 +168,9 @@
 | [formal_power_series.hpp](math/formal_power_series.md) | modint向け形式的冪級数。 |
 | [general_floor_sum.hpp](math/general_floor_sum.md) | floorで定まる語の非可換モノイド積をEuclid再帰で求める。 |
 | [gf2.hpp](math/gf2.md) | GF(2^D)のスカラー演算。 |
-| [internal_bit.hpp](math/internal_bit.md) | 整数のbit幅・2冪切上げ・末尾零・popcountなどの移植用補助。 |
-| [internal_fps_composition.hpp](math/internal_fps_composition.md) | 形式的冪級数の合成とpower projectionの内部実装。 |
-| [internal_math.hpp](math/internal_math.md) | 符号付き除算の丸め、剰余、Barrett/Montgomery、mod冪、素数判定などの内部数論。 |
+| [internal_bit.hpp](math/internal/internal_bit.md) | 整数のbit幅・2冪切上げ・末尾零・popcountなどの移植用補助。 |
+| [internal_fps_composition.hpp](math/internal/internal_fps_composition.md) | 形式的冪級数の合成とpower projectionの内部実装。 |
+| [internal_math.hpp](math/internal/internal_math.md) | 符号付き除算の丸め、剰余、Barrett/Montgomery、mod冪、素数判定などの内部数論。 |
 | [light/fps_light.hpp](math/light/fps_light.md) | 軽量なFPS実装。 |
 | [light/mint_factorial_light.hpp](math/light/mint_factorial_light.md) | 型ごとの共有階乗表とnPk/nCkの軽量関数。 |
 | [linear_sieve.hpp](math/linear_sieve.md) | 最小素因数と素数一覧を線形篩で構築する。 |
@@ -178,9 +184,10 @@
 | [modint.hpp](math/modint.md) | 32/64bitの静的・動的modint。 |
 | [modint_factorials.hpp](math/modint_factorials.md) | modintの逆元・階乗・逆階乗、順列・組合せ・Catalan・格子路。 |
 | [modint_q_factorials.hpp](math/modint_q_factorials.md) | 固定した素数法とqに対するq-階乗・q-二項係数。 |
-| [modint_traits.hpp](math/modint_traits.md) | modint互換型とNTT対応型を検出する型traits。 |
+| [modint_traits.hpp](math/internal/modint_traits.md) | modint互換型とNTT対応型を検出する型traits。 |
 | [nimber.hpp](math/nimber.md) | 64bit nim積に対応する体要素。 |
 | [ntt.hpp](math/ntt.md) | 静的modintのNTTとスペクトル変換。 |
+| [permutation_subgroup.hpp](math/permutation_subgroup.md) | 生成元で与えた置換群の位数の因子と所属判定。 |
 | [number_of_increasing_sequence.hpp](math/number_of_increasing_sequence.md) | 各位置の上限制約下の増加列を畳み込みDPで数える。 |
 | [number_of_subsequences.hpp](math/number_of_subsequences.md) | 空でない相異なる部分列の個数を数える。 |
 | [piecewise_linear_function.hpp](math/piecewise_linear_function.md) | 長さ・傾き・jumpの列で区分線形関数を表す。 |

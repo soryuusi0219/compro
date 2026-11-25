@@ -8,6 +8,35 @@ namespace soryuusi {
 
 using namespace std;
 
+namespace internal {
+
+// Peel leaves to root the tree, and link subtrees with the largest child first.
+inline vector<int> heavy_preorder(vector<int>& par, vector<int>& deg, vector<int>& sz, int root){
+  const int n = par.size();
+  deg[root] = 0;
+  vector<int> nxt(n,-1), mxsz(n,0), bk(n,-1);
+  iota(bk.begin(),bk.end(),0);
+  for(int i = 0, u = 0, v; i < n; u = ++i) while(deg[u] == 1){
+    v = par[u];
+    par[v] ^= u;
+    --deg[u], --deg[v];
+    sz[v] += sz[u];
+    if(sz[u] > mxsz[v]){
+      mxsz[v] = sz[u];
+      nxt[bk[u]] = nxt[v];
+      nxt[v] = u;
+      if(bk[v] == v) bk[v] = bk[u];
+    }else{
+      nxt[bk[v]] = u;
+      bk[v] = bk[u];
+    }
+    u = v;
+  }
+  return nxt;
+}
+
+}  // namespace internal
+
 struct HLdecomposition{
   private:
     int n;
@@ -18,25 +47,7 @@ struct HLdecomposition{
       par[u] ^= v, par[v] ^= u, ++deg[u], ++deg[v];
     }
     void build(int root = 0){
-      deg[root] = 0;
-      vector<int> nxt(n,-1), mxsz(n,0), bk(n,-1);
-      iota(bk.begin(),bk.end(),0);
-      for(int i = 0, u = 0, v; i < n; u = ++i) while(deg[u] == 1){
-        v = par[u];
-        par[v] ^= u;
-        --deg[u], --deg[v];
-        sz[v] += sz[u];
-        if(sz[u] > mxsz[v]){
-          mxsz[v] = sz[u];
-          nxt[bk[u]] = nxt[v];
-          nxt[v] = u;
-          if(bk[v] == v) bk[v] = bk[u];
-        }else{
-          nxt[bk[v]] = u;
-          bk[v] = bk[u];
-        }
-        u = v;
-      }
+      auto nxt = internal::heavy_preorder(par,deg,sz,root);
       for(int i = 0, x = root, h = root; ~x; ++i, x = nxt[x]) {
         in[x] = i, ord[i] = x, hd[x] = h;
         if(sz[x] == 1) h = nxt[x];
@@ -48,10 +59,10 @@ struct HLdecomposition{
     inline int depth(int u) const {return dep[u];}
     int lca(int u, int v) const {
       while(hd[u] != hd[v]){
-        if(depth(hd[u]) > depth(hd[v])) u = par[hd[u]];
+        if(in[hd[u]] > in[hd[v]]) u = par[hd[u]];
         else v = par[hd[v]];
       }
-      return depth(u) < depth(v) ? u : v;
+      return in[u] < in[v] ? u : v;
     }
     
     int up(int u, int n) const {
@@ -64,6 +75,7 @@ struct HLdecomposition{
       return depth(u) + depth(v) - 2 * depth(lca(u,v));
     }
     int jump(int u, int v, int k) const {
+      if(k == 0) return u;
       int w = lca(u,v);
       int d = depth(u) + depth(v) - 2 * depth(w);
       if(k > d) return -1;

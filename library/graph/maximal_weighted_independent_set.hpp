@@ -6,6 +6,8 @@
 #include <utility>
 #include <vector>
 
+#include "../math/internal/internal_bit.hpp"
+
 namespace soryuusi {
 
 using namespace std;
@@ -22,11 +24,11 @@ pair<T, vector<long long>> maximal_weighted_independent_set(vector<vector<long l
   for(int i = 0; i < n; i++) for(auto j:G[i]) nbh[i] |= (((ulll)1) << j);
   map<ulll,pair<T,ulll>> memo;
   auto ctzint128 = [&](ulll x){
-    if((ull)x) return __builtin_ctzll((ull)x);
-    return __builtin_ctzll((ull)(x >> 64)) + 64;
+    if((ull)x) return soryuusi::countr_zero((ull)x);
+    return soryuusi::countr_zero((ull)(x >> 64)) + 64;
   };
   auto popcountint128 = [&](ulll x){
-    return __builtin_popcountll((ull)x) +  __builtin_popcountll((ull)(x >> 64));
+    return soryuusi::popcount((ull)x) +  soryuusi::popcount((ull)(x >> 64));
   };
   auto rec = [&](auto&& self, ulll x) -> pair<T,ulll> {
     int degmax = -1, vmax = -1;

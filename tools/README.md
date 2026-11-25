@@ -67,7 +67,9 @@ ACLありではACLのincludeを保持し、ACLなしではACLも提出コード�
 `submit_A.cpp` の生成だけを行います。問題ソース、tester、設定ファイルなどの既存ファイルは上書きしません。
 
 CIはmainへのpush、PR、手動実行で起動します。全ターゲットの入力を照合し、成功記録のないものだけを
-matrixへ1件ずつ割り当て、最大8件を並列実行します。PRではcheckoutされたmerge結果を検証します。
+`verify_shards.py` で最大32グループに分け、最大8ジョブを並列実行します。同じオンライン問題のverifyは
+同じグループでケースを再利用します。各ジョブは割り当てられたターゲットを順に検証し、ターゲット単位の結果を
+グループ単位のartifactに保存します。PRではcheckoutされたmerge結果を検証します。
 コンテナの後続shellからもGitを使えるよう、checkout先だけを`safe.directory`へ登録します。
 同じPR・refの古いworkflowはキャンセルします。依存関係・reference・ツールのテストは毎回実行します。
 

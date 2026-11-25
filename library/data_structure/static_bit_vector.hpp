@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <vector>
 
+#include "../math/internal/internal_bit.hpp"
+
 namespace soryuusi {
 
 struct StaticBitVector {
@@ -24,15 +26,16 @@ struct StaticBitVector {
 
   void init() {
     for (int i = 0; i + 1 < static_cast<int>(bits.size()); ++i) {
-      prefix[i + 1] = prefix[i] + __builtin_popcountll(bits[i]);
+      prefix[i + 1] = prefix[i] + soryuusi::popcount(bits[i]);
     }
   }
 
   bool get(int i) const { return (bits[i >> 6] >> (i & 63)) & 1; }
 
   int rank1(int i) const {
-    return prefix[i >> 6] +
-           __builtin_popcountll(bits[i >> 6] & ~(~0ULL << (i & 63)));
+    u64 partial = bits[i >> 6] & ~(~u64{0} << (i & 63));
+    // Inline the portable count on the rank hot path.
+    return prefix[i >> 6] + soryuusi::internal_bit_detail::popcount_fallback(partial);
   }
 
   int rank0(int i) const { return i - rank1(i); }

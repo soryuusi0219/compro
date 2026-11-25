@@ -15,7 +15,7 @@ struct dsu_undo {
   vector<int> history;
   dsu_undo() : n(0) {}
   dsu_undo(int n_) : n(n_), data(n, -1) {
-    history.reserve(n*4);
+    history.reserve(static_cast<vector<int>::size_type>(n)*4);
   }
 
   int merge(int a, int b) {
@@ -42,15 +42,13 @@ struct dsu_undo {
     return -data[leader(a)];
   }
   vector<vector<long long>> groups() {
-    vector<int> leader_buf(n), group_size(n);
-    for (int i = 0; i < n; i++) {
-      leader_buf[i] = leader(i);
-      group_size[leader_buf[i]]++;
+    int count = data.size();
+    vector<vector<long long>> result(count);
+    for(int i = 0; i < count; ++i) {
+      if(data[i] < 0) result[i].reserve(-data[i]);
     }
-    vector<vector<long long>> result(n);
-    for (int i = 0; i < n; i++) result[i].reserve(group_size[i]);
-    for (int i = 0; i < n; i++) result[leader_buf[i]].push_back(i);
-    result.erase(remove_if(result.begin(), result.end(),[&](const vector<long long>& v) { return v.empty(); }),result.end());
+    for(int i = 0; i < count; ++i) result[leader(i)].push_back(i);
+    result.erase(remove_if(result.begin(),result.end(),[](const auto& group){ return group.empty(); }),result.end());
     return result;
   }
   int get_state(){return (history.size() >> 2);}
@@ -63,8 +61,8 @@ struct dsu_undo {
     history.pop_back();
   }
   void rollback(int state){
-    state <<= 2;
-    while(state < (int)history.size()) undo();
+    auto size = static_cast<vector<int>::size_type>(state)*4;
+    while(size < history.size()) undo();
   }
 };
 

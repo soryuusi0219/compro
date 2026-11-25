@@ -4,7 +4,7 @@
 
 ## 機能・前提条件
 
-成分データ付き巻き戻しUnion-Find。op で値を結合し、apply で成分へ値を加える。snapshot/rollback に対応。
+成分データ付き巻き戻しUnion-Find。`merge` は残る代表元の値を左、吸収される成分の値を右にして `op` で結合する。`apply` は成分の値を左にして指定した値を `op` で結合する。成功した併合または適用ごとに状態番号を進め、`undo` は1操作分戻す。引数を省略した `rollback()` は最後に `snapshot()` した有効な状態へ戻る。
 
 ## インターフェース
 
@@ -35,7 +35,7 @@ void rollback(int state = -1);
 
 ## 計算量
 
-代表探索・併合 O(log N)、undo は1操作分、空間 O(N+Q)。op の実行時間を別途掛ける。
+代表探索・併合・適用の親探索は最悪 `O(log(N+1))`。一操作の `undo` は最大2件の履歴を復元し、`rollback` は取り消す操作数に比例する。値の演算・コピー・代入の時間は別に数える。未取消の操作を `Q` 件として空間 `O(N+Q)`。
 
 ## 依存関係
 
@@ -43,4 +43,4 @@ void rollback(int state = -1);
 
 ## Verify・利用例
 
-直接includeするverifyはありません。依存先からの間接利用は `make report` で確認できます。
+- [`unit/unionfind_hash`](../../../verify/unit/unionfind_hash.cpp)

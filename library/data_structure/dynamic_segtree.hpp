@@ -23,7 +23,10 @@ struct Dynamic_Segtree{
       node* lp;
       node* rp;
       node(int pos_, S val_) : pos(pos_), val(val_), sum(val), lp(nullptr), rp(nullptr) {}
-      void calc(){sum = op(lp ? lp->sum : e(), op(val, rp ? rp->sum : e()));}
+      void calc(){
+        sum = rp ? op(val,rp->sum) : val;
+        if(lp) sum = op(lp->sum,sum);
+      }
     };
     int n;
     internal::NodePool<node> pool;
@@ -38,7 +41,7 @@ struct Dynamic_Segtree{
         p->calc();
         return;
       }
-      int m = (l+r) >> 1;
+      int m = l+(r-l)/2;
       if(i < m) {
         if(i > p->pos) swap(i, p->pos), swap(x, p->val);
         _set(p->lp, l, m, i, x);
@@ -49,46 +52,52 @@ struct Dynamic_Segtree{
       }
       p->calc();
     }
-    S _get(node* p, int l, int r, int i){
-      if(!p) return e();
-      if(p->pos == i) return p->val;
-      int m = (l+r) >> 1;
-      if(i < m) return _get(p->lp, l, m, i);
-      else return _get(p->rp, m, r, i);
+    S _get(const node* p, int l, int r, int i){
+      while(p){
+        if(p->pos == i) return p->val;
+        int m = l+(r-l)/2;
+        if(i < m) p = p->lp, r = m;
+        else p = p->rp, l = m;
+      }
+      return e();
     }
-    S _prod(node* p, int l, int r, int i, int j){
+    S _prod(const node* p, int l, int r, int i, int j){
       if(!p || r <= i || j <= l) return e();
       if(i <= l && r <= j) return p->sum;
-      int m = (l+r) >> 1;
+      int m = l+(r-l)/2;
       S res = _prod(p->lp, l, m, i, j);
       if(i <= p->pos && p->pos < j) res = op(res,p->val);
       return op(res,_prod(p->rp, m, r, i, j));
     }
     template<class F>
-    int _max_right(node* p, int l, int r, int i, S& x, F& f){
+    int _max_right(const node* p, int l, int r, int i, S& x, F& f){
       if(r <= i) return i;
-      if(!f(x)) return l;
       if(!p) return r;
-      if(f(op(x,p->sum))){
-        x = op(x,p->sum);
-        return r;
+      if(i <= l){
+        S candidate = op(x,p->sum);
+        if(f(candidate)){
+          x = candidate;
+          return r;
+        }
       }
-      int m = (l+r) >> 1;
+      int m = l+(r-l)/2;
       int res = _max_right(p->lp, l, m, i, x, f);
       if(res < m) return res;
       if(i <= p->pos && !f(x = op(x,p->val))) return p->pos;
       return _max_right(p->rp, m, r, res, x, f);
     }
     template<class F>
-    int _min_left(node* p, int l, int r, int i, S& x, F& f){
+    int _min_left(const node* p, int l, int r, int i, S& x, F& f){
       if(i <= l) return i;
-      if(!f(x)) return r;
       if(!p) return l;
-      if(f(op(p->sum,x))){
-        x = op(p->sum,x);
-        return l;
+      if(r <= i){
+        S candidate = op(p->sum,x);
+        if(f(candidate)){
+          x = candidate;
+          return l;
+        }
       }
-      int m = (l+r) >> 1;
+      int m = l+(r-l)/2;
       int res = _min_left(p->rp, m, r, i, x, f);
       if(res > m) return res;
       if(i > p->pos && !f(x = op(p->val,x))) return p->pos+1;
@@ -120,7 +129,7 @@ struct Dynamic_Segtree{
     Dynamic_Segtree(int n_) : n(n_), root(nullptr){assert(n >= 0);}
     void set(int i, S x){assert(0 <= i && i < n); _set(root,0,n,i,x);}
     S get(int i){assert(0 <= i && i < n); return _get(root,0,n,i);}
-    S prod(int l, int r){assert(0 <= l && l <= r && r <= n); return _prod(root,0,n,l,r);}
+    S prod(int l, int r){assert(0 <= l && l <= r && r <= n); return l == r ? e() : _prod(root,0,n,l,r);}
     S all_prod(){return (root ? root->sum : e());}
     template<class F> int max_right(int i, F f){assert(0 <= i && i <= n && f(e())); S x = e(); return _max_right(root, 0, n, i, x, f);}
     template<class F> int min_left(int i, F f){assert(0 <= i && i <= n && f(e())); S x = e(); return _min_left(root, 0, n, i, x, f);}

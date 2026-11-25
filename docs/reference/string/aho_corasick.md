@@ -4,7 +4,7 @@
 
 ## 機能・前提条件
 
-固定文字集合の複数パターン照合automaton。insertで登録しbuild後にnode/queryで走査する。
+固定文字集合の複数パターン照合automaton。`insert` で登録し、`build` で失敗リンクと遷移を確定してから `node`・`query` で走査する。登録は `build` より前に行う。構築済みの状態に対する `build` は何も行わない。`lex_order` は根から先に訪れ、各頂点の子を文字の大きい順にたどる。
 
 ## インターフェース
 
@@ -38,3 +38,4 @@ int query(const VC& s, int p = 0);
 ## Verify・利用例
 
 - [`library_checker/aho_corasick`](../../../verify/library_checker/string/aho_corasick.cpp)
+- [`unit/string_algorithms`](../../../verify/unit/string_algorithms.cpp)

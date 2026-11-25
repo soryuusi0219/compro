@@ -1,137 +1,121 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/binary_trie.hpp
 #pragma once
-#include <cstddef>
 #include <cassert>
-#include <memory>
+#include <cstddef>
 #include <utility>
-#include <vector>
 
 #include "internal/node_pool.hpp"
 
 namespace soryuusi {
 
-using namespace std;
-
 template<class T, int B = 60>
 struct Binary_Trie{
   private:
-    struct node{
-      node* lp;
-      node* rp;
-      int sz;
-      T lz;
-      node() : lp(nullptr), rp(nullptr), sz(0), lz(0){};
+    struct node {
+      node* ch[2] = {};
+      int sz = 0;
+
       void calc(){
-        sz = (lp ? lp->sz : 0) + (rp ? rp->sz : 0);
-      }
-      void act(T f, int h){
-        if(h){
-          if((f >> (h-1)) & 1) swap(lp,rp);
-          lz ^= f;
-        }
-      }
-      void push(int h){
-        if(lz){
-          if(lp) lp->act(lz, h-1);
-          if(rp) rp->act(lz, h-1);
-          lz = 0;
-        }
+        sz = (ch[0] ? ch[0]->sz : 0)+(ch[1] ? ch[1]->sz : 0);
       }
     };
-    node* root;
+    node* root = nullptr;
+    T mask = 0;
     internal::NodePool<node> pool;
-    node* make_node(){return pool.create();}
-    void _insert(node*& p, T x, int h){
-      if(!p) p = make_node();
-      if(!h) {
+
+    bool _insert(node*& p, T x, int h){
+      if(!p) p = pool.create();
+      if(h == 0){
+        if(p->sz) return false;
+        p->sz = 1;
+        return true;
+      }
+      if(!_insert(p->ch[(x >> (h-1)) & 1],x,h-1)) return false;
+      ++p->sz;
+      return true;
+    }
+    bool _erase(node* p, T x, int h){
+      if(!p || p->sz == 0) return false;
+      if(h == 0){
+        p->sz = 0;
+        return true;
+      }
+      if(!_erase(p->ch[(x >> (h-1)) & 1],x,h-1)) return false;
+      --p->sz;
+      return true;
+    }
+    void _merge(node*& p, const node* q, int h, T difference){
+      if(!q || q->sz == 0) return;
+      if(!p) p = pool.create();
+      if(h == 0){
         p->sz = 1;
         return;
       }
-      p->push(h);
-      if((x >> (--h)) & 1) _insert(p->rp, x, h);
-      else _insert(p->lp, x, h);
+      int flip = (difference >> (h-1)) & 1;
+      _merge(p->ch[0],q->ch[flip],h-1,difference);
+      _merge(p->ch[1],q->ch[flip^1],h-1,difference);
       p->calc();
     }
-    void _erase(node* p, T x, int h){
-      if(!p) return;
-      if(!h) {
-        p->sz = 0;
-        return;
-      }
-      p->push(h);
-      if((x >> (--h)) & 1) _erase(p->rp, x, h);
-      else _erase(p->lp, x, h);
-      p->calc();
-    }
-    bool _contains(node* p, T x, int h){
-      if(!p || !(p->sz)) return false;
-      if(!h) return true;
-      p->push(h);
-      if((x >> (--h)) & 1) return _contains(p->rp, x, h);
-      else return _contains(p->lp, x, h);
-    }
-    T _kth(node*& p, int k, int h){
-      if(!h) return 0;
-      p->push(h--);
-      if(p->lp){
-        if(k < p->lp->sz) return _kth(p->lp,k,h);
-        k -= p->lp->sz;
-      }
-      return _kth(p->rp,k,h) | (((T)1) << h);
-    }
-    T _min_element(node*& p, int h){
-      if(!h) return 0;
-      p->push(h--);
-      if(p->lp && p->lp->sz) return _min_element(p->lp,h);
-      return _min_element(p->rp,h) | (((T)1) << h);
-    }
-    T _max_element(node*& p, int h){
-      if(!h) return 0;
-      p->push(h--);
-      if(p->rp && p->rp->sz) return _max_element(p->rp,h) | (((T)1) << h);
-      return _max_element(p->lp,h);
-    }
+
   public:
-    Binary_Trie(){root = make_node();}
+    Binary_Trie() = default;
     Binary_Trie(const Binary_Trie&) = delete;
     Binary_Trie& operator=(const Binary_Trie&) = delete;
-    Binary_Trie(Binary_Trie&& other) noexcept : root(std::exchange(other.root,nullptr)), pool(std::move(other.pool)){}
+    Binary_Trie(Binary_Trie&& other) noexcept : root(std::exchange(other.root,nullptr)), mask(std::exchange(other.mask,T(0))), pool(std::move(other.pool)){}
     Binary_Trie& operator=(Binary_Trie&& other) noexcept {
-      if(this != &other){pool = std::move(other.pool); root = std::exchange(other.root,nullptr);}
+      if(this != &other){
+        pool = std::move(other.pool);
+        root = std::exchange(other.root,nullptr);
+        mask = std::exchange(other.mask,T(0));
+      }
       return *this;
     }
     [[nodiscard]] Binary_Trie clone() const {
       Binary_Trie result;
-      auto dfs = [&](auto&& self, node* p) -> node* {
+      auto dfs = [&](auto&& self,const node* p) -> node* {
         if(!p) return nullptr;
         auto q = result.pool.create(*p);
-        q->lp = self(self,p->lp); q->rp = self(self,p->rp);
+        q->ch[0] = self(self,p->ch[0]);
+        q->ch[1] = self(self,p->ch[1]);
         return q;
       };
       result.root = dfs(dfs,root);
+      result.mask = mask;
       return result;
     }
-    // Union of sets (insert is idempotent, as in the original API).
     void merge(Binary_Trie&& other){
       assert(this != &other);
-      auto dfs = [&](auto&& self, node* p, int h, T x) -> void {
-        if(!p || !p->sz) return;
-        if(h == 0){insert(x); return;}
-        p->push(h);
-        self(self,p->lp,h-1,x);
-        self(self,p->rp,h-1,x | (T(1) << (h-1)));
-      };
-      dfs(dfs,other.root,B,T(0));
+      if(!root){
+        *this = std::move(other);
+        return;
+      }
+      _merge(root,other.root,B,mask^other.mask);
       other.root = nullptr;
     }
     std::size_t allocated_nodes() const {return pool.size();}
     int size() const {return root ? root->sz : 0;}
-    void insert(T x){_insert(root, x, B);}
-    void erase(T x){_erase(root, x, B);}
-    void operate_xor(T x){if(root) root->act(x,B);}
-    T kth(int k){if(k < 0 || k >= size()) return -1; return _kth(root,k,B);}
-    T min_element(){if(!size()) return -1; return _min_element(root,B);}
-    T max_element(){if(!size()) return -1; return _max_element(root,B);}
+    void insert(T x){_insert(root,x^mask,B);}
+    void erase(T x){_erase(root,x^mask,B);}
+    void operate_xor(T x){if(root) mask ^= x;}
+    T kth(int k){
+      if(k < 0 || k >= size()) return T(-1);
+      const node* p = root;
+      T result = 0;
+      for(int h = B-1; h >= 0; --h){
+        int zero = (mask >> h) & 1;
+        const node* left = p->ch[zero];
+        int count = left ? left->sz : 0;
+        if(k < count) p = left;
+        else {
+          k -= count;
+          result |= T(1) << h;
+          p = p->ch[zero^1];
+        }
+      }
+      return result;
+    }
+    T min_element(){return kth(0);}
+    T max_element(){return kth(size()-1);}
 };
 
 }  // namespace soryuusi

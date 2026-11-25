@@ -4,6 +4,8 @@
 
 ## 機能・前提条件
 
+独立集合の表は、集合から1頂点を除いたときの表と、その頂点の隣接ビット列から作る。
+
 小さいグラフの彩色多項式をFormalPowerSeriesで返す。指数時間のため頂点数を小さくする。
 
 ## インターフェース
@@ -25,6 +27,7 @@ FormalPowerSeries<T> chromatic_polynomial(const vector<vector<INT>>& G);
 
 ## 依存関係
 
+- [internal_bit.hpp](../math/internal/internal_bit.md)
 - [formal_power_series.hpp](../math/formal_power_series.md)
 - [set_power_series.hpp](../math/set_power_series.md)
 

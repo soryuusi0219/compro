@@ -12,9 +12,9 @@
 
 - access_node(root&,node)：探索済みのノードをアクセスする高速化用hook。splayではrootを更新し、treapではノードをそのまま返します。
 - access(root&,k)：対象ノードを返します。splayと異なりrootを変更しません。
-- split(root,k)：論理位置で分割。kはノード間の境界に限ります。複数要素ブロックの内部を切る操作は呼出側が実装します。
+- split(root,k)：論理位置で分割。kはノード間の境界に限ります。対象ノードと子の間で切るときは、その子に下降せず部分木を切り離します。複数要素ブロックの内部を切る操作は呼出側が実装します。
 - join(left,right)：inorder順の2列を結合。返却する根の親はnull。
-- build(n,factory)：prepare済みの新しいノードをinorder順に取得し、Cartesian treeとして線形構築します。
+- build(n,factory)：prepare済みで親がnullのノードをinorder順に取得し、親リンクを使ってCartesian treeを線形構築します。
 - bubble_up(node)：新規ノードを接続した後、回転して優先度順を復元し、根を返します。接続経路の集約を更新し、関連タグをpushした状態で呼んでください。
 
 同優先度のheap順も許し、joinでは左側を優先します。入力する根同士はノードを共有せず、ppがnullである必要があります。
@@ -26,7 +26,7 @@
 
 ## 計算量
 
-到達可能ノード数K。access/split/join/bubble_upは期待 O(log(K+1))、単発最悪 O(K)。再帰深さも木の高さに依存します。prepareは O(1)、buildは最悪 O(K) 時間・O(K) 作業空間。乱数の優先度による期待値であり、最悪対数時間の保証ではありません。
+到達可能ノード数K。access/split/join/bubble_upは期待 O(log(K+1))、単発最悪 O(K)。再帰深さも木の高さに依存します。prepareは O(1)、buildは最悪 O(K) 時間・O(1) 追加作業空間。乱数の優先度による期待値であり、最悪対数時間の保証ではありません。
 
 ## 依存関係
 

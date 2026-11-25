@@ -1,6 +1,5 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/data_structure/weighted_dsu.hpp
 #pragma once
-#include <algorithm>
 #include <cassert>
 #include <type_traits>
 #include <utility>
@@ -24,6 +23,7 @@ struct Weighted_dsu{
     assert(0 <= i && i < n);
     if(par[i] < 0) return i;
     int j = par[i];
+    if(par[j] < 0) return j;
     par[i] = leader(j);
     w[i] = op(w[i],w[j]);
     return par[i];
@@ -36,7 +36,8 @@ struct Weighted_dsu{
   T weight(int i, int j){
     assert(0 <= i && i < n);
     assert(0 <= j && j < n);
-    assert(same(i,j));
+    [[maybe_unused]] int x = leader(i), y = leader(j);
+    assert(x == y);
     return op(w[j],inv(w[i]));
   }
   int merge(int i, int j, T a){
@@ -45,7 +46,7 @@ struct Weighted_dsu{
     int x = leader(i);
     int y = leader(j);
     if(x == y){
-      if(weight(i,j) == a) return x;
+      if(op(w[j],inv(w[i])) == a) return x;
       return -1;
     }
     if(par[x] > par[y]){

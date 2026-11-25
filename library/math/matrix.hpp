@@ -328,8 +328,7 @@ struct Matrix : vector<vector<T>>{
     if constexpr(signed_integral<T>) {
       return internal::matrix_integer_determinant(*this,n);
     } else {
-      static_assert(internal::matrix_field<T>,
-                    "Matrix::det requires a field-like or signed integral scalar type");
+      static_assert(internal::matrix_field<T>, "Matrix::det requires a field-like or signed integral scalar type");
       Matrix copy = submatrix(0,n,0,n);
       auto result = copy.row_reduce(false);
       return result.rank == n ? result.determinant : T(0);

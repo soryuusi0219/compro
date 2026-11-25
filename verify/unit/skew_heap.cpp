@@ -30,6 +30,11 @@ int main(){
   soryuusi::PersistentSkewHeap<int> persistent_keys;
   auto key_root = persistent_keys.push(persistent_keys.empty_root(),1);
   assert(persistent_keys.top(key_root).first == 1);
+  auto descending = key_root;
+  for(int i = 0; i < 4096; ++i) descending = persistent_keys.push(descending,-i);
+  assert(persistent_keys.allocated_nodes() == 4097);
+  assert(persistent_keys.top(descending).first == -4095 && persistent_keys.top(key_root).first == 1);
+  assert(persistent_keys.top(persistent_keys.pop(descending)).first == -4094);
 
   std::mt19937 rng(63425);
   using Arena = soryuusi::SkewHeap<int,int>;

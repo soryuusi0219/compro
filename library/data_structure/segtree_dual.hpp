@@ -1,8 +1,10 @@
-// https://github.com/soryuusi0219/compro/blob/main/library/data_structure/Segtree_dual.hpp
+// https://github.com/soryuusi0219/compro/blob/main/library/data_structure/segtree_dual.hpp
 #pragma once
-#include <bit>
 #include <type_traits>
 #include <vector>
+
+#include "../math/internal/internal_bit.hpp"
+#include "internal/segtree_ops.hpp"
 namespace soryuusi {
 
 using namespace std;
@@ -14,39 +16,33 @@ struct Segtree_dual{
   static_assert(is_invocable_r_v<F, decltype(id)>, "id must be callable with no arguments and return a value convertible to F");
 
   private:
-    int n, h, b;
+    int n, b, h;
     vector<S> d;
-    vector<F> lz;
+    internal::SegtreeTags<F,composition,id> lz;
     void act(int k, F f) {
-      if(k < b) lz[k] = composition(f, lz[k]);
+      if(k < b) lz.apply(k,f);
       else if(k < b+n) d[k-b] = mapping(f, d[k-b]);
     }
     void push(int k) {
-      act(k << 1, lz[k]), act(k << 1 | 1, lz[k]);
-      lz[k] = id();
-    }
-    void prop(int l, int r) {
-      int il = __builtin_ctz(l), ir = __builtin_ctz(r);
-      for(int i = h; i > il; i--) push(l >> i);
-      for(int i = h; i > ir; i--) push((r - 1) >> i);
+      lz.push(k, [&](int i, auto&& f){ act(i,f); });
     }
   public:
     Segtree_dual(){}
-    Segtree_dual(int n_) : n(n_), h(bit_width(bit_ceil((unsigned)n))-1), b(bit_ceil((unsigned)n)), d(n), lz(b, id()){}
-    Segtree_dual(int n_, S x) : n(n_), h(bit_width(bit_ceil((unsigned)n))-1), b(bit_ceil((unsigned)n)), d(n,x), lz(b, id()){}
-    Segtree_dual(const vector<S>& v) : n(v.size()), h(bit_width(bit_ceil((unsigned)n))-1), b(bit_ceil((unsigned)n)), d(v), lz(b, id()){}
+    Segtree_dual(int n_) : n(n_), b(soryuusi::bit_ceil(static_cast<unsigned>(n))), h(soryuusi::countr_zero(static_cast<unsigned>(b))), d(n), lz(b){}
+    Segtree_dual(int n_, S x) : n(n_), b(soryuusi::bit_ceil(static_cast<unsigned>(n))), h(soryuusi::countr_zero(static_cast<unsigned>(b))), d(n,x), lz(b){}
+    Segtree_dual(const vector<S>& v) : n(v.size()), b(soryuusi::bit_ceil(static_cast<unsigned>(n))), h(soryuusi::countr_zero(static_cast<unsigned>(b))), d(v), lz(b){}
     void set(int i, S a) {
-      for(int k = h; k; --k) push((i+b) >> k);
+      internal::segtree_push_point(i+b, h, [&](int k){ push(k); });
       d[i] = a;
     }
     S get(int i){
-      for(int k = h; k; --k) push((i+b) >> k);
+      internal::segtree_push_point(i+b, h, [&](int k){ push(k); });
       return d[i];
     }
     void apply(int l, int r, F f) {
       if(l == r) return;
       l += b, r += b;
-      prop(l, r);
+      internal::SegtreeBoundary(l, r, h).push([&](int k){ push(k); });
       for(; l < r; l >>= 1, r >>= 1) {
         if(l & 1) act(l++, f);
         if(r & 1) act(--r, f);

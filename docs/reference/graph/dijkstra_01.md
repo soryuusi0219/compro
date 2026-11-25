@@ -4,6 +4,8 @@
 
 ## 機能・前提条件
 
+dequeには頂点番号を入れ、確定頂点の再走査を省く。
+
 辺重みが0または1の最短路。distanceの後にpathで経路復元。
 
 ## インターフェース
@@ -34,3 +36,4 @@ O(V+E) 時間・空間。
 ## Verify・利用例
 
 - [`unit/csr_graph`](../../../verify/unit/csr_graph.cpp)
+- [`unit/graph_algorithms`](../../../verify/unit/graph_algorithms.cpp)

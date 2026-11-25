@@ -6,6 +6,8 @@
 
 座標 `[0,h)×[0,w)` の一点代入・加算と半開長方形の集約。`op` は可換モノイド演算、`e()` は単位元です。
 
+一点代入では変更した子区間の集約を祖先へ返し、反対側の子だけを検索します。空長方形の集約は `e()`。問い合わせはノードを確保しません。
+
 コピー禁止、move可能。移動元の木は空になり、再利用できます。`clone()` はノードを共有しない独立複製です。ノードはオブジェクトのプールが所有し、個別に解放しません。 1次元木と2次元木のノードは別プールに配置します。
 
 ## インターフェース
@@ -33,5 +35,6 @@ std::size_t allocated_nodes() const; // 両プールの合計
 
 ## Verify・利用例
 
+- [`unit/sparse_structures`](../../../verify/unit/sparse_structures.cpp)
 - [unit/pointer_structures](../../../verify/unit/pointer_structures.cpp)
 - [library_checker/point_add_rectangle_sum_dynamic_segtree_2d](../../../verify/library_checker/data_structure/point_add_rectangle_sum_dynamic_segtree_2d.cpp)

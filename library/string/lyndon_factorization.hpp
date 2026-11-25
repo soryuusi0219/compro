@@ -7,19 +7,21 @@ namespace soryuusi {
 
 using namespace std;
 
-vector<int> LyndonFactorization(const string& s){
+inline vector<int> LyndonFactorization(const string& s){
   int n = s.size();
   vector<int> res;
-  for(int i = 0, j = 1; i < n;){
-    int k = i;
-    while(k+j < n && s[k] == s[k+j]) k++;
-    if(k+j == n || s[k] > s[k+j]){
-      while(i <= k) {
-        res.push_back(i);
-        i += j;
-      }
-      j = 1;
-    }else j += k-i+1;
+  for(int i = 0; i < n;){
+    int j = i+1, k = i;
+    while(j < n && s[k] <= s[j]){
+      if(s[k] < s[j]) k = i;
+      else ++k;
+      ++j;
+    }
+    const int length = j-k;
+    while(i <= k){
+      res.push_back(i);
+      i += length;
+    }
   }
   res.push_back(n);
   return res;

@@ -7,6 +7,7 @@
 #include <utility>
 #include <vector>
 
+#include "../math/internal/internal_bit.hpp"
 #include "../graph/static_graph.hpp"
 
 namespace soryuusi {
@@ -27,46 +28,56 @@ struct steiner_tree{
     int k = terminals.size();
     int K = 1 << k;
     if(k <= 1) return {e,{}};
-    vector<vector<T>> dp(K, vector<T>(n, infty));
-    vector<vector<pair<int,int>>> dp_back(K, vector<pair<int,int>>(n,{-1,-1}));
-    dp[0] = vector<T>(n,e);
-    for(int i = 0; i < k; i++) dp[1 << i][terminals[i]] = e;
+    vector<vector<T>> dp(K);
+    vector<vector<pair<int,int>>> dp_back(K);
+    vector<pair<T,int>> heap;
+    heap.reserve(n);
+    const greater<pair<T,int>> compare;
     for(int i = 1; i < K; i++){
-      priority_queue<pair<T, int>,vector<pair<T, int>>,greater<pair<T, int>>> q;
-      for(int j = 0; j < n; j++) if(dp[i][j] < infty) q.push({dp[i][j],j});
-      while(!q.empty()){
-        auto p = q.top(); q.pop();
-        int j = p.second;
-        if(dp[i][j] < p.first) continue;
-        for(auto e0 : G[j]) {
-          int j2 = e0.to;
-          T w2 = e0.cost;
-          if(dp[i][j] + w2 < dp[i][j2]) {
-            dp[i][j2] = dp[i][j] + w2;
-            dp_back[i][j2] = {K,j};
-            q.push({dp[i][j2],j2});
-         }
+      auto& distances = dp[i];
+      auto& back = dp_back[i];
+      distances.assign(n,infty);
+      back.assign(n,{-1,-1});
+      const unsigned mask = i;
+      const int rest = mask & (mask-1);
+      if(!rest) distances[terminals[soryuusi::countr_zero(mask)]] = e;
+      for(int a = rest; a; a = (a-1)&rest){
+        const int b = i^a;
+        const auto& x = dp[a];
+        const auto& y = dp[b];
+        for(int v = 0; v < n; ++v){
+          const T candidate = x[v]+y[v];
+          if(candidate < distances[v]) distances[v] = candidate, back[v] = {a,b};
         }
       }
-      for(int v = 0; v < n; v++){
-        for(int j = (i+1)|i; j < min(2*i,K); j = (j+1)|i){
-          if(dp[j][v] > dp[i][v] + dp[j-i][v]) {
-            dp[j][v] = dp[i][v] + dp[j-i][v];
-            dp_back[j][v] = {i,j-i};
+      for(int j = 0; j < n; ++j) if(distances[j] < infty) heap.emplace_back(distances[j],j);
+      make_heap(heap.begin(),heap.end(),compare);
+      while(!heap.empty()){
+        pop_heap(heap.begin(),heap.end(),compare);
+        const auto [cost,v] = heap.back();
+        heap.pop_back();
+        if(distances[v] < cost) continue;
+        for(const auto& [to,w] : G[v]){
+          const T candidate = cost+w;
+          if(candidate < distances[to]){
+            distances[to] = candidate;
+            back[to] = {K,v};
+            heap.emplace_back(candidate,to);
+            push_heap(heap.begin(),heap.end(),compare);
           }
         }
       }
     }
     T resval = dp[K-1][terminals[0]];
+    if(resval == infty) return {resval,{}};
     vector<tuple<INT,INT,T>> resedges;
     queue<pair<int,int>> q;
     q.push({K-1,terminals[0]});
     while(!q.empty()){
       auto [s,v] = q.front(); q.pop();
-      if(!s || (__builtin_popcount(s) == 1 && terminals[__builtin_ctz(s)] == v)) continue;
+      if(!s || (soryuusi::popcount(static_cast<unsigned>(s)) == 1 && terminals[soryuusi::countr_zero(static_cast<unsigned>(s))] == v)) continue;
       auto [i,j] = dp_back[s][v];
       if(i == K){
-        if(i == -1) return {e,{}};
         resedges.push_back({v,j, dp[s][v]-dp[s][j]});
         q.push({s,j});
       }

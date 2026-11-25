@@ -5,6 +5,11 @@
 
 #include "library/graph/static_graph.hpp"
 
+struct NonDefaultCost{
+  int value;
+  explicit NonDefaultCost(int x) : value(x) {}
+};
+
 int main(){
   soryuusi::static_graph graph(4,6);
   graph.add_edge(0,1,true);
@@ -55,6 +60,25 @@ int main(){
   assert(multigraph.degree(0) == 4);
   assert(multigraph.degree(1) == 2);
   assert(multigraph.degree(2) == 0);
+
+  soryuusi::static_graph<NonDefaultCost> unsorted(4);
+  unsorted.add_edge(2,1,NonDefaultCost(11));
+  unsorted.add_edge(0,3,NonDefaultCost(12));
+  unsorted.add_edge(2,3,NonDefaultCost(13));
+  unsorted.build();
+  std::vector<int> costs;
+  for(const auto& e : unsorted[2]) costs.push_back(e.cost.value);
+  assert(costs == std::vector<int>({11,13}));
+  assert(unsorted.start == std::vector<int>({0,1,1,3,3}));
+
+  soryuusi::static_graph<> sorted(4);
+  sorted.add_edge(0,3);
+  sorted.add_edge(2,1);
+  sorted.add_edge(2,0);
+  sorted.build();
+  adjacent.clear();
+  for(int v : sorted.vertices(2)) adjacent.push_back(v);
+  assert(adjacent == std::vector<int>({1,0}) && sorted.start == unsorted.start);
 
   std::cout << "static_graph: all tests passed\n";
 }

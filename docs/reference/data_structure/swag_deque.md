@@ -4,7 +4,7 @@
 
 ## 機能・前提条件
 
-両端の追加削除に対応するSWAG。非可換演算でも列順を保って全体を集約する。
+両端の追加削除に対応するSWAG。非可換演算でも先頭から末尾の順に集約します。片側を使い切った場合はもう一方を分け直し、元の側に残す前半だけを一時配列に置きます。
 
 ## インターフェース
 
@@ -31,7 +31,7 @@ T prod();
 
 ## 計算量
 
-両端操作は償却 O(1)、prod O(1)、空間 O(N)。
+両端操作は償却 O(1)、分け直しが発生する単発の最悪は O(N)。prodは O(1)、空間は O(N)。
 
 ## 依存関係
 
@@ -40,3 +40,4 @@ T prod();
 ## Verify・利用例
 
 - [`library_checker/deque_operate_all_composite`](../../../verify/library_checker/data_structure/deque_operate_all_composite.cpp)
+- [`unit/data_structure_misc`](../../../verify/unit/data_structure_misc.cpp)

@@ -71,10 +71,14 @@ public:
     path.clear();
     for(Node* q = p; q; q = q->pp) path.push_back(q);
     if(path.back() != root) return -1;
-    for(auto it = path.rbegin(); it != path.rend(); ++it) Ops::push(*it);
-    int index = Ops::size(p->lp);
-    for(Node* q = p; q->pp; q = q->pp)
-      if(q == q->pp->rp) index += Ops::local_size(q->pp)+Ops::size(q->pp->lp);
+    int index = 0;
+    for(auto it = path.rbegin(); it+1 != path.rend(); ++it){
+      Node* parent = *it;
+      Ops::push(parent);
+      if(parent->rp == *(it+1)) index += Ops::local_size(parent)+Ops::size(parent->lp);
+    }
+    Ops::push(p);
+    index += Ops::size(p->lp);
     if constexpr(requires {engine.access_pushed(root,p);}) engine.access_pushed(root,p);
     else if constexpr(requires {engine.access_node(root,p);}) engine.access_node(root,p);
     else engine.access(root,index);

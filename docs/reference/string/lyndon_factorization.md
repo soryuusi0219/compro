@@ -29,3 +29,4 @@ O(N) 時間・空間。
 ## Verify・利用例
 
 - [`library_checker/lyndon_factorization`](../../../verify/library_checker/string/lyndon_factorization.cpp)
+- [`unit/string_algorithms`](../../../verify/unit/string_algorithms.cpp)

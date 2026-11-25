@@ -4,7 +4,7 @@
 
 ## 機能・前提条件
 
-辺写像とモノイドを指定する全方位木DP。両方向で異なる写像も登録できる。build後にanswers/subanswerを参照する。
+辺写像とモノイドを指定する全方位木DP。両方向で異なる写像も登録できる。build後にanswers/subanswerを参照する。木を反復走査し、各頂点の辺の累積積は共通の作業領域に置く。
 
 ## インターフェース
 
@@ -41,3 +41,4 @@ S subanswer(int id);
 
 - [`library_checker/tree_path_composite_sum_rerooting`](../../../verify/library_checker/tree/tree_path_composite_sum_rerooting.cpp)
 - [`unit/recursive_tree`](../../../verify/unit/recursive_tree.cpp)
+- [`unit/tree_algorithms`](../../../verify/unit/tree_algorithms.cpp)

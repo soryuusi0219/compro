@@ -44,6 +44,11 @@
   同じディレクトリは `"modint.hpp"`、別分野は `"../math/modint.hpp"` の形式です。
   ヘッダー内で `"library/..."` や絶対パスを使わないでください。解答・verifyの公開ヘッダーの
   読み込みとreferenceの利用例は、従来どおり `"library/..."` を使えます。
+- `bit_width`、`countr_zero`、`popcount` などのビット操作は `library/math/internal/internal_bit.hpp` を
+  直接includeし、`soryuusi::` で修飾して呼びます。対応する標準関数や処理系の組み込み関数の選択は
+  このヘッダーに集約します。数学の内部実装用ヘッダーと型traitsは `library/math/internal/` に置きます。
+- 宣言、関数の引数列、テンプレートの引数列、単一の式は、見た目だけの折り返しを入れず1行で書きます。
+  関数本体の文や複数要素を持つ初期化の区切りには、通常どおり改行を使います。
 - 自作ライブラリは原則 `namespace soryuusi` 内に置きます。既存ファイルでは
   `using namespace std;`、空白、括弧、命名など、そのファイルのスタイルに合わせてください。
 - ファイル名は小文字の `snake_case` を基本とします。既存の型名や歴史的な綴りは、明示的な

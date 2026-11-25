@@ -2,6 +2,8 @@
 #pragma once
 #include <vector>
 
+#include "../math/internal/internal_bit.hpp"
+
 namespace soryuusi {
 
 using namespace std;
@@ -25,10 +27,10 @@ struct chromaticnumber {
         vector<unsigned int> t(1 << V, 0), I(1 << V, 0);
         t[(1 << V) - 1] = I[0] = 1;
         for(int i = 1; i < (1 << V); ++i){
-            const int v = __builtin_ctz(i);
+            const int v = soryuusi::countr_zero(static_cast<unsigned>(i));
             I[i] = I[i ^ (1 << v)] + I[i & (~adj[v])];
             I[i] = (I[i] >= MOD) ? (I[i] - MOD) : I[i];
-            t[i-1] = (((V - __builtin_popcount(i - 1)) % 2) ? (MOD - 1) : 1);
+            t[i-1] = (((V - soryuusi::popcount(static_cast<unsigned>(i - 1))) % 2) ? (MOD - 1) : 1);
         }
         for(int k = 1; k < V; ++k){
             unsigned long long res = 0;

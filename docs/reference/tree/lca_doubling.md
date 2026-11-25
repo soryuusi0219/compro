@@ -4,7 +4,7 @@
 
 ## 機能・前提条件
 
-二分累乗祖先表によるLCA・距離・パス上jump。add_edge後buildする。
+二分累乗祖先表によるLCA・距離・パス上jump。add_edge後buildする。 `up(u,k)` は $k \geq 0$ を指定し、根を越える場合は `-1` を返す。
 
 ## インターフェース
 
@@ -31,7 +31,7 @@ build O(N log N)、問い合わせ O(log N)、空間 O(N log N)。
 
 ## 依存関係
 
-標準ライブラリのみ。
+- [internal_bit.hpp](../math/internal/internal_bit.md)
 
 ## Verify・利用例
 

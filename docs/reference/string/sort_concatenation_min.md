@@ -21,7 +21,7 @@ void sort_concatenation_min(std::vector<T>& v);
 
 ## 計算量
 
-比較 O(log N) 段のsortに、1比較の連結比較長を掛ける。最大長Lなら O(NL log N)。補助空間 O(N)。
+列数を $N$、最大長を $L$、全長を $S$ として $O(S+NL\log(N+1))$ 時間、$O(N+S)$ 補助領域。比較する片方が他方のprefixになった場合に限り、必要なZ配列を作って再利用する。
 
 ## 依存関係
 

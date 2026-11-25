@@ -2,6 +2,7 @@
 #pragma once
 #include <array>
 #include <cassert>
+#include <cstddef>
 #include <cstdio>
 #include <cstdint>
 #include <cstring>
@@ -9,6 +10,8 @@
 #include <string>
 #include <type_traits>
 #include <utility>
+
+#include "../math/internal/internal_bit.hpp"
 
 namespace soryuusi{
 
@@ -34,76 +37,101 @@ class Instream {
       std::memset(buf + end, 0, 8);
     }
 
-    void ensure(std::size_t n) {
-      while (end - pos < n && !eof) refill();
+    static bool digit(char c){return static_cast<unsigned>(c-'0') < 10;}
+
+    static uint64_t digit_value(uint64_t word){
+      word = (word * 10 + (word >> 8)) & 0xff00ff00ff00ffULL;
+      word = (word * 100 + (word >> 16)) & 0xffff0000ffffULL;
+      return ((word * 10000 + (word >> 32)) & 0xffffffffULL);
     }
 
-    char peek() {
-      ensure(1);
-      return pos == end ? '\0' : buf[pos];
+    template<class UInt>
+    UInt digits(){
+      if(end-pos > 1 && !digit(buf[pos+1]) && digit(buf[pos])) return buf[pos++]-'0';
+      UInt result = 0;
+      do {
+        if(end-pos < 8) refill();
+        uint64_t word;
+        memcpy(&word,buf+pos,8);
+        if constexpr (soryuusi::endian::native == soryuusi::endian::big) word = soryuusi::byteswap(word);
+        uint64_t values = word-0x3030303030303030ULL;
+        // The high bit is set at the first byte below '0' or above '9'.
+        uint64_t nondigits = (values | (word+0x4646464646464646ULL)) & 0x8080808080808080ULL;
+        if(nondigits){
+          int length = soryuusi::countr_zero(nondigits)/8;
+          if(length == 0) return result;
+          static constexpr uint32_t powers[] = {1,10,100,1000,10000,100000,1000000,10000000};
+          result = result*powers[length]+digit_value(values << (64-length*8));
+          pos += length;
+          if(pos != end || eof) return result;
+        }else{
+          result = 100000000 * result + digit_value(values);
+          pos += 8;
+        }
+      }while(true);
+    }
+
+    template<bool Signed>
+    bool seek_integer(){
+      for(;;){
+        if(pos == end){
+          refill();
+          if(pos == end) return false;
+        }
+        char c = buf[pos];
+        if(digit(c) || (Signed && c == '-')) return true;
+        ++pos;
+      }
     }
 
   public:
-    Instream() { refill(); }
+    Instream() = default;
 
-    void skipSpace(){ while (peek() != '\0' && peek() <= ' ') ++pos; }
-    
+    void skipSpace(){
+      do {
+        while(pos < end && buf[pos] != '\0' && buf[pos] <= ' ') ++pos;
+        if(pos != end || eof) return;
+        refill();
+      }while(true);
+    }
+
     template<typename UINT>
     UINT nextUint() {
-      while (peek() < '0' || peek() > '9') {
-        assert(peek() != '\0');
-        ++pos;
+      if(!seek_integer<false>()){
+        assert(false && "integer expected");
+        return 0;
       }
-      UINT res = 0;
-      uint64_t tmp = 0;
-      while(1) {
-        ensure(8);
-        memcpy(&tmp, buf + pos, 8);
-        if ((tmp -= 0x3030303030303030) & 0x8080808080808080) break;
-        tmp = (tmp * 10 + (tmp >> 8)) & 0xff00ff00ff00ff;
-        tmp = (tmp * 100 + (tmp >> 16)) & 0xffff0000ffff;
-        tmp = (tmp * 10000 + (tmp >> 32)) & 0xffffffff;
-        res = 100000000 * res + tmp;
-        pos += 8;
-      }
-      while ('0' <= peek() && peek() <= '9') res = res * 10 + (buf[pos++] - '0');
-      return res;
+      return digits<UINT>();
     }
+
     template<typename INT>
     INT nextInt() {
-      while ((peek() < '0' || peek() > '9') && peek() != '-') {
-        assert(peek() != '\0');
-        ++pos;
+      if(!seek_integer<true>()){
+        assert(false && "integer expected");
+        return 0;
       }
-      const bool neg = peek() == '-';
-      if (neg) ++pos;
-      using UINT = std::make_unsigned_t<INT>;
-      UINT res = 0;
-      uint64_t tmp = 0;
-      while(1) {
-        ensure(8);
-        memcpy(&tmp, buf + pos, 8);
-        if ((tmp -= 0x3030303030303030) & 0x8080808080808080) break;
-        tmp = (tmp * 10 + (tmp >> 8)) & 0xff00ff00ff00ff;
-        tmp = (tmp * 100 + (tmp >> 16)) & 0xffff0000ffff;
-        tmp = (tmp * 10000 + (tmp >> 32)) & 0xffffffff;
-        res = 100000000 * res + tmp;
-        pos += 8;
-      }
-      while ('0' <= peek() && peek() <= '9') res = res * 10 + (buf[pos++] - '0');
-      return neg ? static_cast<INT>(UINT(0) - res) : static_cast<INT>(res);
+      const bool neg = buf[pos] == '-';
+      pos += neg;
+      using UINT = typename std::conditional_t<std::is_same_v<INT,__int128_t>,std::type_identity<__uint128_t>,std::make_unsigned<INT>>::type;
+      UINT result = digits<UINT>();
+      return neg ? static_cast<INT>(UINT(0) - result) : static_cast<INT>(result);
     }
+
     std::string nextToken(){
       skipSpace();
       std::string result;
-      while (peek() > ' ') {
-        result.push_back(buf[pos++]);
-      }
-      return result;
+      do {
+        std::size_t start = pos;
+        while(pos < end && buf[pos] > ' ') ++pos;
+        result.append(buf+start,pos-start);
+        if(pos != end || eof) return result;
+        refill();
+      }while(true);
     }
+
     char nextChar(){
       skipSpace();
-      return buf[pos++];
+      return pos != end ? buf[pos++] : '\0';
     }
 
     Instream& operator>>(unsigned int& dest){ dest = nextUint<uint32_t>(); return *this; }
@@ -139,13 +167,16 @@ class Outstream {
     }();
 
     inline void reserve(std::size_t n) { if (BUF_SIZE - pos < n) write(); }
-    inline void group(u32 x) {reserve(4); memcpy(buf + pos, &LUT[x], 4); pos += 4;}
+    inline void store_digits(u32 x, int count) {
+      if constexpr (soryuusi::endian::native == soryuusi::endian::big) x = soryuusi::byteswap(x);
+      memcpy(buf+pos,&x,4);
+      pos += count;
+    }
+    inline void group(u32 x) {store_digits(LUT[x],4);}
     inline void first_group(u32 x) {
       unsigned int skip = 3 - (x >= 10) - (x >= 100) - (x >= 1000);
       u32 s = LUT[x] >> (skip * 8);
-      reserve(4);
-      memcpy(buf + pos, &s, 4);
-      pos += 4 - skip;
+      store_digits(s,4-skip);
     }
     
     inline static u32 div_1e4(u32 x) {return ((u64)x * 0xd1b71759ULL) >> 45;}
@@ -180,12 +211,13 @@ class Outstream {
     }
 
     void write(bool flush = false){
-      fwrite(buf, 1, pos, stdout);
+      if(pos) fwrite(buf, 1, pos, stdout);
       if(flush) fflush(stdout);
       pos = 0;
     }
-    
-    void nextU32(u32 x) {
+
+  private:
+    void put_u32(u32 x) {
       if (x > 9999'9999U) {
         u64 q1 = div_1e4(x), q2 = div_1e8(x);
         first_group(q2);
@@ -199,7 +231,7 @@ class Outstream {
         first_group(x);
       }
     }
-    void nextU64(u64 x) {
+    void put_u64(u64 x) {
       if (x > 9999'9999'9999'9999ULL) {
         u64 q1 = div_1e4(x), q2 = div_1e8(x), q3 = div_1e12(x), q4 = div_1e16(x);
         first_group(q4);
@@ -227,52 +259,62 @@ class Outstream {
       }
     }
 
-    void fixed19(u64 x) {
+    void put_fixed19(u64 x) {
       u64 q1 = div_1e4(x), q2 = div_1e8(x), q3 = div_1e12(x), q4 = div_1e16(x);
       u32 s = LUT[q4] >> 8;
-      reserve(4); memcpy(buf + pos, &s, 4); pos += 3;
+      store_digits(s,3);
       group(q3 - q4 * 10000);
       group(q2 - q3 * 10000);
       group(q1 - q2 * 10000);
       group(x - q1 * 10000);
     }
 
+    void put_u128(u128 x) {
+      constexpr u128 limit = u128(10'000'000'000'000'000'000ULL)*10'000'000'000'000'000'000ULL;
+      int high = 0;
+      for(;x >= limit;++high) x -= limit;
+      auto [q,r] = divmod_1e19(x);
+      if(high){
+        buf[pos++] = '0'+high;
+        put_fixed19(q);
+      }else if(q) put_u64(q);
+      if(high || q) put_fixed19(r);
+      else put_u64(r);
+    }
+
+  public:
+    void nextU32(u32 x) {reserve(10); put_u32(x);}
+    void nextU64(u64 x) {reserve(20); put_u64(x);}
+    void fixed19(u64 x) {reserve(19); put_fixed19(x);}
+    void nextU128(u128 x) {reserve(39); put_u128(x);}
+
     void nextI32(i32 x){
-      if(x < 0) nextChar('-'), nextU32(u32(0) - static_cast<u32>(x));
-      else nextU32(static_cast<u32>(x));
+      reserve(11);
+      if(x < 0) buf[pos++] = '-', put_u32(u32(0)-static_cast<u32>(x));
+      else put_u32(static_cast<u32>(x));
     }
-    void nextI64(i64 x) {
-      if(x < 0) nextChar('-'), nextU64(u64(0) - static_cast<u64>(x));
-      else nextU64(static_cast<u64>(x));
+    void nextI64(i64 x){
+      reserve(20);
+      if(x < 0) buf[pos++] = '-', put_u64(u64(0)-static_cast<u64>(x));
+      else put_u64(static_cast<u64>(x));
     }
-
-    void nextU128(u128 x) {
-      static constexpr u128 T3e38 = (u128)10'000'000'000'000'000'000ULL * 10'000'000'000'000'000'000ULL * 3;
-      static constexpr u128 T2e38 = (u128)10'000'000'000'000'000'000ULL * 10'000'000'000'000'000'000ULL * 2;
-      static constexpr u128 T1e38 = (u128)10'000'000'000'000'000'000ULL * 10'000'000'000'000'000'000ULL;
-      if(x >= T3e38) x -= T3e38, nextChar('3');
-      else if(x >= T2e38) x -= T2e38, nextChar('2');
-      else if(x >= T1e38) x -= T1e38, nextChar('1');
-      auto [q, r] = divmod_1e19(x);
-      if(q) nextU64(q), fixed19(r);
-      else nextU64(r);
+    void nextI128(i128 x){
+      reserve(40);
+      if(x < 0) buf[pos++] = '-', put_u128(u128(0)-static_cast<u128>(x));
+      else put_u128(static_cast<u128>(x));
     }
 
-    void nextI128(i128 x) {
-      bool neg = x < 0;
-      u128 v = neg ? u128(0) - (u128)x : (u128)x;
-      auto [q, r] = divmod_1e19(v);
-      if(neg){
-        nextChar('-');
-        if(q) nextU64(q), fixed19(r);
-        else nextU64(r);
-      }else{
-        if(q) nextU64(q), fixed19(r);
-        else nextU64(r);
+    void nextCstr(const char* x){
+      std::size_t length = strlen(x);
+      if(length > BUF_SIZE){
+        write();
+        fwrite(x,1,length,stdout);
+        return;
       }
+      reserve(length);
+      memcpy(buf+pos,x,length);
+      pos += length;
     }
-
-    void nextCstr(const char* x){ while(*x) nextChar(*(x++)); }
     void nextChar(char x){reserve(1); buf[pos++] = x; }
     Outstream& operator<<(unsigned int targ){ nextU32(targ); return *this; }
     Outstream& operator<<(int targ){ nextI32(targ); return *this; }
@@ -293,7 +335,7 @@ class Outstream {
       constexpr OstreamManip flush_ptr = std::flush;
       if (pf == endl_ptr) {nextChar('\n'); write(1); return *this; }
       if (pf == ends_ptr) {nextChar('\0'); return *this; }
-      if (pf == flush_ptr) {write(); return *this; }
+      if (pf == flush_ptr) {write(true); return *this; }
       return *this;
     }
 };

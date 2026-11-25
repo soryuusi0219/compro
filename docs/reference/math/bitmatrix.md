@@ -175,6 +175,7 @@ Four Russians methodを使う。行列の形状から演算回数を推定して
 ## 依存関係
 
 - [matrix.hpp](matrix.md)
+- [internal_bit.hpp](internal/internal_bit.md)
 
 ## Verify・利用例
 

@@ -12,9 +12,7 @@ namespace soryuusi {
 // Garner's algorithm. The moduli must be pairwise coprime.
 // Returns the represented integer modulo final_mod without constructing the
 // (possibly overflowing) product of all moduli.
-inline long long modcrt(const std::vector<long long>& residues,
-                        const std::vector<long long>& moduli,
-                        long long final_mod) {
+inline long long modcrt(const std::vector<long long>& residues, const std::vector<long long>& moduli, long long final_mod) {
     assert(residues.size() == moduli.size());
     assert(1 <= final_mod);
     const std::size_t n = residues.size();
@@ -31,11 +29,8 @@ inline long long modcrt(const std::vector<long long>& residues,
         if (t < 0) t += mods[i];
         t = static_cast<long long>(static_cast<__int128_t>(t) * eg.second % mods[i]);
         for (std::size_t j = i + 1; j <= n; ++j) {
-            constants[j] = static_cast<long long>(
-                (constants[j] + static_cast<__int128_t>(coefficients[j]) * t) %
-                mods[j]);
-            coefficients[j] = static_cast<long long>(
-                static_cast<__int128_t>(coefficients[j]) * mods[i] % mods[j]);
+            constants[j] = static_cast<long long>((constants[j] + static_cast<__int128_t>(coefficients[j]) * t) % mods[j]);
+            coefficients[j] = static_cast<long long>(static_cast<__int128_t>(coefficients[j]) * mods[i] % mods[j]);
         }
     }
     return constants[n];

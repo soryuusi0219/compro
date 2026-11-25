@@ -4,7 +4,7 @@
 
 ## 機能・前提条件
 
-巻き戻し可能なUnion-Find。get_state と rollback、直近操作の undo を使う。経路圧縮しない。
+巻き戻し可能なUnion-Find。状態番号は現在保持している成功した併合数。`merge` は既に同じ成分なら `-1` を返す。`undo` は直近に成功した併合を1件戻す。`rollback(state)` には現在の状態番号以下の有効な状態番号を渡す。親探索では経路圧縮せず、サイズによる併合で深さを抑える。
 
 ## インターフェース
 
@@ -30,7 +30,7 @@ void rollback(int state);
 
 ## 計算量
 
-merge/leader/same/size O(log N)、undo O(1)、rollback は戻す履歴数に比例。空間 O(N+Q)。
+`merge`・`leader`・`same`・`size` は最悪 `O(log(N+1))`、`undo` は `O(1)`、`rollback` は戻す履歴数に比例する。未取消の成功した併合は最大 `N-1` 件で、空間は `O(N)`。成分列挙は最悪 `O(N log(N+1))`。
 
 ## 依存関係
 
@@ -38,4 +38,4 @@ merge/leader/same/size O(log N)、undo O(1)、rollback は戻す履歴数に比�
 
 ## Verify・利用例
 
-直接includeするverifyはありません。依存先からの間接利用は `make report` で確認できます。
+- [`unit/unionfind_hash`](../../../verify/unit/unionfind_hash.cpp)

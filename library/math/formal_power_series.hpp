@@ -1,7 +1,6 @@
 // https://github.com/soryuusi0219/compro/blob/main/library/math/formal_power_series.hpp
 #pragma once
 #include <algorithm>
-#include <bit>
 #include <cassert>
 #include <cmath>
 #include <cstddef>
@@ -15,10 +14,11 @@
 #include <utility>
 #include <vector>
 
+#include "internal/internal_bit.hpp"
 #include "convolution.hpp"
-#include "internal_fps_composition.hpp"
-#include "internal_math.hpp"
-#include "modint_traits.hpp"
+#include "internal/internal_fps_composition.hpp"
+#include "internal/internal_math.hpp"
+#include "internal/modint_traits.hpp"
 #include "modint_factorials.hpp"
 #include "convolution_mod.hpp"
 #include "convolution_semi_online.hpp"
@@ -665,7 +665,7 @@ struct FormalPowerSeries : vector<T>{
     assert(p.size() == this->size());
     int n = this->size();
     if(n == 0) return {};
-    int b = std::bit_ceil(static_cast<unsigned int>(n));
+    int b = soryuusi::bit_ceil(static_cast<unsigned int>(n));
     vector<FPS> g(n*2), r(n*2);
     vector<T> ans(n);
     for(int i = 0; i < n*2-b; ++i) g[b+i] = {-p[i],1};
@@ -685,7 +685,7 @@ struct FormalPowerSeries : vector<T>{
       using NTT = NTTEngine<T>;
       const size_t length = max(F.size(), G.size());
       if(k > 0 && length > 60 && length <= (size_t{1} << (NTT::rank2 - 1))){
-        const int n = std::bit_ceil(length);
+        const int n = soryuusi::bit_ceil(length);
         F.resize(2*n);
         G.resize(2*n);
         NTT::ntt(F);
@@ -698,7 +698,7 @@ struct FormalPowerSeries : vector<T>{
             const T left = F[2*i]*G[2*i+1], right = F[2*i+1]*G[2*i];
             F[i] = odd ? (left-right)*phase : (left+right)*half;
             G[i] = G[2*i]*G[2*i+1];
-            if(odd && i+1 < n) phase *= NTT::inv_rate2(std::countr_zero(~static_cast<unsigned int>(i)));
+            if(odd && i+1 < n) phase *= NTT::inv_rate2(soryuusi::countr_zero(~static_cast<unsigned int>(i)));
           }
           F.resize(n);
           G.resize(n);
@@ -1259,7 +1259,7 @@ public:
       using NTT = NTTEngine<T>;
       if((F.empty() || F[0] == T(0)) && N <= (1 << (NTT::rank2-1)) && M > 1){
         const int requested = N;
-        N = std::bit_ceil(static_cast<unsigned int>(N));
+        N = soryuusi::bit_ceil(static_cast<unsigned int>(N));
         G.resize(requested);
         G <<= N-requested;
         F.resize(N);
@@ -1288,7 +1288,7 @@ public:
           vector<T> phase(N);
           phase[0] = NTT::inverse_size(2*N);
           for(int j = 1; j < N; ++j)
-            phase[j] = phase[j-1]*NTT::inv_rate2(std::countr_zero(static_cast<unsigned int>(j)));
+            phase[j] = phase[j-1]*NTT::inv_rate2(soryuusi::countr_zero(static_cast<unsigned int>(j)));
           for(int i = 0; i < 2*rows; ++i){
             NQ[i][0] += i < rows ? T(1) : T(-1);
             NTT::ntt(NP[i]);
@@ -1416,7 +1416,7 @@ private:
     const int end = min(boundary+half,n), precision = end-first;
     const long long shift = first == 0 ? 0 : 1LL*(order-1)*first;
     if(first != 0 && shift >= precision) return;
-    const int level = std::countr_zero(static_cast<unsigned int>(half));
+    const int level = soryuusi::countr_zero(static_cast<unsigned int>(half));
     auto& plan = plans[level];
     if(!plan) plan.emplace(inner,precision);
     auto contribution = plan->composition(FPS(coefficients.begin()+first,coefficients.end()));
@@ -1432,7 +1432,7 @@ public:
     assert(n >= 0 && (inner.empty() || inner[0] == T(0)));
     inner.resize(min<int>(n,inner.size()));
     coefficients.reserve(n);
-    plans.resize(std::bit_width(static_cast<unsigned int>(n)));
+    plans.resize(soryuusi::bit_width(static_cast<unsigned int>(n)));
     for(int i = 1; i < (int)inner.size(); ++i) if(inner[i] != T(0)){order = i; break;}
     if(order != 0) normalized = inner >> order;
     low = (inner >> 1).pre(min(B,n));
@@ -1469,8 +1469,7 @@ public:
 
 // Returns [x^{n-1}] D * (C2 o F^{o i} o C1), i=0,...,m-1.
 template <typename T, class Factorials = modint_factorials<T>>
-vector<T> CompositionalPowerProjection(FormalPowerSeries<T> F, int n = -1, int m = -1,
-    FormalPowerSeries<T> C1 = {}, FormalPowerSeries<T> C2 = {}, FormalPowerSeries<T> D = {}){
+vector<T> CompositionalPowerProjection(FormalPowerSeries<T> F, int n = -1, int m = -1, FormalPowerSeries<T> C1 = {}, FormalPowerSeries<T> C2 = {}, FormalPowerSeries<T> D = {}){
   using FPS = FormalPowerSeries<T>;
   if(n == -1) n = F.size();
   if(m == -1) m = n;

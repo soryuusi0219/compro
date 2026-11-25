@@ -27,7 +27,8 @@ vector<T> convolution_subset(const vector<T>& a, const vector<T>& b);
 
 ## 依存関係
 
-- [modint_traits.hpp](modint_traits.md)
+- [modint_traits.hpp](internal/modint_traits.md)
+- [internal_bit.hpp](internal/internal_bit.md)
 
 ## Verify・利用例
 
