@@ -187,6 +187,7 @@
 | [modint_traits.hpp](math/internal/modint_traits.md) | modint互換型とNTT対応型を検出する型traits。 |
 | [nimber.hpp](math/nimber.md) | 64bit nim積に対応する体要素。 |
 | [ntt.hpp](math/ntt.md) | 静的modintのNTTとスペクトル変換。 |
+| [permutation_subgroup.hpp](math/permutation_subgroup.md) | 生成元で与えた置換群の位数の因子と所属判定。 |
 | [number_of_increasing_sequence.hpp](math/number_of_increasing_sequence.md) | 各位置の上限制約下の増加列を畳み込みDPで数える。 |
 | [number_of_subsequences.hpp](math/number_of_subsequences.md) | 空でない相異なる部分列の個数を数える。 |
 | [piecewise_linear_function.hpp](math/piecewise_linear_function.md) | 長さ・傾き・jumpの列で区分線形関数を表す。 |
