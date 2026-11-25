@@ -4,9 +4,11 @@
 
 ## 機能・前提条件
 
-有界整数集合を64分木bit列で保持する。insert/erase/contains/next/prev。範囲外の検索結果の番兵を確認する。
+整数キーの集合を64分木bit列で保持する。上限を `n` とし、`insert`、`erase`、`contains`、`operator[]` のキーは `[0,n)`。既にあるキーの追加や、存在しないキーの削除もできる。既定構築は `n == 0` の空集合。
 
-`next(x)` はx以上の最小要素（なければn）、`prev(x)` はx未満の最大要素（なければ-1）です。後者は負の番兵を扱える符号付き型で使用します。
+`next(x)` は `x` 以上の最小要素、`prev(x)` は `x` 未満の最大要素。見つからなければ、それぞれ `n`、`T(-1)` を返す。符号なし型の `T(-1)` は型の最大値。
+
+各段のビット列を一つの配列に格納する。子のワードが空から非空に変わったときだけ、挿入を上の段に伝播する。削除は子のワードが空になったときに伝播する。
 
 ## インターフェース
 
@@ -32,7 +34,7 @@ T prev(T x);
 
 ## 計算量
 
-更新・前後探索 O(log₆₄ U)、contains O(1)、空間 O(U/64) word。
+段数を $H=O(1+\log_{64}(n+1))$ とすると、更新・前後探索は最悪 $O(H)$、所属判定は $O(1)$。空間は $O(1+n/64)$ ワード。構築は同じワード数の初期化が必要。
 
 ## 依存関係
 
@@ -41,3 +43,4 @@ T prev(T x);
 ## Verify・利用例
 
 - [`library_checker/predecessor_problem`](../../../verify/library_checker/data_structure/predecessor_problem.cpp)
+- [`unit/utility_misc`](../../../verify/unit/utility_misc.cpp)

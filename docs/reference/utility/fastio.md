@@ -4,7 +4,11 @@
 
 ## 機能・前提条件
 
-fread/fwriteによる整数・文字列・文字のバッファ入出力。soryuusi::cin/coutを使い、必要時にflushする。
+`stdin` / `stdout` に対する整数・文字列・文字のバッファ入出力。既定の `soryuusi::cin` / `soryuusi::cout` のバッファは64 KiB。読み込みは最初の入力操作で始まる。各ストリームを個別に構築する場合、同じ `FILE` に複数のバッファを同時に使わない。テンプレート引数でバッファサイズを指定する場合は64バイト以上。
+
+- ASCIIの10進整数を、符号付き・符号なしの32 / 64 / 128bit型で読み書きする。入力値は格納先の型の範囲内とし、整数を読むときは入力が残っていること。`nextChar()` はEOFで `\0`、`nextToken()` はEOFで空文字列を返す。
+- `nextToken()` は空白までの1トークンを読む。`nextCstr()` と文字列出力は先頭のNULまでを書き出す。`fixed19(x)` は `0 <= x < 10^19` を先頭0埋めの19桁で出力する。
+- `write()` はライブラリのバッファを `stdout` に書き出す。`write(true)` と `std::flush` は、さらに `fflush(stdout)` を行う。`std::endl` は改行も出力する。
 
 ## インターフェース
 
@@ -17,7 +21,7 @@ fread/fwriteによる整数・文字列・文字のバッファ入出力。soryu
 ```cpp
 template<unsigned int BUF_SIZE = (1U << 16)>
 class Instream;
-Instream();
+Instream() = default;
 void skipSpace();
 template<typename UINT>
 UINT nextUint();
@@ -65,14 +69,15 @@ Outstream& operator<<(std::ostream& (*pf)(std::ostream&));
 
 ## 計算量
 
-入出力文字数Lに O(L)、ストリームごと O(BUF_SIZE) 空間。整数変換は桁数に比例。
+入出力文字数 $L$ に $O(L)$ 時間、各ストリームに $O(\mathrm{BUF\_SIZE})$ 空間。整数入力は最大8桁ずつ変換し、出力は4桁の変換表を使って、整数ごとにまとめてバッファ領域を確保する。文字列はバッファの連続範囲をまとめて転送する。
 
 ## 依存関係
 
-標準ライブラリのみ。
+- [internal_bit.hpp](../math/internal/internal_bit.md)
 
 ## Verify・利用例
 
+- [`unit/fastio`](../../../verify/unit/fastio.cpp)
 - [`library_checker/bitwise_and_convolution`](../../../verify/library_checker/convolution/bitwise_and_convolution.cpp)
 - [`library_checker/bitwise_or_convolution`](../../../verify/library_checker/convolution/bitwise_or_convolution.cpp)
 - [`library_checker/bitwise_xor_convolution`](../../../verify/library_checker/convolution/bitwise_xor_convolution.cpp)
