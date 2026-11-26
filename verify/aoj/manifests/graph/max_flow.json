@@ -1,0 +1,6 @@
+{
+  "name": "max_flow",
+  "problem": "aizu/GRL_6_A",
+  "url": "https://onlinejudge.u-aizu.ac.jp/problems/GRL_6_A",
+  "source": "verify/aoj/graph/max_flow.cpp"
+}

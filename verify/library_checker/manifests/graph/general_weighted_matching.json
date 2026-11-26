@@ -1,0 +1,5 @@
+{
+  "name": "general_weighted_matching",
+  "problem": "graph/general_weighted_matching",
+  "source": "verify/library_checker/graph/general_weighted_matching.cpp"
+}

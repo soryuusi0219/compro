@@ -12,6 +12,9 @@
 # Completed local work plans
 /docs/archive/
 
+# External libraries for local reference
+/reference_libraries/
+
 # Compiler output
 *.o
 *.obj

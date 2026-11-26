@@ -1,0 +1,5 @@
+{
+  "name": "global_minimum_cut_of_dynamic_star_augmented_graph",
+  "problem": "graph/global_minimum_cut_of_dynamic_star_augmented_graph",
+  "source": "verify/library_checker/graph/global_minimum_cut_of_dynamic_star_augmented_graph.cpp"
+}

@@ -1,0 +1,5 @@
+{
+  "name": "general_matching",
+  "problem": "graph/general_matching",
+  "source": "verify/library_checker/graph/general_matching.cpp"
+}

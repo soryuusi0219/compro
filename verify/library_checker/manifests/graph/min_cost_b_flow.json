@@ -1,0 +1,5 @@
+{
+  "name": "min_cost_b_flow",
+  "problem": "graph/min_cost_b_flow",
+  "source": "verify/library_checker/graph/min_cost_b_flow.cpp"
+}
