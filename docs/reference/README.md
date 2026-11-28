@@ -114,29 +114,53 @@
 
 | ヘッダー / reference | 機能 |
 | --- | --- |
+| [assignment_problem.hpp](graph/assignment_problem.md) | 長方形・禁止辺付きの最小費用割当てと双対。 |
 | [bellman_ford.hpp](graph/bellman_ford.md) | 負辺を許す単一始点最短路。 |
 | [biconnected_graph.hpp](graph/biconnected_graph.md) | 無向グラフのlow-link、橋、二辺・二頂点連結成分、block-cut tree。 |
+| [bipartite_matching.hpp](graph/bipartite_matching.md) | 二部最大マッチング、被覆、独立集合。 |
+| [bipartite_weighted_matching.hpp](graph/bipartite_weighted_matching.md) | 重み付き b-matching、頂点被覆、独立集合。 |
+| [bounded_flow.hpp](graph/bounded_flow.md) | 上下限制約付きの実行可能 b-flow、循環流、s-t フロー。 |
 | [chromatic_number.hpp](graph/chromatic_number.md) | 部分集合DP・包除原理による彩色数。 |
 | [chromatic_polynomial.hpp](graph/chromatic_polynomial.md) | 小さいグラフの彩色多項式をFormalPowerSeriesで返す。 |
 | [complement_graph_connected_components.hpp](graph/complement_graph_connected_components.md) | 与えた単純無向グラフの補グラフの連結成分を求める。 |
+| [dag_path_cover.hpp](graph/dag_path_cover.md) | DAG の頂点素な最小パス被覆。 |
+| [internal/cut_contraction.hpp](graph/internal/cut_contraction.md) | 無向カット共通の縮約グラフと順序計算用二分ヒープ。 |
 | [dijkstra.hpp](graph/dijkstra.md) | 非負重みの最短路と経路復元。 |
 | [dijkstra_01.hpp](graph/dijkstra_01.md) | 辺重みが0または1の最短路。 |
 | [dijkstra_1.hpp](graph/dijkstra_1.md) | 全辺重み1の幅優先探索。 |
 | [directed_mst.hpp](graph/directed_mst.md) | 根を指定した有向最小全域木。 |
+| [dulmage_mendelsohn_decomposition.hpp](graph/dulmage_mendelsohn_decomposition.md) | DM ブロック順序と最大マッチングの許容辺・必須辺。 |
 | [dynamic_connectivity_offline.hpp](graph/dynamic_connectivity_offline.md) | 辺追加削除時刻を登録し時間軸セグメント木とrollback DSUで連結性を処理する。 |
 | [dynamic_connectivity_offline_data.hpp](graph/dynamic_connectivity_offline_data.md) | 動的連結性に成分値の加算・集約を追加したオフライン処理。 |
+| [dynamic_star_minimum_cut.hpp](graph/dynamic_star_minimum_cut.md) | 星辺の容量変更と大域最小カット値。 |
 | [enumerate_cliques.hpp](graph/enumerate_cliques.md) | 無向単純グラフのクリークをcallbackへ列挙する。 |
 | [enumerate_cliques_small_n.hpp](graph/enumerate_cliques_small_n.md) | 128bit整数で隣接を保持する小頂点数版クリーク列挙。 |
 | [enumerate_triangles.hpp](graph/enumerate_triangles.md) | 次数に応じて辺を向き付けし、三角形の各頂点をcallbackへ渡す。 |
+| [extreme_vertex_set.hpp](graph/extreme_vertex_set.md) | 非負容量無向グラフの極点集合の包含木とカット容量。 |
+| [flow_decomposition.hpp](graph/flow_decomposition.md) | 元の辺 ID を保持したフローのパス・サイクル分解。 |
+| [general_matching.hpp](graph/general_matching.md) | 一般無向グラフの最大マッチングと辺 ID 復元。 |
+| [general_weighted_matching.hpp](graph/general_weighted_matching.md) | 一般無向グラフの最大重み・辺数優先・完全マッチング。 |
+| [global_minimum_cut.hpp](graph/global_minimum_cut.md) | Stoer–Wagner 法による大域最小カットと分割。 |
+| [gomory_hu_tree.hpp](graph/gomory_hu_tree.md) | 全点対の無向最小カット値と分割を表す木。 |
 | [graph_general.hpp](graph/graph_general.md) | 木のパス、直径、重心などの補助関数。 |
 | [incremental_msf.hpp](graph/incremental_msf.md) | 辺を順に加えた各prefixの最小全域森をオフライン分割統治で求める。 |
+| [max_flow.hpp](graph/max_flow.md) | 有向最大流、辺流量、最小カット。 |
 | [maximal_independent_set.hpp](graph/maximal_independent_set.md) | 名称はmaximalだが最大サイズの独立集合を探索し、頂点番号列を返す。 |
 | [maximal_weighted_independent_set.hpp](graph/maximal_weighted_independent_set.md) | 頂点重み付き最大独立集合。 |
+| [min_cost_b_flow.hpp](graph/min_cost_b_flow.md) | 上下限制約・負費用循環を含む最小費用 b-flow と双対ポテンシャル。 |
+| [min_cost_flow.hpp](graph/min_cost_flow.md) | 負費用辺と折点列に対応した最小費用流。 |
+| [internal/min_cost_paths.hpp](graph/internal/min_cost_paths.md) | 費用流のポテンシャル初期化と最短増加路探索。 |
 | [min_cost_flow_modified.hpp](graph/min_cost_flow_modified.md) | 限界費用関数を持つ最小費用流。 |
+| [minimum_cut_lattice.hpp](graph/minimum_cut_lattice.md) | 固定した端点間の全最小カットを表す残余 SCC と縮約 DAG。 |
+| [multi_label_project_selection.hpp](graph/multi_label_project_selection.md) | 順序付きラベルと Monge 費用の最小化。 |
 | [planar_graph.hpp](graph/planar_graph.md) | 交差のない直線埋め込みから面・面積を構築する。 |
 | [prim.hpp](graph/prim.md) | 無向重み付きグラフの最小全域木。 |
+| [project_selection.hpp](graph/project_selection.md) | 二値変数の利益・費用とハード制約の最適化。 |
+| [internal/selection_cut.hpp](graph/internal/selection_cut.md) | 二値・多値 Project Selection 共通のカット構築。 |
 | [scc.hpp](graph/scc.md) | 有向グラフの強連結成分分解と縮約DAG。 |
 | [static_graph.hpp](graph/static_graph.md) | 辺を追加してbuildするCSR隣接配列。 |
+| [undirected_cut_edge.hpp](graph/undirected_cut_edge.md) | 無向カット系の入力辺。 |
+| [internal/weighted_blossom.hpp](graph/internal/weighted_blossom.md) | 一般グラフの最大重みマッチング用の主双対 blossom。 |
 
 ## math
 

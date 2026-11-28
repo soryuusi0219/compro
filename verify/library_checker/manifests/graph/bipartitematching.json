@@ -1,0 +1,5 @@
+{
+  "name": "bipartitematching",
+  "problem": "graph/bipartitematching",
+  "source": "verify/library_checker/graph/bipartitematching.cpp"
+}

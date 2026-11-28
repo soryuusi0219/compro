@@ -2,10 +2,13 @@
 #pragma once
 #include <algorithm>
 #include <cassert>
+#include <cstdint>
 #include <limits>
+#include <stdexcept>
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include "internal/min_cost_paths.hpp"
 
 namespace soryuusi {
 
@@ -17,13 +20,17 @@ template <class Cap, class Cost, class Costfct, auto FR, auto FL, auto MAXCOST, 
   static_assert(is_invocable_r_v<Cost, decltype(MAXCOST)>, "MAXCOST must be callable with no arguments and return a value convertible to Cost");
   static_assert(is_invocable_r_v<Cost, decltype(ZEROCOST)>, "ZEROCOST must be callable with no arguments and return a value convertible to Cost");
 
+  using Price = conditional_t<is_integral_v<Cost> && sizeof(Cost) <= 8,__int128_t,Cost>;
+
   public:
-    mcf_graph_modified() {}
-    mcf_graph_modified(int n) : _n(n), h(n,-1) {}
+    mcf_graph_modified() : mcf_graph_modified(0) {}
+    mcf_graph_modified(int n) : _n(n), h(n,-1), shortest(n,MAXCOST(),ZEROCOST()) {}
 
     int add_edge(int from, int to, Cap cap, Costfct costfct) {
         assert(0 <= from && from < _n);
         assert(0 <= to && to < _n);
+        assert(cap >= 0 && pos.size() < numeric_limits<int>::max()/2);
+        initialized = false;
         int m = int(pos.size());
         pos.push_back({from, int(g.size())});
         nxt.push_back(h[from]);
@@ -75,113 +82,76 @@ template <class Cap, class Cost, class Costfct, auto FR, auto FL, auto MAXCOST, 
         assert(0 <= s && s < _n);
         assert(0 <= t && t < _n);
         assert(s != t);
-        vector<Cost> dual(_n, ZEROCOST()), dist(_n);
-        vector<int> pv(_n), pe(_n);
-        vector<unsigned char> vis(_n);
-        vector<int> settled, zero;
-        struct Q {
-            Cost key;
-            int to;
-            bool operator<(const Q& r) const {return key > r.key;}
-        };
-        vector<Q> heap;
-        auto dual_ref = [&]() {
-            fill(dist.begin(), dist.end(), MAXCOST());
-            for(int v : settled) vis[v] = false;
-            settled.clear();
-            zero.clear();
-            heap.clear();
-            dist[s] = ZEROCOST();
-            zero.push_back(s);
-            while(!zero.empty() || !heap.empty()){
-                int v;
-                if(!zero.empty()){
-                    v = zero.back();
-                    zero.pop_back();
-                }else{
-                    pop_heap(heap.begin(),heap.end());
-                    v = heap.back().to;
-                    heap.pop_back();
-                }
-                if(vis[v]) continue;
-                vis[v] = true;
-                settled.push_back(v);
-                if(v == t) break;
-                for(int i = h[v]; i != -1; i = nxt[i]){
-                    const auto& e = g[i];
-                    const int u = to[i];
-                    if(vis[u] || !e.cap) continue;
-                    const Cost cost = e.cost() - dual[u] + dual[v];
-                    if(dist[u] - dist[v] <= cost) continue;
-                    dist[u] = dist[v]+cost;
-                    pv[u] = v;
-                    pe[u] = i;
-                    if(cost == ZEROCOST()) zero.push_back(u);
-                    else{
-                        heap.push_back({dist[u],u});
-                        push_heap(heap.begin(),heap.end());
-                    }
-                }
+        assert(flow_limit >= 0);
+        vector<pair<Cap, Cost>> result{{0,ZEROCOST()}};
+        if(flow_limit == 0) return result;
+        const auto scan = [&](int v, const auto& relax) {
+            for(int i = h[v]; i != -1; i = nxt[i]) {
+                if(g[i].cap > 0) relax(to[i],i,[&] { return g[i].cost(); });
             }
-            if(!vis[t]) return false;
-            for(int v : settled) dual[v] -= dist[t]-dist[v];
-            return true;
         };
+        if(!initialized) {
+            if(!shortest.initialize(scan)) throw domain_error("mcf_graph_modified: negative residual cycle");
+            initialized = true;
+        }
         Cap flow = 0;
-        Cost cost = ZEROCOST(), prev_cost_per_flow = -MAXCOST();
-        vector<pair<Cap, Cost>> result;
-        result.push_back({flow, cost});
-        while (flow < flow_limit) {
-            if (!dual_ref()) break;
-            Cap c = flow_limit - flow;
-            for (int v = t; v != s; v = pv[v]) {
-                c = min(c, g[pe[v]].next_cap());
+        Cost cost = ZEROCOST();
+        Price prev_cost = ZEROCOST();
+        while(flow < flow_limit && shortest.search(s,t,scan)) {
+            Cap amount = flow_limit-flow;
+            for(int v = t; v != s; v = to[shortest.parent[v]^1]) {
+                amount = min(amount,g[shortest.parent[v]].next_cap());
             }
-            for (int v = t; v != s; v = pv[v]) {
-                auto& e = g[pe[v]];
-                e.cap -= c;
-                g[pe[v]^1].cap += c;
+            const Price marginal = shortest.price[t]-shortest.price[s];
+            if constexpr(is_integral_v<Cost> && sizeof(Cost) <= 8) {
+                Price change;
+                if(__builtin_mul_overflow(Price(amount),marginal,&change) || __builtin_add_overflow(cost,change,&cost)) {
+                    throw overflow_error("mcf_graph_modified: total cost overflow");
+                }
+            } else {
+                cost += amount*marginal;
             }
-            Cost d = -dual[s];
-            flow += c;
-            cost += c * d;
-            if (prev_cost_per_flow == d) {
-                result.pop_back();
+            for(int v = t; v != s; v = to[shortest.parent[v]^1]) {
+                const int i = shortest.parent[v];
+                g[i].cap -= amount;
+                g[i^1].cap += amount;
             }
-            result.push_back({flow, cost});
-            prev_cost_per_flow = d;
+            if(flow > 0 && prev_cost == marginal) result.pop_back();
+            flow += amount;
+            result.emplace_back(flow,cost);
+            prev_cost = marginal;
         }
         return result;
     }
 
+    void reset() {
+        for(int i = 0; i < int(g.size()); i += 2) {
+            g[i].cap = g[i].maxcap;
+            g[i+1].cap = 0;
+        }
+        initialized = false;
+    }
+
   private:
     int _n;
+    bool initialized = false;
 
     struct _edge {
       Cap cap, maxcap;
       Costfct costfct;
       bool inverted;
-      Cost cost() const {return (inverted ? -FL(costfct, cap).first : FR(costfct, maxcap-cap).first);}
-      Cap next_cap() {return min((inverted ? cap - FL(costfct, cap).second : FR(costfct, maxcap-cap).second + cap - maxcap), cap);}
+      Price cost() const { return inverted ? -Price(FL(costfct,cap).first) : Price(FR(costfct,maxcap-cap).first); }
+      Cap next_cap() const {
+        const Cap x = inverted ? cap : maxcap-cap;
+        const Cap end = inverted ? max<Cap>(0,FL(costfct,x).second) : min(maxcap,FR(costfct,x).second);
+        if(inverted ? end >= x : end <= x) throw invalid_argument("mcf_graph_modified: invalid marginal interval");
+        return inverted ? x-end : end-x;
+      }
     };
     vector<pair<int, int>> pos;
     vector<int> h, nxt, to;
     vector<_edge> g;
+    internal::MinCostPaths<Price> shortest;
 };
-// using Cap = ll;
-// using Cost = ll;
-// using Costfct = pi;
-// constexpr Cost MAXCOST(){return INF;}
-// constexpr Cost ZEROCOST(){return 0;}
-// pair<Cost,Cap> FL(Costfct f, Cap x){
-//   if(x < 0) return {0,0};
-//   if(f.fi) return {f.fi * x + f.se, x+1};
-//   return {f.se,INF};
-// }
-// pair<Cost,Cap> FR(Costfct f, Cap x){
-//   if(x <= 0) return {0,0};
-//   if(f.fi) return {f.fi * (x-1) + f.se, x-1}; 
-//   return {f.se,0};
-// }
 
 }  // namespace soryuusi
